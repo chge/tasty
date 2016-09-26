@@ -1,0 +1,127 @@
+# Tasty
+
+Tasty helps test assembled web applications in nearly-production environments on real clients: browsers and webviews.
+
+```shell
+$ npm install -g tasty-js
+```
+
+Tasty supports both multiple and single page applications (with server rendering too) and code coverage.
+It uses [Socket.IO](http://socket.io/) for client-server communication.
+Tasty respects Content Security Policy and SSL/TLS.
+
+# How it works
+
+1. Add `tasty.js` script to your assembly or markup.
+2. Assemble and serve your application from staging server. Add CSP directives for Tasty, if needed.
+3. Write async tests for your preferred test runner using Tasty tools.
+4. Run Tasty server. Run application on any of your clients.
+5. For every client Tasty will trigger test runner to run your tests and print output.
+6. Edit tests, Tasty will re-run them automatically, if needed.
+
+# Example
+
+Serve your application.
+
+```html
+<html>
+	<head>
+		<script src="tasty.js"></script>
+	</head>
+	<body>
+		<form>
+			<input name="login" type="text" />
+			<input name="pass" type="password" />
+			<input type="submit" text="Login" />
+		</form>
+	</body>
+</html>
+```
+
+Write a test.
+
+```javascript
+describe('login form', function() {
+	it('allows user to log in', function(done) {
+		navigate('/login');
+		text('Welcome');
+		enter('test', 'login');
+		enter(tasty.config.pass);
+		click('Login');
+		location('/dashboard');
+
+		queue(done);
+	});
+});
+```
+
+Run Tasty server.
+
+```shell
+$ tasty --runner=mocha --include=test.js --pass=secret --exit=false
+```
+
+Open your application in your client. Tasty will run tests, print all runner output and exit.
+
+# Server
+
+Server is a bridge between client and any test runner, that runs tests written using Tasty tools.
+
+You can run built-in static server for basic cases from CWD by passing `--static` flag.
+
+Use `--exit=false` flag to run on several clients.
+
+# Client
+
+Client is a small extendable library that connects to server and executes tests with the same set of tools.
+
+# Runner
+
+Tasty generally supports any test runner that can run async tests and has API.
+
+There is built-in support for [Mocha](https://mochajs.org/) and [Jasmine](http://jasmine.github.io/).
+
+# CSP
+
+Assuming that Tasty server is running on `localhost:8765/path`, you should add the following CSP directives for Tasty client to work properly:
+```
+connect-src localhost:8765/path ws://localhost:8765/path wss://localhost:8765/path
+script-src localhost:8765/path/*.js
+```
+
+Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.
+
+# Tools
+
+To be described.
+
+```
+click(value?: string, selector?: string)
+font(family: string, selector?: string)
+location(): string
+navigate(url: string)
+reload()
+loaded(src?: string)
+text(value?: string, selector?: string)
+title(value?: string): string
+```
+
+# Security recommendations
+
+On staging or other near-production environment, Tasty can't pass (re)CAPTCHA or two-factor authentication for you.
+
+### Permanent secrets
+
+Store passwords in CI/CD tool and pass credentials into command line.
+
+### One-off secrets
+
+Get two-factor nonces from backdoor or use paid services to mock real mobile phones.
+
+### (re)CAPTCHA
+
+Use [reCAPTCHA testing key](https://developers.google.com/recaptcha/docs/faq) or get answers from backdoor.
+
+### SSL/TLS
+
+Use [Let's encrypt](https://letsencrypt.org/).

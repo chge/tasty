@@ -1,0 +1,14 @@
+<!doctype html>
+<html manifest="/manifest.appcache">
+	<head>
+		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' localhost:8765; style-src 'self'; object-src 'none'; img-src 'self' data:; media-src 'self'; frame-src 'none'; child-src 'none'; font-src 'self'; connect-src 'self' localhost:8765 ws://localhost:8765 wss://localhost:8765; base-uri 'self'; form-action 'none';" />
+		<meta charset="utf-8" />
+		<link rel="stylesheet" type="text/css" href="/test.css" />
+		<script src="/test.js"></script>
+		<script src="//localhost:8765/tasty.js"></script>
+		<title>Tasty other</title>
+	</head>
+	<body>
+		Other
+	</body>
+</html>

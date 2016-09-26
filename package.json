@@ -1,0 +1,36 @@
+{
+  "name": "tasty-js",
+  "title": "Tasty",
+  "version": "0.0.1",
+  "description": "Integration testing helper for web",
+  "main": "src/server.js",
+  "preferGlobal": true,
+  "bin": {
+    "tasty": "./src/cli.js"
+  },
+  "dependencies": {
+    "glob": "^7.1.0",
+    "requireg": "^0.1.6",
+    "socket.io": "^1.4.8",
+    "tasty-sandbox": "^2.0.4"
+  },
+  "scripts": {
+    "test": "mocha test/spec/*.js",
+    "selftest": "cd test && printf 'Navigate browser to http://localhost:5678/test.html\\n\\n' && tasty --runner=mocha --static --include=self/mocha/*.js && printf '\\nNavigate browser to http://localhost:5678/test.html\\n\\n' && tasty --runner=jasmine --static --include=self/jasmine/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chge/tasty.git"
+  },
+  "keywords": [
+    "integration",
+    "testing",
+    "web"
+  ],
+  "author": "chge",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chge/tasty/issues"
+  },
+  "homepage": "https://github.com/chge/tasty"
+}
