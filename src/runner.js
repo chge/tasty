@@ -87,17 +87,15 @@ function context(token, config) {
 	};
 	queue.chain = [];
 
-	const wrap = function(tool) {
-		return function(...args) {
-			return new Promise(function(resolve) {
-				queue.chain.push(function() {
-					var promise = tool.apply({token: token}, args);
-					resolve(promise);
+	const wrap = (tool) => {
+		return (...args) => new Promise(function(resolve) {
+			queue.chain.push(function() {
+				var promise = tool.apply({token: token}, args);
+				resolve(promise);
 
-					return promise;
-				});
+				return promise;
 			});
-		};
+		});
 	};
 
 	const inject = function globals(scope, filter) {
@@ -130,7 +128,6 @@ function context(token, config) {
 		}
 	};
 
-log('OLOLO', config);
 	config.globals &&
 		inject(globals);
 

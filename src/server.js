@@ -61,10 +61,14 @@ function listen(config) {
 
 	io = socketio(server).path(config.server.path)
 		.on('connection', (socket) => {
+			// WORKAROUND: client performs sync before reconnect to get ack on ack.
+			socket.on('sync', function(data, callback) {
+				callback();
+			});
+
+			// WORKAROUND: we use socket.io rooms to handle reconnects properly.
 			socket.emit('ready', generate(), (token) => {
 				token = token | 0;
-
-				// WORKAROUND: we use socket.io rooms to handle reconnects properly.
 
 				let runner = runners[token];
 				if (runner) {
@@ -101,6 +105,7 @@ function listen(config) {
 			try {
 				let path = config.static.root + request.url;
 				if (fs.existsSync(path)) {
+					// TODO MIME.
 					response.end(
 						fs.readFileSync(path)
 					);
@@ -135,9 +140,7 @@ function close() {
 }
 
 function emit(token, name, data, reconnect) {
-
 	// WORKAROUND: we use socket.io rooms to handle reconnects properly.
-
 	return new Promise((resolve, reject) => {
 		io.in(token).clients(function (error, ids) {
 			ids.forEach((id) => {

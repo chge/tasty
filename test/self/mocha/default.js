@@ -1,4 +1,6 @@
 describe('client.navigate', function() {
+	this.timeout(30000);
+
 	it('navigates client', function() {
 		this.slow(500);
 
@@ -14,6 +16,8 @@ describe('client.navigate', function() {
 });
 
 describe('dom.loaded', function() {
+	this.timeout(30000);
+
 	it('checks resource', function() {
 		this.slow(500);
 
@@ -33,6 +37,8 @@ describe('dom.loaded', function() {
 });
 
 describe('dom.text', function() {
+	this.timeout(30000);
+
 	it('checks text', function() {
 		this.slow(750);
 

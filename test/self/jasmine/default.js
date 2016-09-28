@@ -8,7 +8,7 @@ describe('client.navigate', function() {
 		dom.title('Tasty other');
 
 		queue(done);
-	});
+	}, 30000);
 });
 
 describe('dom.loaded', function() {
@@ -23,7 +23,7 @@ describe('dom.loaded', function() {
 		dom.loaded('/test.js');
 
 		queue(done);
-	});
+	}, 30000);
 });
 
 describe('dom.text', function() {
@@ -34,5 +34,5 @@ describe('dom.text', function() {
 		dom.text('Other');
 
 		queue(done);
-	});
+	}, 30000);
 });

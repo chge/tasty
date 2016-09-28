@@ -2,7 +2,7 @@ const tasty = require('../..');
 
 describe('tasty', function() {
 	it('exports API', function() {
-		tasty({static: true, logger: null}).start();
+		tasty({static: true, log: false}).start();
 		tasty.finish();
 	});
 });

@@ -10,17 +10,18 @@
 })('tasty', this, function() {
 	'use strict';
 
+	tasty.connect = connect;
 	tasty.tool = tool;
-	tasty.key = function key(value) {
+	tasty.token = function token(value) {
 		if (arguments.length) {
 			if (value) {
-				sessionStorage.tasty = value;
+				sessionStorage.__tasty = value;
 			} else {
-				delete sessionStorage.tasty;
+				delete sessionStorage.__tasty;
 			}
 		}
 
-		return sessionStorage.tasty;
+		return sessionStorage.__tasty;
 	};
 
 	[].forEach.call(document.getElementsByTagName('script'), function(script) {
@@ -28,7 +29,7 @@
 			var server = script.getAttribute('data-server') ||
 				script.src.split('tasty.js')[0];
 			server &&
-				init(server);
+				tasty({server: server}).connect();
 		}
 	});
 
@@ -36,16 +37,22 @@
 		config = typeof config === 'string' ?
 			{server: config} :
 			config || {};
+		tasty.config = config;
 
-		if (config.log) {
-			tasty.log = config.log;
-		}
-		config.server &&
-			init(config.server);
+		tasty.log = config.hasOwnProperty('log') && config.log !== true ?
+			config.log :
+			window.console;
+
+		tasty.token = config.token ||
+			tasty.token;
+
+		return tasty;
 	}
 
-	function init(server) {
-		tasty.key() ||
+	function connect() {
+		var server = tasty.config.server;
+
+		tasty.token() ||
 			log('tasty', 'server', server);
 
 		var script = document.createElement('script');
@@ -60,7 +67,9 @@
 	}
 
 	function ready(socket) {
-		log('tasty', tasty.key() ? 'reconnected' : 'connected');
+		log('tasty', tasty.token() ? 'reconnected' : 'connected');
+
+		tasty.socket = socket;
 
 		socket.on('tool', function(data, callback) {
 			// NOTE code is inlined to make stack trace clean.
@@ -103,23 +112,32 @@
 			}
 		});
 
-		// TODO use cookies to store key?
-		socket.on('ready', function(key, callback) {
-			if (tasty.key()) {
-				log.debug('tasty', 'ready', tasty.key());
+		// TODO use cookies to store token?
+		socket.on('ready', function(token, callback) {
+			if (tasty.token()) {
+				log.debug('tasty', 'ready', tasty.token());
 			} else {
-				log.info('tasty', 'ready', key);
-				tasty.key(key);
+				log.info('tasty', 'ready', token);
+				tasty.token(token);
 			}
-			callback([tasty.key()]);
+			callback([tasty.token()]);
 		});
 
 		socket.on('finish', function(data, callback) {
 			log.info('tasty', 'finish');
-			tasty.key(null);
+			tasty.token(null);
 			callback([]);
 			socket.close();
 		});
+	}
+
+	function sync(callback) {
+		return {
+			then: function(resolved) {
+				resolved();
+				tasty.socket.emit('sync', tasty.token(), callback);
+			}
+		};
 	}
 
 	function formatError(error) {
@@ -140,16 +158,20 @@
 	}
 
 	function log() {
-		(tasty.console || console).log.apply(null, arguments);
+		tasty.log &&
+			tasty.log.log.apply(tasty.log, arguments);
 	}
 	log.debug = function debug() {
-		(tasty.console || console).debug.apply(null, arguments);
+		tasty.log &&
+			tasty.log.debug.apply(tasty.log, arguments);
 	};
 	log.info = function info() {
-		(tasty.console || console).info.apply(null, arguments);
+		tasty.log &&
+			tasty.log.info.apply(tasty.log, arguments);
 	};
 	log.error = function error() {
-		(tasty.console || console).error.apply(null, arguments);
+		tasty.log &&
+			tasty.log.error.apply(tasty.log, arguments);
 	};
 
 	function tpl() {
@@ -192,7 +214,7 @@
 	}
 
 	function nextTick(fn) {
-		setTimeout(fn, 0);
+		setTimeout(fn, 1);
 	}
 
 	function random(min, max) {
@@ -303,12 +325,12 @@
 		}
 	});
 	tool('client.navigate', function navigate(url) {
-		nextTick(function() {
+		return sync(function() {
 			window.location = url;
 		});
 	});
 	tool('client.reload', function reload() {
-		nextTick(function() {
+		return sync(function() {
 			window.location.reload(true);
 		});
 	});
@@ -357,6 +379,12 @@
 				screenY: y
 			})
 		);
+	});
+	tool('input.press', function press() {
+		throw new Error('not implemented yet, sorry');
+	});
+	tool('input.type', function type() {
+		throw new Error('not implemented yet, sorry');
 	});
 
 	return tasty;

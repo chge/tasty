@@ -16,8 +16,14 @@ function tool(path, handle) {
 
 	return scope[name] = typeof handle === 'function' ?
 		handle :
+		// NOTE preserve this.
 		function(...args) {
-			return tool.server.emit(this.token, 'tool', [space + '.' + name].concat(args), !!handle);
+			return tool.server.emit(
+				this.token,
+				'tool',
+				[space + '.' + name].concat(args),
+				!!handle
+			);
 		};
 }
 
@@ -31,6 +37,8 @@ tool('dom.text');
 tool('dom.title');
 
 tool('input.click');
+tool('input.press');
+tool('input.type');
 
 tool('runner.until', function until(tool, ...args) {
 	return new Promise(function(resolve) {
