@@ -1,56 +1,29 @@
 'use strict';
 
+module.exports = {
+	close: close,
+	emit: emit,
+	listen: listen
+};
+
 const Emitter = require('events'),
 	fs = require('fs'),
-	glob = require('glob'),
 	http = require('http'),
 	https = require('https'),
 	socketio = require('socket.io'),
-	sandbox = require('tasty-sandbox'),
 	url = require('url');
 
-tasty.tool = tool;
-tasty.listen = listen;
+const log = require('./log'),
+	prepare = require('./runner').prepare,
+	tool = require('./tool');
 
-module.exports = tasty;
+let io,
+	statics;
 
-const SERVER = 'http://0.0.0.0:8765/',
-	STATIC = 'http://0.0.0.0:5678/';
-
-// TODO allow to filter globals.
 let emitter = new Emitter(),
-	config = tasty.config = {
-		include: '',
-		exclude: '',
-		runner: 'mocha',
-		globals: true,
-		colors: true,
-		bail: false,
-		exit: true,
-	},
 	runners = {};
 
-function tasty(conf) {
-	Object.assign(config, conf);
-
-	config.tests = config.include ?
-		glob.sync(config.include, {ignore: config.exclude}) :
-		[];
-	config.server = config.server ?
-		config.server === true ?
-			url.parse(SERVER) :
-			Object.assign(url.parse(SERVER), url.parse(config.server)) :
-		url.parse(SERVER);
-	config.static = config.static ?
-		config.static === true ?
-			url.parse(STATIC) :
-			Object.assign(url.parse(STATIC), url.parse(config.static)) :
-		null;
-
-	return tasty;
-}
-
-function listen() {
+function listen(config) {
 	let server = http.createServer((request, response) => {
 		switch (request.url) {
 			case '/':
@@ -86,45 +59,47 @@ function listen() {
 
 	log('server', url.format(config.server));
 
-	tasty.io = socketio(server).path(config.server.path)
+	io = socketio(server).path(config.server.path)
 		.on('connection', (socket) => {
-			socket.emit('ready', generate(), (key) => {
-				// NOTE we use socket.io rooms to handle reconnects properly.
+			socket.emit('ready', generate(), (token) => {
+				token = token | 0;
 
-				key = key | 0;
-				let runner = runners[key];
+				// WORKAROUND: we use socket.io rooms to handle reconnects properly.
+
+				let runner = runners[token];
 				if (runner) {
-					emitter.emit('reconnect' + key);
+					socket.join(token);
+					emitter.emit('reconnect' + token);
 
-					socket.join(key);
 					runner.finish &&
-						finish(key);
+						finish(token, config);
 
 					return;
 				}
 
-				runner = runners[key] = prepare(key, config.tests);
-				socket.join(key);
-				log('client', key, 'ready');
+				runner = runners[token] = prepare(token, config);
+				socket.join(token);
+
+				log('client', token, 'ready');
 
 				runner.run()
 					.catch((error) => error)
 					.then((error) => {
-						log('client', key, error ? 'failure ' + error : 'success');
+						log('client', token, error ? 'failure ' + error : 'success');
 
 						runner.error = error;
 						runner.finish = true;
-						finish(key);
+						finish(token, config);
 					});
 			});
 		});
 
 	if (config.static) {
-		log('static', url.format(config.static));
+		log('static', url.format(config.static), 'from', config.static.root);
 
-		tasty.static = http.createServer((request, response) => {
+		statics = http.createServer((request, response) => {
 			try {
-				let path = process.cwd() + request.url;
+				let path = config.static.root + request.url;
 				if (fs.existsSync(path)) {
 					response.end(
 						fs.readFileSync(path)
@@ -149,184 +124,34 @@ function listen() {
 	config.tests.length ?
 		log('tests', config.tests) :
 		log('no tests found');
-
-	return tasty;
 }
 
-function generate() {
-	return generate.key = (generate.key | 0) + 1;
+function close() {
+	io.server.close();
+	log('server', 'closed');
+
+	statics.close();
+	log('static', 'closed');
 }
 
-function prepare(key) {
-	log('client', key, 'runner', config.runner);
+function emit(token, name, data, reconnect) {
 
-	switch (config.runner) {
-		case 'mocha':
-			let Mocha = sandbox.require(
-					resolve('mocha'),
-					context(key, config.globals === true)
-				),
-				mocha = new Mocha({
-					ui: 'bdd',
-					bail: config.bail === true
-					// TODO reporter.
-				});
-			config.tests.forEach((file) => mocha.addFile(file));
-
-			return {
-				run: () => {
-					return new Promise((resolve, reject) => {
-						mocha.run((error) => {
-							error ?
-								reject(error) :
-								resolve();
-						});
-					});
-				}
-			};
-		case 'jasmine':
-			let Jasmine = sandbox.require(
-					resolve('jasmine'),
-					context(key, config.globals === true)
-				),
-				jasmine = new Jasmine();
-			jasmine.loadConfig({
-				spec_files: config.tests
-			});
-			jasmine.configureDefaultReporter({
-				showColors: config.colors === true
-			});
-
-			return {
-				run: () => {
-					return new Promise((resolve, reject) => {
-						jasmine.onComplete((passed) => {
-							passed ?
-								resolve() :
-								reject(1); // TODO number of fails.
-						});
-						jasmine.execute();
-					});
-				}
-			};
-		default:
-			// TODO resolve plugin.
-			throw new Error(`unknown runner '${config.runner}'`);
-	}
-}
-
-function finish(key) {
-	emit(key, 'finish', null)
-		.then(() => null, (error) => error)
-		.then((error) => {
-			log('client', key, 'finished');
-
-			config.exit === true &&
-				process.exit(runners[key].error || error);
-		});
-}
-
-function resolve(name) {
-	try {
-		return require.resolve(name);
-	} catch (thrown) {
-		try {
-			return require.resolve(process.cwd() + '/node_modules/' + name);
-		} catch (thrown) {
-			let path = require('requireg').resolve(name);
-			if (!path) {
-				throw new Error(`cannot find module '${name}'`);
-			}
-
-			return path;
-		}
-	}
-}
-
-function context(key, auto) {
-	let queue = function queue(done) {
-		let chain = Promise.resolve();
-		queue.chain.forEach((link) => {
-			chain = chain.then(link);
-		});
-
-		if (typeof done === 'function') {
-			chain.then(done);
-		} else {
-			return chain;
-		}
-	};
-	queue.chain = [];
-
-	let wrap = function(tool) {
-		return function(...args) {
-			return new Promise(function(resolve) {
-				queue.chain.push(function() {
-					var promise = tool.apply({key: key}, args);
-					resolve(promise);
-
-					return promise;
-				});
-			});
-		};
-	};
-
-	let inject = function globals(scope, filter) {
-		if (!scope) {
-			throw new Error('scope is required');
-		}
-
-		// TODO filter.
-		Object.keys(tasty.tool).forEach((name) => {
-			let tool = tasty.tool[name];
-
-			scope[name] = rename(
-				wrap(tool),
-				name
-			);
-			scope[name].handle = rename(
-				tool.bind(scope),
-				name
-			);
-		});
-
-		scope.queue = queue;
-	};
-
-	let globals = {
-		tasty: {
-			config: config, // TODO clone?
-			globals: inject,
-			tool: tool,
-			queue: queue
-		}
-	};
-
-	auto &&
-		inject(globals);
-
-	return {
-		globals: globals
-	};
-}
-
-function emit(key, name, data, reconnect) {
-	// NOTE we use socket.io rooms to handle reconnects properly.
+	// WORKAROUND: we use socket.io rooms to handle reconnects properly.
 
 	return new Promise((resolve, reject) => {
-		tasty.io.in(key).clients(function (error, ids) {
+		io.in(token).clients(function (error, ids) {
 			ids.forEach((id) => {
-				tasty.io.connected[id].emit(name, data, (response) => {
+				io.connected[id].emit(name, data, (response) => {
 					let result = response[0],
 						error = response[1];
 					if (error) {
 						error = Object.assign(new Error(), error);
 						reconnect ?
-							emitter.once('reconnect' + key, () => reject(error)) :
+							emitter.once('reconnect' + token, () => reject(error)) :
 							reject(error);
 					} else {
 						reconnect ?
-							emitter.once('reconnect' + key, () => resolve(result)) :
+							emitter.once('reconnect' + token, () => resolve(result)) :
 							resolve(result);
 					}
 				})
@@ -335,51 +160,17 @@ function emit(key, name, data, reconnect) {
 	});
 }
 
-function rename(fn, name) {
-	Object.defineProperty(fn, 'name', {
-		value: name,
-		configurable: true
-	});
+function finish(token, config) {
+	emit(token, 'finish', null)
+		.then(() => null, (error) => error)
+		.then((error) => {
+			log('client', token, 'finished');
 
-	return fn;
+			config.exit === true &&
+				process.exit(runners[token].error || error);
+		});
 }
 
-function log(...args) {
-	if (tasty.log === false) {
-		return;
-	}
-
-	args = ['[tasty]'].concat(args);
-	tasty.log ?
-		tasty.log.apply(null, args) :
-		console.log.apply(console, args);
+function generate() {
+	return generate.token = (generate.token | 0) + 1;
 }
-
-function tool(name, handle) {
-	return tasty.tool[name] = typeof handle === 'function' ?
-		handle :
-		function(...args) {
-			return emit(this.key, 'tool', [name].concat(args), !!handle);
-		};
-}
-
-tool('click');
-tool('font');
-tool('location');
-tool('navigate', true);
-tool('reload', true);
-tool('loaded');
-tool('text');
-tool('title');
-tool('until', function until(tool, ...args) {
-	return new Promise(function(resolve) {
-		var repeat = function() {
-			tool.handle.apply(null, args)
-				.then(
-					resolve,
-					() => setTimeout(repeat, 100)
-				)
-		};
-		repeat();
-	});
-});

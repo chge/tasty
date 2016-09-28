@@ -78,27 +78,27 @@
 					result.then(
 						function(result) {
 							if (result instanceof Error) {
-								log.error(result);
+								log.error(name, result);
 								callback([undefined, formatError(result)]);
 							} else {
 								callback([result]);
 							}
 						},
 						function(error) {
-							log.error(error);
+							log.error(name, error);
 							callback([undefined, formatError(error)]);
 						}
 					);
 				} else {
 					if (result instanceof Error) {
-						log.error(result);
+						log.error(name, result);
 						callback([undefined, formatError(result)]);
 					} else {
 						callback([result]);
 					}
 				}
 			} catch (thrown) {
-				log.error(thrown);
+				log.error(name, thrown);
 				callback([undefined, formatError(thrown)]);
 			}
 		});
@@ -203,58 +203,11 @@
 		tasty.tool[name] = handle;
 	}
 
-	tool('click', function click(value, selector) {
-		value = value instanceof RegExp ?
-			value :
-			new RegExp('^' + escape(value, true) + '$');
-
-		var list = document.querySelectorAll(selector || '*'),
-			found;
-		for (var i = 0; i < list.length; i++) {
-			var node = list[i];
-			if (value.test(node.innerText)) {
-				found = node;
-				break;
-			}
-		}
-		if (!found) {
-			throw new Error(tpl(
-				'node ', selector ? [selector, ' '] : null,
-				'with text ', value, ' not found'
-			));
-		}
-
-		var rect = found.getBoundingClientRect(),
-			x = random(rect.left, rect.left + rect.width),
-			y = random(rect.top, rect.top + rect.height),
-			actual = document.elementFromPoint(x, y),
-			parent = actual;
-		while (parent !== found) {
-			if (!(parent = parent.parentElement)) {
-				throw new Error(tpl(
-					'node ', formatNode(found),
-					' with text ', value, ' is covered by node ',
-					formatNode(actual)
-				));
-			}
-		}
-
-		actual.dispatchEvent(
-			new MouseEvent('click', {
-				bubbles: true,
-				cancelable: true,
-				screenX: x,
-				screenY: y
-			})
-		);
-	});
-
-	tool('font', function font(family, selector) {
+	tool('dom.font', function font(family, selector) {
 		// TODO window.getComputedStyle(selector).fontFamily, document.fonts.keys()
 		throw new Error('not implemented yet, sorry');
 	});
-
-	tool('loaded', function loaded(src) {
+	tool('dom.loaded', function loaded(src) {
 		if (!src) {
 			return document.readyState === 'complete';
 		}
@@ -277,6 +230,18 @@
 			case 'js':
 				list = document.getElementsByTagName('script');
 				break;
+			case 'bmp':
+			case 'gif':
+			case 'ico':
+			case 'jpg':
+			case 'jpeg':
+			case 'png':
+				list = [].concat(
+					[].slice.call(document.getElementsByTagName('img'), 0),
+					[].slice.call(document.getElementsByTagName('link'), 0)
+				);
+				// TODO picture, background-image, :before, :after, css states.
+				break;
 			// TODO more.
 			default:
 				list = document.getElementsByTagName('*');
@@ -291,37 +256,15 @@
 
 		throw new Error('resource ' + src + ' not found');
 	});
-
-	tool('location', function location(path) {
-		if (!arguments.length) {
-			return window.location.pathname;
-		}
-		if (window.location.pathname !== path) {
-			throw new Error('location ' + window.location.pathname + ' is not ' + path);
-		}
-	});
-
-	tool('navigate', function navigate(url) {
-		nextTick(function() {
-			window.location = url;
-		});
-	});
-
-	tool('reload', function reload() {
-		nextTick(function() {
-			window.location.reload(true);
-		});
-	});
-
-	tool('text', function text(value, selector) {
-		value = value instanceof RegExp ?
-			value :
-			new RegExp(escape(value, true));
+	tool('dom.text', function text(what, selector) {
+		what = what instanceof RegExp ?
+			what :
+			new RegExp(escape(what, true));
 
 		var walker = document.createTreeWalker(document, NodeFilter.SHOW_TEXT, null, false),
 			node, found;
 		while (node = walker.nextNode()) {
-			if (value.test(node.parentElement.innerText)) {
+			if (what.test(node.parentElement.innerText)) {
 				found = node;
 				break;
 			}
@@ -329,15 +272,91 @@
 		if (!found) {
 			throw new Error(tpl(
 				selector ? ['node ', selector, ' with '] : null,
-				'text ', value, ' not found'
+				'text ', what, ' not found'
+			));
+		}
+	});
+	tool('dom.title', function title(what) {
+		what = what instanceof RegExp ?
+			what :
+			new RegExp(escape(what, true));
+
+		if (!what.test(document.title)) {
+			throw new Error(tpl(
+				'title ', document.title, ' is not ', what
 			));
 		}
 	});
 
-	tool('title', function title(value) {
-		if (document.title !== value) {
-			throw new Error('title ' + document.title + ' is not ' + value);
+	tool('client.location', function location(what) {
+		if (!arguments.length) {
+			return window.location.pathname;
 		}
+		what = what instanceof RegExp ?
+			what :
+			new RegExp('^' + escape(what, true) + '$');
+
+		if (what.test(window.location.href)) {
+			throw new Error(tpl(
+				'location ', window.location.pathname, ' is not ', path
+			));
+		}
+	});
+	tool('client.navigate', function navigate(url) {
+		nextTick(function() {
+			window.location = url;
+		});
+	});
+	tool('client.reload', function reload() {
+		nextTick(function() {
+			window.location.reload(true);
+		});
+	});
+
+	tool('input.click', function click(what, selector) {
+		what = what instanceof RegExp ?
+			what :
+			new RegExp('^' + escape(what, true) + '$');
+
+		var list = document.querySelectorAll(selector || '*'),
+			found;
+		for (var i = 0; i < list.length; i++) {
+			var node = list[i];
+			if (what.test(node.innerText)) {
+				found = node;
+				break;
+			}
+		}
+		if (!found) {
+			throw new Error(tpl(
+				'node ', selector ? [selector, ' '] : null,
+				'with text ', what, ' not found'
+			));
+		}
+
+		var rect = found.getBoundingClientRect(),
+			x = random(rect.left, rect.left + rect.width),
+			y = random(rect.top, rect.top + rect.height),
+			actual = document.elementFromPoint(x, y),
+			parent = actual;
+		while (parent !== found) {
+			if (!(parent = parent.parentElement)) {
+				throw new Error(tpl(
+					'node ', formatNode(found),
+					' with text ', what, ' is covered by node ',
+					formatNode(actual)
+				));
+			}
+		}
+
+		actual.dispatchEvent(
+			new MouseEvent('click', {
+				bubbles: true,
+				cancelable: true,
+				screenX: x,
+				screenY: y
+			})
+		);
 	});
 
 	return tasty;

@@ -1,9 +1,9 @@
 {
   "name": "tasty-js",
   "title": "Tasty",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Integration testing helper for web",
-  "main": "src/server.js",
+  "main": "src/main.js",
   "preferGlobal": true,
   "bin": {
     "tasty": "./src/cli.js"
@@ -14,9 +14,13 @@
     "socket.io": "^1.4.8",
     "tasty-sandbox": "^2.0.4"
   },
+  "devDependencies": {
+    "jasmine": "^2.5.2",
+    "mocha": "^3.1.0"
+  },
   "scripts": {
-    "test": "mocha test/spec/*.js",
-    "selftest": "cd test && printf 'Navigate browser to http://localhost:5678/test.html\\n\\n' && tasty --runner=mocha --static --include=self/mocha/*.js && printf '\\nNavigate browser to http://localhost:5678/test.html\\n\\n' && tasty --runner=jasmine --static --include=self/jasmine/*.js"
+    "test": "node test/run.js",
+    "selftest": "printf 'Navigate browser to http://localhost:5678/test.html\\n\\n' && node ./src/cli.js --runner=mocha --include=test/self/mocha/*.js --static-root=test/res && printf '\\nNavigate browser to http://localhost:5678/test.html\\n\\n' && node ./src/cli.js --runner=jasmine --include=test/self/jasmine/*.js --static-root=test/res"
   },
   "repository": {
     "type": "git",

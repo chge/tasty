@@ -1,10 +1,10 @@
 describe('globals', function() {
 	tasty.config.globals ?
-		xit('are not defined') :
-		it('are not defined', function() {
-			Object.keys(tasty.tool).forEach((name) => {
-				if (global[name]) {
-					throw new Error('global ' + name + ' is defined prematurely');
+		xit('are not defined before call') :
+		it('are not defined before call', function() {
+			Object.keys(tasty.tool).forEach((space) => {
+				if (global[space]) {
+					throw new Error('global.' + space + ' is defined prematurely');
 				}
 			});
 		});
@@ -24,10 +24,15 @@ describe('globals', function() {
 	it('are defined after call', function() {
 		tasty.globals(global);
 
-		Object.keys(tasty.tool).forEach((name) => {
-			if (!global[name]) {
-				throw 'global ' + name + ' is not defined';
+		Object.keys(tasty.tool).forEach((space) => {
+			if (!global[space]) {
+				throw new Error('global.' + name + ' is not defined');
 			}
+			Object.keys(tasty.tool[space]).forEach((name) => {
+				if (!global[space][name]) {
+					throw new Error('global.' + space + '.' + name + ' is not defined');
+				}
+			});
 		});
 	});
 });

@@ -4,7 +4,7 @@
 
 process.title = 'Tasty';
 
-let server = require('./server');
+let tasty = require('./main');
 
 // TODO use minimist.
 let config = {};
@@ -30,8 +30,31 @@ if (Object.keys(config).length === 1 && config.version === true) {
 	);
 	process.exit(0);
 } else if (Object.keys(config).length === 1 && config.help === true) {
-	console.log('Usage: tasty --runner=runner --include=glob --exclude=glob ...');
+	console.log(
+`Usage: tasty --include=GLOB ...
+	--exclude=test/lib/*.js
+	--exit=true|false
+	--globals=true|false
+	--include=test/*.js
+	--log=true|false
+	--server
+	--server=true|false
+	--server-url=http://localhost:8765/path
+	--static
+	--static=true|false
+	--static-url=http://localhost:5678/path
+	--static-root=path/to/root`
+	);
 	process.exit(0);
 } else {
-	server(config).listen();
+	tasty(
+		Object.assign(config, {
+			server: config['server-url'] ?
+				{url: config['server-url']} :
+				config['server'],
+			static: config['static-url'] || config['static-root'] ?
+				{url: config['static-url'], root: config['static-root']} :
+				config['static']
+		})
+	).start();
 }

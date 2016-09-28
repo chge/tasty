@@ -1,37 +1,37 @@
-describe('navigate', function() {
-	it('navigates', function(done) {
-		navigate('/test.html');
-		location('/test.html');
-		title('Tasty test');
-		navigate('/other.html');
-		location('/other.html');
-		title('Tasty other');
+describe('client.navigate', function() {
+	it('navigates client', function(done) {
+		client.navigate('/test.html');
+		client.location('/test.html');
+		dom.title('Tasty test');
+		client.navigate('/other.html');
+		client.location('/other.html');
+		dom.title('Tasty other');
 
 		queue(done);
 	});
 });
 
-describe('loaded', function() {
+describe('dom.loaded', function() {
 	it('checks resource', function(done) {
-		navigate('/test.html');
-		loaded('/manifest.appcache');
-		loaded('/test.css');
-		loaded('/test.js');
-		navigate('/other.html');
-		loaded('/manifest.appcache');
-		loaded('/test.css');
-		loaded('/test.js');
+		client.navigate('/test.html');
+		dom.loaded('/manifest.appcache');
+		dom.loaded('/test.css');
+		dom.loaded('/test.js');
+		client.navigate('/other.html');
+		dom.loaded('/manifest.appcache');
+		dom.loaded('/test.css');
+		dom.loaded('/test.js');
 
 		queue(done);
 	});
 });
 
-describe('text', function() {
+describe('dom.text', function() {
 	it('checks text', function(done) {
-		navigate('/test.html');
-		text('Test');
-		navigate('/other.html');
-		text('Other');
+		client.navigate('/test.html');
+		dom.text('Test');
+		client.navigate('/other.html');
+		dom.text('Other');
 
 		queue(done);
 	});

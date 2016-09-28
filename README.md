@@ -1,5 +1,7 @@
 # Tasty
 
+[![Build Status](https://travis-ci.org/chge/tasty.svg?branch=master)](https://travis-ci.org/chge/tasty)
+
 Tasty helps test assembled web applications in nearly-production environments on real clients: browsers and webviews.
 
 ```shell
@@ -7,7 +9,7 @@ $ npm install -g tasty-js
 ```
 
 Tasty supports both multiple and single page applications (with server rendering too) and code coverage.
-It uses [Socket.IO](http://socket.io/) for client-server communication.
+It uses [Socket.IO](https://socket.io/) for client-server communication.
 Tasty respects Content Security Policy and SSL/TLS.
 
 # How it works
@@ -30,6 +32,7 @@ Serve your application.
 	</head>
 	<body>
 		<form>
+			Welcome!
 			<input name="login" type="text" />
 			<input name="pass" type="password" />
 			<input type="submit" text="Login" />
@@ -44,7 +47,7 @@ Write a test.
 describe('login form', function() {
 	it('allows user to log in', function(done) {
 		navigate('/login');
-		text('Welcome');
+		text('Welcome!');
 		enter('test', 'login');
 		enter(tasty.config.pass);
 		click('Login');
@@ -79,7 +82,7 @@ Client is a small extendable library that connects to server and executes tests 
 
 Tasty generally supports any test runner that can run async tests and has API.
 
-There is built-in support for [Mocha](https://mochajs.org/) and [Jasmine](http://jasmine.github.io/).
+There is built-in support for [Mocha](https://mochajs.org/) and [Jasmine](https://jasmine.github.io/).
 
 # CSP
 
@@ -96,14 +99,15 @@ Remember, CSP allows consequently applied directives to only restrict the result
 To be described.
 
 ```
-click(value?: string, selector?: string)
-font(family: string, selector?: string)
-location(): string
-navigate(url: string)
-reload()
-loaded(src?: string)
-text(value?: string, selector?: string)
-title(value?: string): string
+dom.font(family: string, selector?: string): void
+dom.loaded(src?: string): void
+dom.text(what?: string | RegExp, selector?: string): void
+dom.title(what?: string | RegExp): string
+client.location(): string
+client.location(what?: string | RegExp): void
+client.navigate(url: string): void
+client.reload(): void
+input.click(what?: string | RegExp, selector?: string): void
 ```
 
 # Security recommendations

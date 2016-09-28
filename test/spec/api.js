@@ -1,9 +1,8 @@
-describe('tasty', function() {
-	let tasty = require('requireg')('tasty-js');
+const tasty = require('../..');
 
+describe('tasty', function() {
 	it('exports API', function() {
-		tasty({static: true}).listen();
-		tasty.io.server.close();
-		tasty.static.close();
+		tasty({static: true, logger: null}).start();
+		tasty.finish();
 	});
 });
