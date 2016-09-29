@@ -62,39 +62,36 @@ function listen(config) {
 	io = socketio(server).path(config.server.path)
 		.on('connection', (socket) => {
 			// WORKAROUND: client performs sync before reconnect to get ack on ack.
-			socket.on('sync', function(data, callback) {
-				callback();
-			});
+			socket.on('sync', (data, callback) => callback());
 
 			// WORKAROUND: we use socket.io rooms to handle reconnects properly.
-			socket.emit('ready', generate(), (token) => {
-				token = token | 0;
+			socket.on('register', (token, callback) => {
+				let runner = register(token, socket, config);
+				runner ?
+					callback(runner.token) :
+					callback(token);
 
-				let runner = runners[token];
-				if (runner) {
-					socket.join(token);
-					emitter.emit('reconnect' + token);
+				runner && config.autorun &&
+					runner.run()
+						.then(
+							(result) => {
+								log('client', runner.token, 'success');
+							},
+							(error) => {
+								log('client', runner.token, 'failure', error && error.stack ? error.stack : error);
 
-					runner.finish &&
-						finish(token, config);
+								runner.error = error;
+							}
+						)
+						.then(() => {
+							runner.finish = true;
+							finish(runner.token, config);
+						});
+			});
 
-					return;
-				}
-
-				runner = runners[token] = prepare(token, config);
-				socket.join(token);
-
-				log('client', token, 'ready');
-
-				runner.run()
-					.catch((error) => error)
-					.then((error) => {
-						log('client', token, error ? 'failure ' + error : 'success');
-
-						runner.error = error;
-						runner.finish = true;
-						finish(token, config);
-					});
+			// WORKAROUND for forked runners.
+			socket.on('bridge', (args, callback) => {
+				emit(...args, true).then(callback);
 			});
 		});
 
@@ -139,6 +136,33 @@ function close() {
 	log('static', 'closed');
 }
 
+function register(token, socket, config) {
+	token = token | 0;
+	register.token = register.token | 0;
+	let runner;
+
+	if (token) {
+		runner = runners[token]
+		if (runner) {
+			socket.join(token);
+
+			runner.finish ?
+				finish(token, config) :
+				emitter.emit('reconnect' + token);
+
+			return null;
+		}
+	}
+	token = ++register.token;
+
+	socket.join(token);
+
+	runner = runners[token] = prepare(token, config);
+	runner.token = token;
+
+	return runner;
+}
+
 function emit(token, name, data, reconnect) {
 	// WORKAROUND: we use socket.io rooms to handle reconnects properly.
 	return new Promise((resolve, reject) => {
@@ -169,11 +193,9 @@ function finish(token, config) {
 		.then((error) => {
 			log('client', token, 'finished');
 
-			config.exit === true &&
-				process.exit(runners[token].error || error);
+			config.exit &&
+				process.exit(
+					runners[token] && runners[token].error || error
+				);
 		});
-}
-
-function generate() {
-	return generate.token = (generate.token | 0) + 1;
 }

@@ -2,24 +2,32 @@
 
 [![Build Status](https://travis-ci.org/chge/tasty.svg?branch=master)](https://travis-ci.org/chge/tasty)
 
-Tasty helps test assembled web applications in nearly-production environments on real clients: browsers and webviews.
+Tasty helps test assembled web applications in nearly-production environments on real clients as real user.
 
 ```shell
 $ npm install -g tasty-js
 ```
 
 Tasty supports both multiple and single page applications (with server rendering too) and code coverage.
-It uses [Socket.IO](https://socket.io/) for client-server communication.
-Tasty respects [Content Security Policy](https://www.w3.org/TR/CSP/) and SSL/TLS.
+It respects [Content Security Policy](https://www.w3.org/TR/CSP/) and SSL/TLS.
 
 # How it works
 
 1. Add `tasty.js` script to your assembly or markup.
-2. Assemble and serve your application from staging server. Add CSP directives for Tasty, if needed.
-3. Write tests for your preferred test framework using Tasty async tools.
-4. Run Tasty server. Open application in any of your clients.
-5. For every client Tasty will run your tests and print output.
-6. Edit tests, Tasty will re-run them automatically, if needed.
+2. Assemble and serve your application from staging server.
+3. Provide CSP directives for Tasty and use test certificates, if needed.
+4. Write tests for your preferred test framework using Tasty async tools.
+5. Run Tasty server. Open application in any of your clients.
+6. For every client Tasty will run your tests and print output.
+7. Edit tests, Tasty will re-run them automatically, if needed.
+
+# Is [Selenium](https://github.com/SeleniumHQ/selenium) needed?
+
+No.
+
+# Similar tools
+
+[Protractor]() is [Selenium](https://github.com/SeleniumHQ/selenium/wiki/WebDriverJs)-based end-to-end test framework.
 
 # Example
 
@@ -28,7 +36,7 @@ Serve your application.
 ```html
 <html>
 	<head>
-		<script src="tasty.js"></script>
+		<script src="//localhost:8765/tasty.js"></script>
 	</head>
 	<body>
 		<form>
@@ -46,12 +54,12 @@ Write a test.
 ```javascript
 describe('login form', function() {
 	it('allows user to log in', function(done) {
-		navigate('/login');
-		text('Welcome!');
-		enter('test', 'login');
-		enter(tasty.config.pass);
-		click('Login');
-		location('/dashboard');
+		dom.text('Welcome!');
+		dom.enter('login', 'test');
+		dom.enter('pass', tasty.config.pass);
+		dom.click('Login');
+		client.wait();
+		client.location('/dashboard');
 
 		queue(done);
 	});
@@ -82,7 +90,9 @@ Client is a small extendable library that connects to server and executes tests 
 
 Tasty supports any test frameworks that support asynchronous tests.
 
-There are built-in runners for [Mocha](https://mochajs.org/) and [Jasmine](https://jasmine.github.io/).
+There are built-in runners for [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/) and [QUnit](https://qunitjs.com/). Provide `--runner=name` flag to use one of them. For other frameworks, use Tasty programmatically from your runner.
+
+[Chai](http://chaijs.com/) and other assertion libraries are supported by providing `--assert=name` and/or `--expect=name` flags.
 
 # CSP
 

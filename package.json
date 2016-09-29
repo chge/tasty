@@ -1,7 +1,7 @@
 {
   "name": "tasty-js",
   "title": "Tasty",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Integration testing helper for web",
   "main": "src/main.js",
   "preferGlobal": true,
@@ -12,15 +12,17 @@
     "glob": "^7.1.0",
     "requireg": "^0.1.6",
     "socket.io": "^1.4.8",
-    "tasty-sandbox": "^2.0.4"
+    "tasty-sandbox": "^2.0.5"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "jasmine": "^2.5.2",
-    "mocha": "^3.1.0"
+    "mocha": "^3.1.0",
+    "qunitjs": "^2.0.1"
   },
   "scripts": {
     "test": "node --harmony test/run.js",
-    "selftest": "printf 'Navigate browser to http://localhost:5678/test.html\\n\\n' && node --harmony ./src/cli.js --runner=mocha --include=test/self/mocha/*.js --static-root=test/res && printf '\\nNavigate browser to http://localhost:5678/test.html\\n\\n' && node --harmony ./src/cli.js --runner=jasmine --include=test/self/jasmine/*.js --static-root=test/res"
+    "selftest": "printf 'Navigate browser to http://localhost:5678/test.html\\n\\n' && node --harmony ./src/cli.js --runner=mocha --assert=chai --expect=chai --static-root=test/res --include=test/self/mocha/*.js && printf '\\nNavigate browser to http://localhost:5678/test.html\\n\\n' && node --harmony ./src/cli.js --runner=jasmine --static-root=test/res --include=test/self/jasmine/*.js && printf '\\nNavigate browser to http://localhost:5678/test.html\\n\\n' && node --harmony ./src/cli.js --runner=qunit --static-root=test/res --include=test/self/qunit/*.js"
   },
   "repository": {
     "type": "git",

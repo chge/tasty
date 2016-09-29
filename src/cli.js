@@ -31,12 +31,15 @@ if (Object.keys(config).length === 1 && config.version === true) {
 	process.exit(0);
 } else if (Object.keys(config).length === 1 && config.help === true) {
 	console.log(
-`Usage: tasty --include=GLOB ...
+`Usage: tasty --include=glob ...
+	--assert=name
+	--expect=name
 	--exclude=test/lib/*.js
 	--exit=true|false
 	--globals=true|false
 	--include=test/*.js
 	--log=true|false
+	--runner=mocha|jasmine|qunit
 	--server
 	--server=true|false
 	--server-url=http://localhost:8765/path

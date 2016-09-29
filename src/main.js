@@ -11,9 +11,12 @@ const log = require('./log'),
 	tool = require('./tool');
 
 const DEFAULTS = {
+	assert: false,
+	autorun: true,
 	bail: false,
 	exclude: '',
 	exit: true,
+	expect: false,
 	globals: true,
 	include: '',
 	log: true,

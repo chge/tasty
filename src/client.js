@@ -12,17 +12,20 @@
 
 	tasty.connect = connect;
 	tasty.tool = tool;
+
+	// TODO use cookies to store token?
 	tasty.token = function token(value) {
 		if (arguments.length) {
 			if (value) {
-				sessionStorage.__tasty = value;
+				sessionStorage[tasty.token.key] = value;
 			} else {
-				delete sessionStorage.__tasty;
+				delete sessionStorage[tasty.token.key];
 			}
 		}
 
-		return sessionStorage.__tasty;
+		return sessionStorage[tasty.token.key];
 	};
+	tasty.token.key = '__token';
 
 	[].forEach.call(document.getElementsByTagName('script'), function(script) {
 		if (script.src.indexOf('tasty.js') !== -1) {
@@ -61,12 +64,12 @@
 			var io = typeof define === 'function' && define['amd'] ?
 				require('socket.io') :
 				window.io;
-			ready(io(server, {multiplex: false}));
+			connected(io(server, {multiplex: false}));
 		};
 		document.getElementsByTagName('head')[0].appendChild(script);
 	}
 
-	function ready(socket) {
+	function connected(socket) {
 		log('tasty', tasty.token() ? 'reconnected' : 'connected');
 
 		tasty.socket = socket;
@@ -112,22 +115,21 @@
 			}
 		});
 
-		// TODO use cookies to store token?
-		socket.on('ready', function(token, callback) {
-			if (tasty.token()) {
-				log.debug('tasty', 'ready', tasty.token());
-			} else {
-				log.info('tasty', 'ready', token);
-				tasty.token(token);
-			}
-			callback([tasty.token()]);
-		});
-
 		socket.on('finish', function(data, callback) {
 			log.info('tasty', 'finish');
 			tasty.token(null);
 			callback([]);
 			socket.close();
+		});
+
+		socket.emit('register', tasty.token(), function(token) {
+			if (token) {
+				tasty.token(token);
+				log.debug('tasty', 'registered', token);
+			} else {
+				tasty.token(null);
+				log.error('tasty', 'not registered');
+			}
 		});
 	}
 
@@ -211,10 +213,6 @@
 				.replace(/\r/g, '\\r')
 				.replace(/\n/g, '\\n')
 				.replace(/\t/g, '\\t');
-	}
-
-	function nextTick(fn) {
-		setTimeout(fn, 1);
 	}
 
 	function random(min, max) {

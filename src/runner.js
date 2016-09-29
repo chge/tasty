@@ -1,7 +1,8 @@
 'use strict';
 
 module.exports = {
-	prepare: prepare
+	prepare: prepare,
+	context: context
 };
 
 const sandbox = require('tasty-sandbox');
@@ -25,21 +26,19 @@ function prepare(token, config) {
 				),
 				mocha = new Mocha({
 					ui: 'bdd',
-					bail: config.bail === true
-					// TODO reporter.
+					bail: config.bail
+					// TODO configurable reporter.
 				});
 			config.tests.forEach((file) => mocha.addFile(file));
 
 			return {
-				run: () => {
-					return new Promise((resolve, reject) => {
-						mocha.run((error) => {
-							error ?
-								reject(error) :
-								resolve();
-						});
+				run: () => new Promise((resolve, reject) => {
+					mocha.run((error) => {
+						error ?
+							reject(error) :
+							resolve();
 					});
-				}
+				})
 			};
 		case 'jasmine':
 			const Jasmine = sandbox.require(
@@ -51,20 +50,46 @@ function prepare(token, config) {
 				spec_files: config.tests
 			});
 			jasmine.configureDefaultReporter({
-				showColors: config.colors === true
+				showColors: config.colors
+				// TODO configurable reporter.
 			});
 
 			return {
-				run: () => {
-					return new Promise((resolve, reject) => {
-						jasmine.onComplete((passed) => {
-							passed ?
-								resolve() :
-								reject(1); // TODO number of fails.
-						});
-						jasmine.execute();
+				run: () => new Promise((resolve, reject) => {
+					jasmine.onComplete((passed) => {
+						passed ?
+							resolve() :
+							reject(1); // TODO number of fails.
 					});
-				}
+					jasmine.execute();
+				})
+			};
+		case 'qunit':
+			const ctx = context(token, config),
+				QUnit = require(
+					find('qunitjs')
+				);
+			QUnit.config.autostart = false;
+			ctx.globals.QUnit = QUnit;
+
+			return {
+				run: () => new Promise((resolve, reject) => {
+					// TODO configurable reporter.
+					QUnit.done((details) => {
+						details.failed ?
+							reject(details.failed) :
+							resolve();
+					});
+					config.tests.map(
+						(name) => sandbox.require(
+							require.resolve(process.cwd() + '/' + name),
+							ctx
+						)
+					);
+
+					QUnit.load();
+					QUnit.start();
+				})
 			};
 		default:
 			// TODO resolve plugins.
@@ -78,6 +103,7 @@ function context(token, config) {
 		queue.chain.forEach((link) => {
 			chain = chain.then(link);
 		});
+		queue.chain = [];
 
 		if (typeof done === 'function') {
 			chain.then(done);
@@ -117,6 +143,19 @@ function context(token, config) {
 		});
 
 		scope.queue = queue;
+
+		if (config.assert) {
+			let assert = require(
+				find(config.assert)
+			);
+			scope.assert = assert.assert || assert;
+		}
+		if (config.expect) {
+			let expect = require(
+				find(config.expect)
+			);
+			scope.expect = expect.expect || expect;
+		}
 	};
 
 	const globals = {
