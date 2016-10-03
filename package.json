@@ -1,7 +1,7 @@
 {
   "name": "tasty-js",
   "title": "Tasty",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "Integration testing helper for web",
   "main": "src/server/main.js",
   "preferGlobal": true,

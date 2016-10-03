@@ -1,15 +1,19 @@
 'use strict';
 
+// NOTE user must inject tool.sync(callback);
+
 module.exports = tool;
 
 tool.hook = hook;
 
-// NOTE user must inject tool.sync(callback);
-
-const log = require('./log'),
+const dom = require('./dom'),
+	log = require('./log'),
 	util = require('./util');
 
-const escape = util.escape,
+const delay = util.delay,
+	escape = util.escape,
+	format = util.format,
+	random = util.random,
 	reason = util.reason,
 	thenable = util.thenable;
 
@@ -78,6 +82,85 @@ function hook(result, key, args) {
 	return thenable(result);
 }
 
+// NOTE client.
+
+tool('client.breakpoint', function breakpoint() {
+	debugger;
+});
+
+tool('client.location', function location(what) {
+	if (!arguments.length) {
+		return window.location.pathname;
+	}
+	// TODO smart matching.
+	what = what instanceof RegExp ?
+		what :
+		new RegExp(escape(what, true));
+
+	if (!what.test(
+			// NOTE slash is escaped.
+			what.source.indexOf('\/') === 0 ?
+				window.location.pathname :
+				window.location.href
+	)) {
+		throw reason('location', window.location.pathname, 'is not', what);
+	}
+});
+
+tool('client.navigate', function navigate(url) {
+	// TODO allow to skip navigation if url already matches.
+	return tool.sync(() => {
+		window.location = url;
+	});
+});
+
+tool('client.reload', function reload() {
+	return tool.sync(() => {
+		window.location.reload(true);
+	});
+});
+
+tool('client.reset', function reset() {
+	return tool.sync(() => {
+		const token = util.session(),
+			done = () => {
+				util.session(token);
+				window.location.reload(true);
+			};
+
+		// NOTE clear cookies.
+		document.cookie.split(';').forEach(
+			(pair) => {
+				document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
+			}
+		);
+		// NOTE clear Storage.
+		localStorage.clear();
+		sessionStorage.clear();
+		// NOTE clear indexedDB.
+		let chain = thenable();
+		if (window.indexedDB && indexedDB.webkitGetDatabaseNames) {
+			let request = indexedDB.webkitGetDatabaseNames();
+			request.onsuccess = (event) => {
+				[].forEach.call(
+					event.target.result,
+					(name) => {
+						chain = chain.then(() => thenable((resolve, reject) => {
+							request = indexedDB.deleteDatabase(name);
+							request.onsuccess = resolve;
+							request.onerror = (event) => log.error(event);
+							request.onblocked = (event) => log.error(event);
+						}));
+					}
+				);
+			};
+			request.onfailure = (event) => log.error(event);
+		}
+		chain.then(done, done);
+		// TODO other.
+	});
+});
+
 // NOTE page.
 
 tool('page.font', function font(family, selector) {
@@ -90,7 +173,7 @@ tool('page.loaded', function loaded(src) {
 		return document.readyState === 'complete';
 	}
 
-	var type = src.toLowerCase().split('.'),
+	let type = src.toLowerCase().split('.'),
 		origin = location.origin ||
 			location.protocol + '//' + location.host,
 		url = origin + src,
@@ -99,7 +182,7 @@ tool('page.loaded', function loaded(src) {
 		case 'appcache':
 			list = [];
 			if (document.documentElement.getAttribute('manifest') === src) {
-				return util.format(document.documentElement);
+				return format(document.documentElement);
 			}
 			break;
 		case 'css':
@@ -128,39 +211,39 @@ tool('page.loaded', function loaded(src) {
 		item = list[i];
 		if (item.src === url || item.href === url) {
 			// TODO try to check if loaded.
-			return util.format(item);
+			return format(item);
 		}
 	}
 
 	throw reason('resource', src, 'not found');
 });
 
-tool('page.text', function text(what, selector) {
+tool('page.text', function text(what, selector, reachable) {
 	what = what instanceof RegExp ?
 		what :
 		new RegExp(escape(what, true));
+	reachable = reachable !== false &&
+		selector !== false;
 
-	// NOTE Node.textContent doesn't respect CSS text-transform, while HTMLElement.innerText does.
-
-	const walker = document.createTreeWalker(
-			document.body,
-			NodeFilter.SHOW_TEXT,
-			null,
-			false
-		),
-		precursor = new RegExp(what.source, 'i'),
-		node, found;
-	while (node = walker.nextNode()) {
-		if (precursor.test(node.textContent) && what.test(node.parentElement.innerText)) {
-			found = node;
-			break;
-		}
-	}
+	let found = dom.find(what, selector);
 	if (!found) {
 		throw reason(
-			selector ? 'node ' + selector + ' with' : '',
-			'text', what, 'not found'
+			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
 		);
+	}
+	found = found.parentElement;
+	if (!dom.is(found, !reachable)) {
+		throw reason(
+			selector ? 'node ' + selector + ' with text' : 'text', what, 'is not fully visible'
+		);
+	}
+	if (reachable) {
+		const [actual] = dom.reach(found);
+		if (actual !== found) {
+			throw reason(
+				'node', format(found), 'with text', what, 'is blocked by node', format(actual)
+			);
+		}
 	}
 });
 
@@ -174,109 +257,89 @@ tool('page.title', function title(what) {
 	}
 });
 
-// NOTE client.
-
-tool('client.location', function location(what) {
-	if (!arguments.length) {
-		return window.location.pathname;
-	}
-	// TODO smart matching.
-	what = what instanceof RegExp ?
-		what :
-		new RegExp(escape(what, true));
-
-	if (!what.test(
-			what.source.indexOf('/') === 0 ?
-				window.location.pathname :
-				window.location.href
-	)) {
-		throw reason('location', window.location.pathname, 'is not', what);
-	}
-});
-
-tool('client.navigate', function navigate(url) {
-	// TODO allow to skip navigation if url already matches.
-	return tool.sync(function() {
-		window.location = url;
-	});
-});
-
-tool('client.reload', function reload() {
-	return tool.sync(function() {
-		window.location.reload(true);
-	});
-});
-
 // NOTE input.
 
-tool('input.click', function click(what, selector) {
+tool('input.click', function click(what, selector, reachable) {
 	what = what instanceof RegExp ?
 		what :
 		new RegExp('^' + escape(what, true) + '$');
+	reachable = reachable !== false &&
+		selector !== false;
 
-	var list = document.querySelectorAll(selector || '*'),
-		found;
-	for (var i = 0; i < list.length; i++) {
-		var node = list[i];
-		if (what.test(node.innerText)) {
-			found = node;
-			break;
-		}
-	}
+	let found = dom.find(what);
 	if (!found) {
 		throw reason(
-			'node', selector ? selector : '',
-			'with text', what, 'not found'
+			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
 		);
 	}
+	found = found.parentElement;
 	if (found.disabled) {
-		throw reason('node', util.format(found), 'is disabled');
+		throw reason(
+			'node', format(found), 'with text', what, 'is disabled'
+		);
 	}
-
-	var rect = found.getBoundingClientRect(),
-		x = util.random(rect.left, rect.left + rect.width),
-		y = util.random(rect.top, rect.top + rect.height),
-		actual = document.elementFromPoint(x, y),
-		parent = actual;
-	while (parent !== found) {
-		if (!(parent = parent.parentElement)) {
-			throw reason(
-				'node', util.format(found),
-				'with text', what, 'is covered by node',
-				util.format(actual)
-			);
-		}
+	if (!dom.is(found, !reachable)) {
+		throw reason(
+			selector ? 'node ' + selector + ' with text' : 'text', what, 'is not fully visible'
+		);
 	}
-
-	actual.dispatchEvent(
-		new MouseEvent('click', {
-			bubbles: true,
-			cancelable: true,
-			screenX: x,
-			screenY: y
-		})
-	);
+	const [actual, x, y] = dom.reach(found);
+	if (reachable && actual !== found) {
+		throw reason(
+			'node', format(found), 'with text', what, 'is blocked by node', format(actual)
+		);
+	}
+	dom.click(actual);
 });
 
-tool('input.press', function press() {
-	throw reason('not implemented yet, sorry');
+tool('input.paste', function paste(text) {
+	const target = document.activeElement;
+	if (typeof target.value === 'undefined') {
+		throw reason('cannot type into active node', format(target));
+	}
+
+	const value = target.value,
+		start = target.selectionStart || value.length,
+		end = target.selectionEnd || value.length;
+	target.value = value.substr(0, start) +
+		text +
+		value.substr(end, value.length);
+
+	dom.trigger(target, 'ClipboardEvent', 'paste', true, true);
+	typeof window.oninput === 'undefined' ?
+		dom.trigger(target, 'Event', 'change', true, false) :
+		dom.trigger(target, 'Event', 'input', true, false);
 });
 
 tool('input.type', function type(text) {
-	var actual = document.activeElement;
+	const target = document.activeElement;
+	if (typeof target.value === 'undefined') {
+		throw reason('cannot type into active node', format(target));
+	}
 
-	return thenable(function(resolve) {
-		[].forEach.call(text, function(char) {
-			actual.value = actual.value + char;
-			if (document.createEvent) {
-				var event = document.createEvent('HTMLEvents');
-				event.initEvent('change', false, true);
-				actual.dispatchEvent(event);
-			} else {
-				actual.fireEvent('onchange');
-			}
+	return thenable((resolve) => {
+		let chain = thenable();
+		[].forEach.call(text, (char) => {
+			chain = chain
+				.then(
+					() => {
+						const value = target.value,
+							start = target.selectionStart || value.length,
+							end = target.selectionEnd || value.length;
+						target.value = value.substr(0, start) +
+							char +
+							value.substr(end, value.length);
+
+						typeof window.oninput === 'undefined' ?
+							dom.trigger(target, 'Event', 'change', true, false) :
+							dom.trigger(target, 'Event', 'input', true, false);
+					}
+				)
+				.then(
+					delay(random(1, 100))
+				);
 		});
 
-		resolve();
+		resolve(chain);
 	});
 });

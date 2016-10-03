@@ -151,6 +151,7 @@ function register(persistent, method, value, filter) {
 
 // NOTE client.
 
+tool('client.breakpoint');
 tool('client.exec', function exec(fn, ...args) {
 	return tool.server.exec(this, fn.toString(), args);
 });
@@ -163,6 +164,11 @@ tool('client.ready', function ready(...args) {
 });
 
 tool('client.reload', true);
+tool('client.reset', function reset() {
+	delete tool.server.exec.persistent[this];
+
+	return tool.server.send(this, 'tool', ['client.reset'], true);
+});
 
 // NOTE page.
 
@@ -179,8 +185,7 @@ tool('page.title');
 // NOTE input.
 
 tool('input.click');
-tool('input.press');
-tool('input.ready');
+tool('input.paste');
 tool('input.type');
 
 // NOTE runner.

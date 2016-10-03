@@ -25,6 +25,7 @@ const DEFAULTS = {
 	server: {
 		url: 'http://0.0.0.0:8765'
 	},
+	slow: 0,
 	static: {
 		url: 'http://0.0.0.0:5678',
 		root: '.'
@@ -72,6 +73,10 @@ function tasty(config) {
 					) :
 					null
 			);
+	}
+	config.slow = parseInt(config.slow, 10);
+	if (isNaN(config.slow)) {
+		config.slow = 1000;
 	}
 	if (config.static) {
 		const root = config.static.root ||

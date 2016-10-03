@@ -29,25 +29,28 @@ if (Object.keys(config).length === 1 && config.version === true) {
 		require('../package.json').version
 	);
 	process.exit(0);
-} else if (Object.keys(config).length === 1 && config.help === true) {
+} else if (!Object.keys(config).length || Object.keys(config).length === 1 && config.help === true) {
 	console.log(
 `Usage: tasty --include=glob ...
-	--assert=name
-	--expect=name
-	--exclude=test/lib/*.js
-	--exit=true|false
-	--globals=true|false
-	--include=test/*.js
-	--mode=single|multiple
-	--log=true|false
-	--runner=mocha|jasmine|qunit
-	--server
-	--server=true|false
-	--server-url=http://localhost:8765/path
-	--static
-	--static=true|false
-	--static-url=http://localhost:5678/path
-	--static-root=path/to/root`
+
+  --assert=module-name
+  --bail=true|false
+  --expect=module-name
+  --exclude=file-glob
+  --exit=true|false
+  --globals=true|false
+  --include=file-glob
+  --mode=single|multiple
+  --log=true|false
+  --runner=module-name|mocha|jasmine|qunit
+  --server
+  --server=true|false
+  --server-url=http://localhost:8765/path
+  --static
+  --static=true|false
+  --static-url=http://localhost:5678/path
+  --static-root=path
+`
 	);
 	process.exit(0);
 } else {

@@ -17,6 +17,8 @@ function prepare(token, config) {
 		return config.runner;
 	}
 	log('client', token, 'runner', config.runner, 'in', config.mode, 'mode');
+	config.slow &&
+		log('client', token, 'slow', config.slow, 'ms');
 
 	// WORKAROUND for internal state.
 	Object.keys(require.cache).forEach(
@@ -98,12 +100,10 @@ function prepare(token, config) {
 			// NOTE QUnit doesn't have built-in console reporter.
 			// TODO nested modules and colors.
 			// TODO separate into tasty-qunit-reporter module.
-			let total = 0;
-			QUnit.begin(
-				(details) => {
-					total = details.totalTests;
-				}
-			);
+			let passed = 0,
+				failed = 0,
+				skipped = 0,
+				errors = [];
 			QUnit.moduleStart(
 				(details) => {
 					console.log();
@@ -111,16 +111,33 @@ function prepare(token, config) {
 				}
 			);
 			QUnit.testDone(
-				(details) => console.log(`    ${details.failed ? '×' : details.passed ? '+' : '-'} ${details.name}${details.total ? ' (' + details.runtime + 'ms)' : ''}`)
+				(details) => {
+					details.failed ?
+						failed++ :
+						details.passed ?
+							passed++ :
+							skipped++;
+					console.log(`    ${details.failed ? '×' : details.passed ? '+' : '-'} ${details.name}${details.total ? ' (' + details.runtime + 'ms)' : ''}`);
+				}
+			);
+			QUnit.log(
+				(details) => details.result || errors.push(details)
 			);
 			QUnit.done(
 				(details) => {
 					console.log();
-					details.failed &&
-						console.log(`  ${details.failed} failed`);
-					console.log(`  ${details.passed} passed (${details.runtime}ms)`);
-					console.log(`  ${total - details.failed - details.passed} skipped`);
+					console.log(`  ${passed} passed (${details.runtime}ms)`);
+					failed &&
+						console.log(`  ${failed} failed`);
+					skipped &&
+						console.log(`  ${skipped} skipped`);
 					console.log();
+					errors.forEach((details) => {
+						console.log(`  ${details.name} ${details.module}`);
+						console.log(`  ${details.message || (details.actual + ' is not ' + details.expected)}`);
+						console.log(`${details.source}`);
+						console.log();
+					});
 				}
 			);
 
@@ -164,15 +181,15 @@ function context(token, config) {
 			require(resolve(config.expect)) :
 			null;
 
-	const queue = function queue(link) {
-		if (link) {
-			if (typeof link !== 'function') {
-				throw new Error('push functions to queue');
-			}
-			queue.push(link);
+	const queue = function queue(...links) {
+		if (links.length) {
+			queue.push(...links);
 		} else {
 			let chain = Promise.resolve();
 			queue.chain.forEach((link) => {
+				if (typeof link !== 'function') {
+					throw new Error('push functions to queue');
+				}
 				chain = chain.then(link);
 			});
 			queue.chain = [];
@@ -181,11 +198,17 @@ function context(token, config) {
 		}
 	};
 	queue.chain = [];
-	queue.push = (link) => queue.chain.push(link);
+	queue.push = (...links) => {
+		config.slow &&
+			queue.chain.push(() => new Promise(
+				(resolve) => setTimeout(resolve, config.slow)
+			));
+		queue.chain.push(...links);
+	}
 
 	// NOTE support for for runner.get/set/pop/push/until/while.
 	const wrap = (tool) => (...args) => new Promise(
-		(resolve, reject) => queue.push(
+		(resolve) => queue.push(
 			() => tool.apply(token, args).then(resolve)
 		)
 	);

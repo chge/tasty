@@ -1,5 +1,6 @@
 # Tasty
 
+[![npm](https://img.shields.io/npm/v/tasty-js.svg?maxAge=2592000)](https://www.npmjs.com/package/tasty-js)
 [![Build Status](https://travis-ci.org/chge/tasty.svg?branch=master)](https://travis-ci.org/chge/tasty)
 
 Tasty helps test assembled web applications in nearly-production environments on real clients as a real user.
@@ -312,7 +313,8 @@ client.location(): string
 client.location(what?: string | RegExp): void
 client.navigate(url: string): void
 client.reload(): void
-input.click(what?: string | RegExp, selector?: string): void
+input.click(what?: string | RegExp, selector?: string, reachable = true): void
+input.paste(text: string): void
 input.type(text: string): void
 runner.get(key: string): any
 runner.pop(): any

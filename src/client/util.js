@@ -3,10 +3,13 @@
 // NOTE user must inject include.server;
 
 module.exports = {
+	delay: delay,
 	escape: escape,
 	format: format,
 	include: include,
+	random: random,
 	reason: reason,
+	session: session,
 	thenable: thenable
 };
 
@@ -14,7 +17,7 @@ const Promise = global.Promise ||
 	require('./promise');
 
 function include(src, callback) {
-	var script = document.createElement('script');
+	const script = document.createElement('script');
 	script.src = include.server + src;
 	script.onload = callback;
 	document.getElementsByTagName('head')[0].appendChild(script);
@@ -26,6 +29,20 @@ function thenable(value) {
 		typeof value === 'function' ?
 			new Promise(value) :
 			Promise.resolve(value);
+}
+
+// TODO store session in cookie?
+function session(value) {
+	session.key = session.key || '__tasty';
+	if (arguments.length) {
+		if (value) {
+			sessionStorage[session.key] = value;
+		} else {
+			delete sessionStorage[session.key];
+		}
+	}
+
+	return sessionStorage[session.key];
 }
 
 function reason() {
@@ -67,6 +84,12 @@ function escape(source, regexp) {
 			.replace(/\r/g, '\\r')
 			.replace(/\n/g, '\\n')
 			.replace(/\t/g, '\\t');
+}
+
+function delay(ms) {
+	return () => thenable(
+		(resolve) => setTimeout(resolve, ms | 0)
+	);
 }
 
 function random(min, max) {

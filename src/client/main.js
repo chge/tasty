@@ -11,7 +11,7 @@ const reason = util.reason,
 
 tasty.connect = connect;
 tasty.hook = tool.hook;
-tasty.session = session;
+tasty.session = util.session;
 tasty.thenable = thenable;
 tasty.tool = tool;
 
@@ -46,7 +46,8 @@ function connect() {
 
 	util.include('socket.io.js', () => {
 		// TODO bundle socket.io client to leave global scope clean.
-		const socket = global.io(server, {multiplex: false})
+		const io = window.io || require('socket.io-client');
+		const socket = io(server, {multiplex: false})
 			.on('connect', () => {connected(socket)});
 	});
 }
@@ -57,9 +58,22 @@ function connected(socket) {
 
 	tool.sync = sync.bind(socket);
 
-	socket.on('tool', function(data, callback) {
+	socket.on('tool', (data, callback) => {
 		const name = data[0],
 			args = data.slice(1);
+
+		const respond = (result) => {
+			if (result instanceof Error) {
+				log.error(result);
+				result = [util.format(result)];
+			} else {
+				result = [null, result];
+			}
+			reconnect = false;
+
+			// WORKAROUND
+			setTimeout(() => callback(result), 1);
+		};
 
 		thenable(
 			reconnect ?
@@ -67,23 +81,7 @@ function connected(socket) {
 				null
 		)
 			.then(() => tool(name, args))
-			.then(
-				(result) => {
-					if (result instanceof Error) {
-						log.error(error);
-						callback([util.format(result)]);
-					} else {
-						callback([null, result]);
-					}
-				},
-				(error) => {
-					log.error(error);
-					callback([util.format(error)]);
-				}
-			)
-			.then(() => {
-				reconnect = false;
-			});
+			.then(respond, respond);
 	});
 
 	socket.on('message', (text, callback) => {
@@ -123,17 +121,3 @@ function sync(callback) {
 		this.emit('sync', tasty.session(), callback);
 	});
 }
-
-// TODO store session in cookie?
-function session(value) {
-	session.key = session.key || '__tasty';
-	if (arguments.length) {
-		if (value) {
-			sessionStorage[session.key] = value;
-		} else {
-			delete sessionStorage[session.key];
-		}
-	}
-
-	return sessionStorage[session.key];
-};

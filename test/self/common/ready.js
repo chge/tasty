@@ -5,7 +5,7 @@ module.exports = [
 		name: 'client.ready',
 		timeout: 5000,
 		afterEach: () => {
-			delete tasty.tool.server.exec.persistent;
+			client.reset();
 		},
 		specs: [
 			{
@@ -45,7 +45,7 @@ module.exports = [
 				body: () => {
 					client.ready('exec', function(tasty) {
 						return tasty.thenable(function(resolve) {
-							setTimeout(resolve, 1100);
+							setTimeout(resolve, 1000);
 						});
 					});
 					client.navigate('/async.html');
