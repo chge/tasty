@@ -10,46 +10,46 @@ module.exports = [
 				body: () => {
 					client.navigate('/test.html');
 					client.location('/test.html');
-					dom.title('Tasty test');
+					page.title('Tasty test');
 					client.navigate('/other.html');
 					client.location('/other.html');
-					dom.title('Tasty other');
+					page.title('Tasty other');
 				}
 			}
 		]
 	},
 	{
-		name: 'dom.loaded',
+		name: 'page.loaded',
 		specs: [
 			{
 				name: 'checks resource',
 				time: 500,
 				body: () => {
 					client.navigate('/test.html');
-					dom.loaded('/manifest.appcache');
-					dom.loaded('/test.css');
-					dom.loaded('/test.js');
-					dom.loaded('/favicon.png');
+					page.loaded('/manifest.appcache');
+					page.loaded('/test.css');
+					page.loaded('/test.js');
+					page.loaded('/favicon.png');
 					client.navigate('/other.html');
-					dom.loaded('/manifest.appcache');
-					dom.loaded('/test.css');
-					dom.loaded('/test.js');
-					dom.loaded('/favicon.png');
+					page.loaded('/manifest.appcache');
+					page.loaded('/other.css');
+					page.loaded('/other.js');
+					page.loaded('/favicon.png');
 				}
 			}
 		]
 	},
 	{
-		name: 'dom.text',
+		name: 'page.text',
 		specs: [
 			{
 				name: 'checks text',
 				time: 750,
 				body: () => {
 					client.navigate('/test.html');
-					dom.text('Test');
+					page.text('Test');
 					client.navigate('/other.html');
-					dom.text('Other');
+					page.text('Other');
 				}
 			}
 		]

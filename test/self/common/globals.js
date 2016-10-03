@@ -3,7 +3,6 @@
 module.exports = [
 	{
 		name: 'globals',
-		skip: !tasty.config.assert || !tasty.config.expect,
 		specs: [
 			{
 				name: 'are not defined before call',
@@ -16,12 +15,14 @@ module.exports = [
 			},
 			{
 				name: 'require scope',
+				skip: !tasty.config.expect,
 				body: () => {
 					expect(() => tasty.globals()).to.throw(Error);
 				}
 			},
 			{
 				name: 'are defined after call',
+				skip: !tasty.config.expect,
 				body: () => {
 					tasty.globals(global);
 

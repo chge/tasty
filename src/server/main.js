@@ -20,6 +20,7 @@ const DEFAULTS = {
 	globals: true,
 	include: '',
 	log: true,
+	mode: 'single',
 	runner: 'mocha',
 	server: {
 		url: 'http://0.0.0.0:8765'
@@ -36,7 +37,8 @@ tasty.start = start;
 tasty.tool = tool;
 
 tool.server = {
-	emit: server.emit
+	exec: server.exec,
+	send: server.send
 };
 
 function tasty(config) {
@@ -46,6 +48,12 @@ function tasty(config) {
 		console :
 		config.log;
 
+	if (config.runner === 'qunit' && config.bail) {
+		throw new Error('QUnit doesn\'t support bail');
+	}
+	if (config.runner === 'jasmine' && config.bail) {
+		throw new Error('Jasmine doesn\'t support bail');
+	}
 	config.tests = config.include ?
 		glob.sync(config.include, {ignore: config.exclude}) :
 		[];
@@ -96,5 +104,6 @@ function start() {
 }
 
 function finish() {
+	// TODO report.
 	server.close();
 }

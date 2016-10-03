@@ -2,8 +2,9 @@
 
 module.exports = {
 	close: close,
-	emit: emit,
-	listen: listen
+	exec: exec,
+	listen: listen,
+	send: send
 };
 
 const Emitter = require('events'),
@@ -28,26 +29,33 @@ function listen(config) {
 		switch (request.url) {
 			case '/':
 			case config.server.path:
-				response.setHeader('Content-Type', 'text/plain');
+				response.setHeader('Content-Type', mime('txt'));
 				response.writeHead('400');
 				response.end(`400 Bad Request\nLoad ${url.format(config.server)}tasty.js on your page.`);
 				break;
 			case config.server.path + 'tasty.js':
-				response.setHeader('Content-Type', 'application/javascript');
+				response.setHeader('Content-Type', mime('js'));
 				response.end(
-					fs.readFileSync(__dirname + '/client.js')
+					fs.readFileSync(__dirname + '/../../dist/tasty.js')
 				);
 				break;
 			case config.server.path + 'socket.io.js':
-				response.setHeader('Content-Type', 'application/javascript');
+				response.setHeader('Content-Type', mime('js'));
 				response.end(
-					fs.readFileSync(__dirname + '/../node_modules/socket.io-client/socket.io.js')
+					fs.readFileSync(__dirname + '/../../node_modules/socket.io-client/socket.io.js')
 				);
 				break;
 			default:
-				response.setHeader('Content-Type', 'text/plain');
-				response.writeHead('404');
-				response.end('404 Not Found');
+				if (exec.code[request.url]) {
+					response.setHeader('Content-Type', mime('js'));
+					response.end(
+						exec.code[request.url]
+					);
+				} else {
+					response.setHeader('Content-Type', mime('txt'));
+					response.writeHead('404');
+					response.end('404 Not Found');
+				}
 		}
 	})
 		.listen(
@@ -88,11 +96,6 @@ function listen(config) {
 							finish(runner.token, config);
 						});
 			});
-
-			// WORKAROUND for forked runners.
-			socket.on('bridge', (args, callback) => {
-				emit(...args, true).then(callback);
-			});
 		});
 
 	if (config.static) {
@@ -100,17 +103,19 @@ function listen(config) {
 
 		statics = http.createServer((request, response) => {
 			try {
-				let path = config.static.root + request.url;
+				const path = config.static.root + request.url;
 				if (fs.existsSync(path)) {
-					// TODO MIME.
+					response.setHeader('Content-Type', mime(path));
 					response.end(
 						fs.readFileSync(path)
 					);
 				} else {
+					response.setHeader('Content-Type', mime('txt'));
 					response.writeHead(404);
 					response.end('404 Not Found');
 				}
 			} catch (thrown) {
+				response.setHeader('Content-Type', mime('txt'));
 				response.writeHead(500);
 				response.end('500 ' + thrown);
 			}
@@ -137,23 +142,40 @@ function close() {
 }
 
 function register(token, socket, config) {
-	token = token | 0;
-	register.token = register.token | 0;
+	register.count = register.count | 0;
 	let runner;
 
-	if (token) {
-		runner = runners[token]
-		if (runner) {
+	if (token && token.length === 4 && (runner = runners[token])) {
+		if (config.mode === 'single') {
+			// TODO stop runner.
+			delete runners[token];
+		} else {
 			socket.join(token);
 
-			runner.finish ?
-				finish(token, config) :
-				emitter.emit('reconnect' + token);
+			if (runner.finish) {
+				finish(token, config);
+			} else {
+				// TODO chain?
+				const keys = exec.persistent ?
+					exec.persistent[token] :
+					null;
+				Promise.all(
+					keys ?
+						Object.keys(keys).map(
+							(key) => send(token, 'exec', key.slice(1), keys[key])
+						) :
+						[]
+				)
+					.then(
+						() => emitter.emit('reconnect.' + token)
+					);
+			}
 
 			return null;
 		}
 	}
-	token = ++register.token;
+	// TODO better.
+	token = ('' + (++register.count) + random(0, 9) + random(0, 9) + random(0, 9)).substr(0, 4);
 
 	socket.join(token);
 
@@ -163,22 +185,22 @@ function register(token, socket, config) {
 	return runner;
 }
 
-function emit(token, name, data, reconnect) {
+function send(token, name, data, reconnect) {
 	// WORKAROUND: we use socket.io rooms to handle reconnects properly.
 	return new Promise((resolve, reject) => {
 		io.in(token).clients(function (error, ids) {
 			ids.forEach((id) => {
 				io.connected[id].emit(name, data, (response) => {
-					let result = response[0],
-						error = response[1];
+					let error = response[0],
+						result = response[1];
 					if (error) {
 						error = Object.assign(new Error(), error);
 						reconnect ?
-							emitter.once('reconnect' + token, () => reject(error)) :
+							emitter.once('reconnect.' + token, () => reject(error)) :
 							reject(error);
 					} else {
 						reconnect ?
-							emitter.once('reconnect' + token, () => resolve(result)) :
+							emitter.once('reconnect.' + token, () => resolve(result)) :
 							resolve(result);
 					}
 				})
@@ -187,15 +209,66 @@ function emit(token, name, data, reconnect) {
 	});
 }
 
+function exec(token, code, args, reconnect, persistent) {
+	let id = ++exec.id,
+		key = '/exec.' + token + '.' + id + '.js',
+		values = JSON.stringify(args);
+
+	exec.code[key] = `(${code}).apply(this,${values});`;
+	if (persistent) {
+		exec.persistent = exec.persistent || {};
+		exec.persistent[token] = exec.persistent[token] || {};
+		exec.persistent[token][key] = !!reconnect;
+	}
+
+	return send(token, 'exec', key.slice(1), reconnect)
+		.then(() => {
+			if (!persistent) {
+				delete exec[key];
+			}
+		});
+}
+exec.id = 0;
+exec.code = {};
+exec.persistent = {};
+
 function finish(token, config) {
-	emit(token, 'finish', null)
+	return send(token, 'finish', null)
 		.then(() => null, (error) => error)
 		.then((error) => {
 			log('client', token, 'finished');
 
-			config.exit &&
-				process.exit(
-					runners[token] && runners[token].error || error
-				);
+			if (exec.persistent) {
+				delete exec.persistent[token];
+			}
+
+			// TODO via API.
+			if (config.exit) {
+				const code = (runners[token] && runners[token].error || error) | 0;
+
+				log('exit', code);
+
+				process.exit(code);
+			}
 		});
+}
+
+function mime(path) {
+	const TYPE = {
+		css: 'text/css',
+		htm: 'text/html',
+		html: 'text/html',
+		js: 'application/javascript',
+		txt: 'text/plain'
+	};
+
+	let ext = path.split('.');
+	ext = ext[ext.length - 1];
+
+	return TYPE[ext] ||
+		'application/octet-stream';
+}
+
+function random(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
 }

@@ -1,9 +1,9 @@
 {
   "name": "tasty-js",
   "title": "Tasty",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Integration testing helper for web",
-  "main": "src/main.js",
+  "main": "src/server/main.js",
   "preferGlobal": true,
   "bin": {
     "tasty": "./src/cli.js"
@@ -14,15 +14,15 @@
     "socket.io": "^1.4.8",
     "tasty-sandbox": "^2.0.5"
   },
-  "devDependencies": {
-    "chai": "^3.5.0",
-    "jasmine": "^2.5.2",
-    "mocha": "^3.1.0",
-    "qunitjs": "^2.0.1"
-  },
   "scripts": {
-    "test": "node --harmony test/run.js",
-    "selftest": "printf 'Navigate browser to http://localhost:5678/test.html\\n\\n' && node --harmony ./src/cli.js --runner=mocha --assert=chai --expect=chai --static-root=test/res --include=test/self/mocha/*.js && printf '\\nNavigate browser to http://localhost:5678/test.html\\n\\n' && node --harmony ./src/cli.js --runner=jasmine --static-root=test/res --include=test/self/jasmine/*.js && printf '\\nNavigate browser to http://localhost:5678/test.html\\n\\n' && node --harmony ./src/cli.js --runner=qunit --static-root=test/res --include=test/self/qunit/*.js"
+    "prepublish": "node --harmony src/build",
+    "pretest": "npm install chai mocha jasmine qunitjs",
+    "selftest": "npm run selftest-before && npm run selftest-jasmine && npm run selftest-mocha && npm run selftest-qunit",
+    "selftest-before": "npm install jasmine-spec-reporter",
+    "selftest-jasmine": "node --harmony ./src/cli.js --colors --include=test/self/jasmine/*.js --mode=multiple --reporter=jasmine-spec-reporter --runner=jasmine --static-root=test/res",
+    "selftest-mocha": "node --harmony ./src/cli.js --assert=chai --expect=chai --colors --runner=mocha --mode=multiple --static-root=test/res --include=test/self/mocha/*.js",
+    "selftest-qunit": "node --harmony ./src/cli.js --colors --runner=qunit --mode=multiple --static-root=test/res --include=test/self/qunit/*.js",
+    "test": "node --harmony test/run.js --colors"
   },
   "repository": {
     "type": "git",

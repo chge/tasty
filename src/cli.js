@@ -4,7 +4,7 @@
 
 process.title = 'Tasty';
 
-let tasty = require('./main');
+let tasty = require('./server/main');
 
 // TODO use minimist.
 let config = {};
@@ -38,6 +38,7 @@ if (Object.keys(config).length === 1 && config.version === true) {
 	--exit=true|false
 	--globals=true|false
 	--include=test/*.js
+	--mode=single|multiple
 	--log=true|false
 	--runner=mocha|jasmine|qunit
 	--server

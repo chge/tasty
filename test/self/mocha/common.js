@@ -5,10 +5,15 @@ const glob = require('glob'),
 files.map(file => require(file)).forEach(suites => suites.forEach(suite => {
 
 	suite.skip ?
-		describe.skip(suite.name) :
+		describe.skip(suite.name, function() {}) :
 		describe(suite.name, function() {
+			suite.beforeEach &&
+				beforeEach(suite.beforeEach);
+			suite.afterEach &&
+				afterEach(suite.afterEach);
 			suite.timeout &&
 				this.timeout(suite.timeout);
+
 			suite.specs.map((spec) => {
 				spec.skip ?
 					it.skip(spec.name) :
@@ -17,7 +22,9 @@ files.map(file => require(file)).forEach(suites => suites.forEach(suite => {
 							this.timeout(spec.timeout);
 						spec.time &&
 							this.slow(spec.time);
+
 						spec.body();
+
 						return queue();
 					});
 			});
