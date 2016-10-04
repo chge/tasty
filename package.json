@@ -1,7 +1,7 @@
 {
   "name": "tasty-js",
   "title": "Tasty",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "description": "Integration testing helper for web",
   "main": "src/server/main.js",
   "preferGlobal": true,
@@ -14,15 +14,28 @@
     "socket.io": "^1.4.8",
     "tasty-sandbox": "^2.0.5"
   },
+  "devDependencies": {
+    "browserify": "^13.1.0",
+    "chai": "^3.5.0",
+    "chai-http": "^3.0.0",
+    "coveralls": "^2.11.14",
+    "istanbul": "^0.4.5",
+    "jasmine": "^2.5.2",
+    "mocha": "^3.1.0",
+    "qunitjs": "^2.0.1",
+    "typescript": "^2.0.3"
+  },
   "scripts": {
     "prepublish": "node --harmony src/build",
-    "pretest": "npm install chai mocha jasmine qunitjs",
-    "selftest": "npm run selftest-before && npm run selftest-jasmine && npm run selftest-mocha && npm run selftest-qunit",
-    "selftest-before": "npm install jasmine-spec-reporter",
-    "selftest-jasmine": "node --harmony ./src/cli.js --colors --include=test/self/jasmine/*.js --mode=multiple --reporter=jasmine-spec-reporter --runner=jasmine --static-root=test/res",
-    "selftest-mocha": "node --harmony ./src/cli.js --assert=chai --expect=chai --colors --runner=mocha --mode=multiple --static-root=test/res --include=test/self/mocha/*.js",
-    "selftest-qunit": "node --harmony ./src/cli.js --colors --runner=qunit --mode=multiple --static-root=test/res --include=test/self/qunit/*.js",
-    "test": "node --harmony test/run.js --colors"
+    "selftest": "npm run selftest:before && npm run selftest:jasmine && npm run selftest:mocha && npm run selftest:qunit",
+    "selftest:before": "npm install jasmine-spec-reporter",
+    "selftest:jasmine": "node --harmony ./src/cli.js --colors --include=test/self/jasmine/*.js --reporter=jasmine-spec-reporter --runner=jasmine --static-root=test/res",
+    "selftest:mocha": "node --harmony ./src/cli.js --assert=chai --expect=chai --colors --runner=mocha --static-root=test/res --include=test/self/mocha/*.js",
+    "selftest:qunit": "node --harmony ./src/cli.js --colors --runner=qunit --static-root=test/res --include=test/self/qunit/*.js",
+    "test": "npm run test:cover && npm run test:report",
+    "test:run": "node --harmony ./node_modules/mocha/bin/mocha --ui bdd --colors test/spec/*.js",
+    "test:cover": "node --harmony ./node_modules/istanbul/lib/cli cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --ui bdd --colors test/spec/*.js",
+    "test:report": "node --harmony ./node_modules/coveralls/bin/coveralls < ./coverage/lcov.info"
   },
   "repository": {
     "type": "git",

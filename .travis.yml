@@ -17,8 +17,5 @@ node_js:
   - 5.9
   - 4
 
-before_install:
-  - npm install -g browserify typescript
-
 notifications:
   email: false

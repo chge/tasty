@@ -14,13 +14,16 @@ const DEFAULTS = {
 	assert: false,
 	autorun: true,
 	bail: false,
+	coverage: {
+		instrumenter: '',
+		reporter: ''
+	},
 	exclude: '',
 	exit: true,
 	expect: false,
 	globals: true,
 	include: '',
-	log: true,
-	mode: 'single',
+	log: false,
 	runner: 'mocha',
 	server: {
 		url: 'http://0.0.0.0:8765'

@@ -164,10 +164,14 @@ tool('client.ready', function ready(...args) {
 });
 
 tool('client.reload', true);
-tool('client.reset', function reset() {
-	delete tool.server.exec.persistent[this];
+tool('client.reset', function reset(url, persistent) {
+	persistent = url !== false &&
+		persistent !== false;
+	if (persistent) {
+		delete tool.server.exec.persistent[this];
+	}
 
-	return tool.server.send(this, 'tool', ['client.reset'], true);
+	return tool.server.send(this, 'tool', ['client.reset', url], true);
 });
 
 // NOTE page.

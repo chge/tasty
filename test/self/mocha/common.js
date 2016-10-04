@@ -5,10 +5,10 @@ const glob = require('glob'),
 files.map(file => require(file)).forEach(suites => suites.forEach(suite => {
 
 	function run(fn, timeout, time) {
-		spec.timeout &&
-			this.timeout(spec.timeout);
-		spec.time &&
-			this.slow(spec.time);
+		timeout &&
+			this.timeout(timeout);
+		time &&
+			this.slow(time);
 		fn();
 
 		return queue();

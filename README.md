@@ -2,6 +2,8 @@
 
 [![npm](https://img.shields.io/npm/v/tasty-js.svg?maxAge=2592000)](https://www.npmjs.com/package/tasty-js)
 [![Build Status](https://travis-ci.org/chge/tasty.svg?branch=master)](https://travis-ci.org/chge/tasty)
+[![Coverage Status](https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master)](https://coveralls.io/github/chge/tasty?branch=master)
+[![Code Climate](https://codeclimate.com/github/chge/tasty/badges/gpa.svg)](https://codeclimate.com/github/chge/tasty)
 
 Tasty helps test assembled web applications in nearly-production environments on real clients as a real user.
 
@@ -85,9 +87,7 @@ Open your application in your clients. Tasty will run tests, print all output an
 
 Tasty server is a bridge between client and test runner, that runs tests written using Tasty tools.
 
-You can run built-in static server by passing `--static` flag. Use `--exit=false` flag to run on several clients.
-
-See `tasty --help` for more information.
+Use `--exit=false` flag to run on several clients. See `tasty --help` for more information.
 
 # Client
 
@@ -101,6 +101,16 @@ There are built-in runners for [Mocha](https://mochajs.org/), [Jasmine](https://
 
 [Chai](http://chaijs.com/) and other assertion/expectation libraries are supported by providing `--assert=name` and/or `--expect=name` flags.
 
+# Static server
+
+You can run built-in static server by passing `--static-root=path` and `--static-url=URL` flags.
+The `--static` flag alone runs static server from CWD on `http://localhost:5678/`.
+
+# Code coverage
+
+When serving application from own server, you should instrument JavaScript code for coverage by yourself.
+Tasty's static server has built-in support for [Istanbul](https://gotwarlost.github.io/istanbul/) to automatically do it for you.
+
 # CSP
 
 For Tasty server running on `localhost:8765/path` you should add the following CSP directives for Tasty client to work properly:
@@ -110,7 +120,16 @@ connect-src localhost:8765/path ws://localhost:8765/path wss://localhost:8765/pa
 script-src localhost:8765/path/*.js
 ```
 
+Unfortunately, [Istanbul](https://gotwarlost.github.io/istanbul)'s coverage instrumenter uses `new Function()` to get top-level scope.
+To use it, you have to add the following directive:
+
+```
+script-src 'unsafe-eval'
+```
+
 Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.
+
+Check out a [great tool](https://report-uri.io/home/generate) for generating and validating CSP directives.
 
 # Tools
 
@@ -196,7 +215,7 @@ it('remembers', function(done) {
 	);
 	page.text(
 		runner.get('subtitle'),
-		'h1'
+		'h2'
 	);
 
 	return queue();
@@ -346,17 +365,15 @@ Use [Let's encrypt](https://letsencrypt.org/).
 
 # Building
 
-In order to build client module, you'll need [Browserify](http://browserify.org/) and [TypeScript](https://www.typescriptlang.org/) installed (globally or locally).
-
 ```shell
-npm install -g browserify typescript
+npm run prepublish
 ```
 
-```shell
-npm install
-```
+# Testing
 
-# Self-testing
+```shell
+npm run test:run
+```
 
 ```shell
 npm run selftest

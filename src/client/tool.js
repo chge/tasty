@@ -120,12 +120,14 @@ tool('client.reload', function reload() {
 	});
 });
 
-tool('client.reset', function reset() {
+tool('client.reset', function reset(url) {
 	return tool.sync(() => {
 		const token = util.session(),
 			done = () => {
 				util.session(token);
-				window.location.reload(true);
+				typeof url === 'string' ?
+					(window.location = url) :
+					window.location.reload(true);
 			};
 
 		// NOTE clear cookies.
@@ -241,7 +243,7 @@ tool('page.text', function text(what, selector, reachable) {
 		const [actual] = dom.reach(found);
 		if (actual !== found) {
 			throw reason(
-				'node', format(found), 'with text', what, 'is blocked by node', format(actual)
+				'node', format(found), 'with text', what, 'is covered by node', format(actual)
 			);
 		}
 	}
@@ -286,7 +288,7 @@ tool('input.click', function click(what, selector, reachable) {
 	const [actual, x, y] = dom.reach(found);
 	if (reachable && actual !== found) {
 		throw reason(
-			'node', format(found), 'with text', what, 'is blocked by node', format(actual)
+			'node', format(found), 'with text', what, 'is covered by node', format(actual)
 		);
 	}
 	dom.click(actual);

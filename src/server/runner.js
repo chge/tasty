@@ -8,15 +8,19 @@ module.exports = {
 const sandbox = require('tasty-sandbox');
 
 const log = require('./log'),
-	tool = require('./tool');
+	tool = require('./tool'),
+	util = require('./util');
+
+const rename = util.rename,
+	resolve = util.resolve;
 
 function prepare(token, config) {
 	if (config.runner && config.runner.run) {
-		log('client', token, 'runner', config.runner.name || 'custom', 'in', config.mode, 'mode');
+		log('client', token, 'runner', config.runner.name || 'custom');
 
 		return config.runner;
 	}
-	log('client', token, 'runner', config.runner, 'in', config.mode, 'mode');
+	log('client', token, 'runner', config.runner);
 	config.slow &&
 		log('client', token, 'slow', config.slow, 'ms');
 
@@ -263,30 +267,4 @@ function context(token, config) {
 	return {
 		globals: globals
 	};
-}
-
-function resolve(name) {
-	try {
-		return require.resolve(name);
-	} catch (thrown) {
-		try {
-			return require.resolve(process.cwd() + '/node_modules/' + name);
-		} catch (thrown) {
-			const path = require('requireg').resolve(name);
-			if (!path) {
-				throw new Error(`Cannot find module '${name}'`);
-			}
-
-			return path;
-		}
-	}
-}
-
-function rename(fn, name) {
-	Object.defineProperty(fn, 'name', {
-		value: name,
-		configurable: true
-	});
-
-	return fn;
 }

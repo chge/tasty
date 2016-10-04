@@ -27,9 +27,9 @@ const result = ts.createProgram(
 
 if (result.emitSkipped) {
 	result.diagnostics.forEach((item) => {
-		const { line, character } = item.file.getLineAndCharacterOfPosition(item.start),
+		const data = item.file.getLineAndCharacterOfPosition(item.start),
 			message = ts.flattenDiagnosticMessageText(item.messageText, '\n');
-		console.log(`${item.file.fileName} (${line + 1},${character + 1}): ${message}`);
+		console.log(`${item.file.fileName} (${data.line + 1},${data.character + 1}): ${message}`);
 	});
 
 	process.exit(1);

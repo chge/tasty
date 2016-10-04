@@ -56,6 +56,12 @@ if (Object.keys(config).length === 1 && config.version === true) {
 } else {
 	tasty(
 		Object.assign(config, {
+			coverage: config['coverage-reporter'] ?
+				{instrumenter: config['coverage'], reporter: config['coverage-reporter']} :
+				config['coverage'] ?
+					{instrumenter: config['coverage']} :
+					false,
+			log: config['log'] || true,
 			server: config['server-url'] ?
 				{url: config['server-url']} :
 				config['server'],

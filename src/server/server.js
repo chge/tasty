@@ -14,9 +14,14 @@ const Emitter = require('events'),
 	socketio = require('socket.io'),
 	url = require('url');
 
-const log = require('./log'),
+const coverage = require('./coverage'),
+	log = require('./log'),
 	prepare = require('./runner').prepare,
-	tool = require('./tool');
+	tool = require('./tool'),
+	util = require('./util');
+
+const mime = util.mime,
+	random = util.random;
 
 let io,
 	statics;
@@ -100,15 +105,45 @@ function listen(config) {
 
 	if (config.static) {
 		log('static', url.format(config.static), 'from', config.static.root);
+		config.coverage &&
+			log('static', 'coverage', config.coverage.instrumenter);
 
 		statics = http.createServer((request, response) => {
 			try {
-				const path = config.static.root + request.url;
+				// TODO configurable index.
+				const path = config.static.root +
+					(request.url === '/' ? '/index.html' : request.url);
+
 				if (fs.existsSync(path)) {
-					response.setHeader('Content-Type', mime(path));
-					response.end(
-						fs.readFileSync(path)
-					);
+					const type = mime(path);
+					let content = fs.readFileSync(path);
+
+					if (config.coverage) {
+						if (type === mime.js) {
+							try {
+								content = coverage.instrument(content.toString(), request.url, config);
+							} catch (thrown) {
+								content = `
+(function() {
+	var error = new Error(${JSON.stringify(thrown.message)});
+	error.name = ${JSON.stringify(request.url)};
+	throw error;
+/*
+${thrown.stack}
+*/
+})();
+`;
+							}
+						} else if (type === mime.html) {
+							// WORKAROUND: Istanbul uses eval to get top-level scope.
+							content = config.coverage.instrumenter === 'istanbul' ?
+								content.toString().replace('script-src ', "script-src 'unsafe-eval' ") :
+								content;
+						}
+					}
+
+					response.setHeader('Content-Type', type);
+					response.end(content);
 				} else {
 					response.setHeader('Content-Type', mime('txt'));
 					response.writeHead(404);
@@ -116,8 +151,13 @@ function listen(config) {
 				}
 			} catch (thrown) {
 				response.setHeader('Content-Type', mime('txt'));
-				response.writeHead(500);
-				response.end('500 ' + thrown);
+				if (thrown.code === 'EISDIR') {
+					response.writeHead(403);
+					response.end('403 Forbidden');
+				} else {
+					response.writeHead(500);
+					response.end('500 Internal Server Error\n\n' + (thrown.stack || thrown));
+				}
 			}
 		})
 			.listen(
@@ -146,33 +186,28 @@ function register(token, socket, config) {
 	let runner;
 
 	if (token && token.length === 4 && (runner = runners[token])) {
-		if (config.mode === 'single') {
-			// TODO stop runner.
-			delete runners[token];
+		socket.join(token);
+
+		if (runner.finish) {
+			finish(token, config);
 		} else {
-			socket.join(token);
-
-			if (runner.finish) {
-				finish(token, config);
-			} else {
-				// TODO chain?
-				const keys = exec.persistent ?
-					exec.persistent[token] :
-					null;
-				Promise.all(
-					keys ?
-						Object.keys(keys).map(
-							(key) => send(token, 'exec', key.slice(1), keys[key])
-						) :
-						[]
-				)
-					.then(
-						() => emitter.emit('reconnect.' + token)
-					);
-			}
-
-			return null;
+			// TODO chain?
+			const keys = exec.persistent ?
+				exec.persistent[token] :
+				null;
+			Promise.all(
+				keys ?
+					Object.keys(keys).map(
+						(key) => send(token, 'exec', key.slice(1), keys[key])
+					) :
+					[]
+			)
+				.then(
+					() => emitter.emit('reconnect.' + token)
+				);
 		}
+
+		return null;
 	}
 	// TODO better.
 	token = ('' + (++register.count) + random(0, 9) + random(0, 9) + random(0, 9)).substr(0, 4);
@@ -233,8 +268,28 @@ exec.code = {};
 exec.persistent = {};
 
 function finish(token, config) {
-	return send(token, 'finish', null)
-		.then(() => null, (error) => error)
+	// TODO timeout.
+	return Promise.resolve()
+		.then(() => {
+			if (config.coverage) {
+				log('client', token, 'coverage', config.coverage.instrumenter);
+
+				return send(token, 'coverage')
+					.then(
+						(data) => coverage.report(data, config)
+					)
+					.catch(
+						(error) => log(error)
+					);
+			}
+		})
+		.then(
+			() => send(token, 'finish')
+		)
+		.then(
+			() => null,
+			(error) => error
+		)
 		.then((error) => {
 			log('client', token, 'finished');
 
@@ -251,24 +306,4 @@ function finish(token, config) {
 				process.exit(code);
 			}
 		});
-}
-
-function mime(path) {
-	const TYPE = {
-		css: 'text/css',
-		htm: 'text/html',
-		html: 'text/html',
-		js: 'application/javascript',
-		txt: 'text/plain'
-	};
-
-	let ext = path.split('.');
-	ext = ext[ext.length - 1];
-
-	return TYPE[ext] ||
-		'application/octet-stream';
-}
-
-function random(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
 }

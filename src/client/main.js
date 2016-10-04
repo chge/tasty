@@ -93,7 +93,15 @@ function connected(socket) {
 	socket.on('exec', (key, callback) => {
 		log.debug('exec', util.include.server + key);
 
-		util.include(key, callback);
+		util.include(key, () => callback([]));
+	});
+
+	socket.on('coverage', (key, callback) => {
+		key = key || '__coverage__';
+		log.debug('coverage', key);
+
+		callback([null, window[key]]);
+		log.debug('coverage', key);
 	});
 
 	socket.on('finish', (data, callback) => {
