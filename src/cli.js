@@ -46,6 +46,7 @@ if (Object.keys(config).length === 1 && config.version === true) {
   --server
   --server=true|false
   --server-url=http://localhost:8765/path
+  --slow=ms
   --static
   --static=true|false
   --static-url=http://localhost:5678/path
@@ -69,5 +70,14 @@ if (Object.keys(config).length === 1 && config.version === true) {
 				{url: config['static-url'], root: config['static-root']} :
 				config['static']
 		})
-	).start();
+	)
+		.on('finish', (fail) => {
+			if (config.exit) {
+				console.log('exit', fail);
+				process.exit(fail | 0);
+			} else {
+				console.log('waiting for next client');
+			}
+		})
+		.start();
 }

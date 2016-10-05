@@ -1,7 +1,8 @@
 'use strict';
 
 const fs = require('fs'),
-	glob = require('glob').sync;
+	glob = require('glob').sync,
+	path = require('path');
 
 const browserify = require(resolve('browserify')),
 	ts = require(resolve('typescript'));
@@ -35,6 +36,24 @@ if (result.emitSkipped) {
 	process.exit(1);
 }
 
+if (process.argv.indexOf('--coverage') !== -1) {
+	const Instrumenter = require(resolve('istanbul')).Instrumenter,
+		instrumenter = new Instrumenter();
+
+	glob(ROOT + 'tmp/*.js').forEach((name) => {
+		fs.writeFileSync(
+			name,
+			instrumenter.instrumentSync(
+				fs.readFileSync(name).toString(),
+				name.replace(
+					path.dirname(name),
+					'src/client'
+				)
+			)
+		);
+	});
+}
+
 try {
 	fs.mkdirSync(ROOT + 'dist');
 } catch (thrown) {
@@ -45,11 +64,13 @@ try {
 }
 
 browserify({
+	bundleExternal: false,
 	entries: [
 		ROOT + 'tmp/main.js'
 	],
 	standalone: 'tasty'
 })
+	.exclude('socket.io-client')
 	.bundle()
 	.pipe(
 		fs.createWriteStream(ROOT + 'dist/tasty.js')

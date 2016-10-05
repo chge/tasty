@@ -8,7 +8,8 @@ const glob = require('glob'),
 
 const log = require('./log'),
 	server = require('./server'),
-	tool = require('./tool');
+	tool = require('./tool'),
+	util = require('./util');
 
 const DEFAULTS = {
 	assert: false,
@@ -25,6 +26,7 @@ const DEFAULTS = {
 	include: '',
 	log: false,
 	runner: 'mocha',
+	reporter: 'spec',
 	server: {
 		url: 'http://0.0.0.0:8765'
 	},
@@ -38,6 +40,9 @@ const DEFAULTS = {
 tasty.config = {};
 tasty.finish = finish;
 tasty.start = start;
+tasty.off = off;
+tasty.on = on;
+tasty.once = once;
 tasty.tool = tool;
 
 tool.server = {
@@ -45,13 +50,18 @@ tool.server = {
 	send: server.send
 };
 
+// TODO disposable API without internal state.
+
 function tasty(config) {
-	config = Object.assign(tasty.config, DEFAULTS, config);
+	config = tasty.config = Object.assign({}, tasty.config, DEFAULTS, config);
 
 	log.logger = config.log === true ?
 		console :
 		config.log;
 
+	if (config.coverage && !config.coverage.instrumenter) {
+		config.coverage = false;
+	}
 	if (config.runner === 'qunit' && config.bail) {
 		throw new Error('QUnit doesn\'t support bail');
 	}
@@ -109,9 +119,31 @@ function tasty(config) {
 
 function start() {
 	server.listen(tasty.config);
+
+	return tasty;
 }
 
 function finish() {
 	// TODO report.
 	server.close();
+
+	return tasty;
+}
+
+function off(...args) {
+	server.emitter.removeListener(...args);
+
+	return tasty;
+}
+
+function on(...args) {
+	server.emitter.on(...args);
+
+	return tasty;
+}
+
+function once(...args) {
+	server.emitter.once(...args);
+
+	return tasty;
 }

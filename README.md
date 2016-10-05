@@ -65,9 +65,9 @@ Write a test.
 describe('login form', function() {
 	it('allows user to log in', function() {
 		page.text('Welcome!');
-		page.enter('login', 'test');
-		page.enter('pass', tasty.config.pass);
-		page.click('Login');
+		input.enter('login', 'test');
+		input.enter('pass', tasty.config.pass);
+		input.click('Login');
 		client.location('/dashboard');
 
 		return queue();
@@ -371,10 +371,20 @@ npm run prepublish
 
 # Testing
 
-```shell
-npm run test:run
-```
+Requires [PhantomJS](http://phantomjs.org/) to be available in shell as `phantomjs`.
 
 ```shell
-npm run selftest
+npm test
 ```
+
+Make sure to clear PhantomJS persistent cache located in user home.
+
+`AppData\Local\Ofi Labs\PhantomJS`
+
+`Library/Caches/Ofi Labs/PhantomJS`
+
+`.local/share/Ofi Labs/PhantomJS`
+
+# Windows
+
+Everything works fine.

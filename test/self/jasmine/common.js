@@ -1,7 +1,7 @@
 'use strict';
 
 const glob = require('glob'),
-	files = glob.sync(__dirname + '/../common/ready.js');
+	files = glob.sync(__dirname + '/../common/*.js');
 files.map(file => require(file)).forEach(suites => suites.forEach(suite => {
 
 	jasmine.DEFAULT_TIMEOUT_INTERVAL = 2000;

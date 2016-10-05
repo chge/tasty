@@ -129,18 +129,21 @@ tool('client.reset', function reset(url) {
 					(window.location = url) :
 					window.location.reload(true);
 			};
-
+/*
 		// NOTE clear cookies.
 		document.cookie.split(';').forEach(
 			(pair) => {
 				document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
 			}
 		);
+
 		// NOTE clear Storage.
 		localStorage.clear();
 		sessionStorage.clear();
 		// NOTE clear indexedDB.
+*/
 		let chain = thenable();
+/*
 		if (window.indexedDB && indexedDB.webkitGetDatabaseNames) {
 			let request = indexedDB.webkitGetDatabaseNames();
 			request.onsuccess = (event) => {
@@ -158,6 +161,7 @@ tool('client.reset', function reset(url) {
 			};
 			request.onfailure = (event) => log.error(event);
 		}
+*/
 		chain.then(done, done);
 		// TODO other.
 	});

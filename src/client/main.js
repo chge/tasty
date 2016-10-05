@@ -47,7 +47,10 @@ function connect() {
 	util.include('socket.io.js', () => {
 		// TODO bundle socket.io client to leave global scope clean.
 		const io = window.io || require('socket.io-client');
-		const socket = io(server, {multiplex: false})
+
+		const socket = io(server, {
+			multiplex: false
+		})
 			.on('connect', () => {connected(socket)});
 	});
 }
@@ -71,8 +74,7 @@ function connected(socket) {
 			}
 			reconnect = false;
 
-			// WORKAROUND
-			setTimeout(() => callback(result), 1);
+			callback(result);
 		};
 
 		thenable(

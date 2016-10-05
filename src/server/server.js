@@ -1,14 +1,17 @@
 'use strict';
 
+const Emitter = require('events').EventEmitter,
+	emitter = new Emitter();
+
 module.exports = {
 	close: close,
 	exec: exec,
+	emitter: emitter,
 	listen: listen,
 	send: send
 };
 
-const Emitter = require('events'),
-	fs = require('fs'),
+const fs = require('fs'),
 	http = require('http'),
 	https = require('https'),
 	socketio = require('socket.io'),
@@ -24,10 +27,8 @@ const mime = util.mime,
 	random = util.random;
 
 let io,
+	runners = {},
 	statics;
-
-let emitter = new Emitter(),
-	runners = {};
 
 function listen(config) {
 	let server = http.createServer((request, response) => {
@@ -84,7 +85,9 @@ function listen(config) {
 					callback(runner.token) :
 					callback(token);
 
-				runner && config.autorun &&
+				if (runner && config.autorun) {
+					emitter.emit('start', token);
+
 					runner.run()
 						.then(
 							(result) => {
@@ -100,6 +103,7 @@ function listen(config) {
 							runner.finish = true;
 							finish(runner.token, config);
 						});
+				}
 			});
 		});
 
@@ -271,8 +275,8 @@ function finish(token, config) {
 	// TODO timeout.
 	return Promise.resolve()
 		.then(() => {
-			if (config.coverage) {
-				log('client', token, 'coverage', config.coverage.instrumenter);
+			if (config.coverage && config.coverage.reporter) {
+				log('client', token, 'coverage', config.coverage.reporter);
 
 				return send(token, 'coverage')
 					.then(
@@ -296,14 +300,8 @@ function finish(token, config) {
 			if (exec.persistent) {
 				delete exec.persistent[token];
 			}
+			const fail = runners[token] && runners[token].error || error;
 
-			// TODO via API.
-			if (config.exit) {
-				const code = (runners[token] && runners[token].error || error) | 0;
-
-				log('exit', code);
-
-				process.exit(code);
-			}
+			emitter.emit('finish', token, fail);
 		});
 }

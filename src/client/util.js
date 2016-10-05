@@ -14,7 +14,7 @@ module.exports = {
 };
 
 const Promise = global.Promise ||
-	require('./promise');
+	require('./promise').Promise;
 
 function include(src, callback) {
 	const script = document.createElement('script');
@@ -36,13 +36,13 @@ function session(value) {
 	session.key = session.key || '__tasty';
 	if (arguments.length) {
 		if (value) {
-			sessionStorage[session.key] = value;
+			sessionStorage.setItem(session.key, value);
 		} else {
-			delete sessionStorage[session.key];
+			sessionStorage.removeItem(session.key);
 		}
 	}
 
-	return sessionStorage[session.key];
+	return sessionStorage.getItem(session.key);
 }
 
 function reason() {
