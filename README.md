@@ -1,6 +1,6 @@
 # Tasty
 
-[![npm](https://img.shields.io/npm/v/tasty-js.svg?maxAge=2592000)](https://www.npmjs.com/package/tasty-js)
+[![npm](https://img.shields.io/npm/v/tasty.svg)](https://www.npmjs.com/package/tasty)
 [![Build Status](https://travis-ci.org/chge/tasty.svg?branch=master)](https://travis-ci.org/chge/tasty)
 [![Coverage Status](https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master)](https://coveralls.io/github/chge/tasty?branch=master)
 [![Code Climate](https://codeclimate.com/github/chge/tasty/badges/gpa.svg)](https://codeclimate.com/github/chge/tasty)
@@ -8,7 +8,7 @@
 Tasty helps test fully assembled web applications in nearly-production environments on real clients as a real user.
 
 ```shell
-npm install -g tasty-js
+npm install -g tasty
 ```
 
 The main purpose is to emulate real user experience. Interact with text and graphics, not with heartless HTML elements.

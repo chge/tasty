@@ -34,7 +34,7 @@ describe('static', function() {
 				(response) => {
 					expect(response).to.have.status(200);
 					expect(response).to.be.json;
-					expect(response.body.name).to.equal('tasty-js');
+					expect(response.body.name).to.equal('tasty');
 				}
 			);
 	});
@@ -96,7 +96,7 @@ describe('static', function() {
 						(response) => {
 							expect(response).to.have.status(200);
 							expect(response).to.be.json;
-							expect(response.body.name).to.equal('tasty-js');
+							expect(response.body.name).to.equal('tasty');
 						}
 					)
 			);
