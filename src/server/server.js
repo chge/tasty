@@ -73,6 +73,8 @@ function listen(config) {
 
 	log('server', url.format(config.server));
 
+	// TODO file watch.
+
 	io = socketio(server).path(config.server.path)
 		.on('connection', (socket) => {
 			// WORKAROUND: client performs sync before reconnect to get ack on ack.
@@ -125,7 +127,7 @@ function listen(config) {
 					if (config.coverage) {
 						if (type === mime.js) {
 							try {
-								content = coverage.instrument(content.toString(), request.url, config);
+								content = coverage.instrument(content.toString(), path, config);
 							} catch (thrown) {
 								content = `
 (function() {

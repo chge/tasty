@@ -3,7 +3,7 @@
 module.exports = [
 	{
 		name: 'client.ready',
-		timeout: 10000,
+		timeout: 30000,
 		afterEach: () => {
 			client.reset();
 		},
@@ -56,7 +56,7 @@ module.exports = [
 	},
 	{
 		name: 'page.ready',
-		timeout: 10000,
+		timeout: 30000,
 		specs: [
 			{
 				name: 'supports delay',

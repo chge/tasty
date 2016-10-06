@@ -15,7 +15,7 @@ function exec(command) {
 }
 
 describe('client', function() {
-	this.timeout(120000);
+	this.timeout(60000);
 
 	afterEach(function() {
 		tasty.finish();
@@ -37,7 +37,7 @@ describe('client', function() {
 			}
 		}).start();
 
-		const phantom = exec('phantomjs test/self/phantom.js');
+		const phantom = exec('phantomjs test/phantom.js');
 
 		tasty.once('finish', () => {
 			phantom.kill();
@@ -61,7 +61,7 @@ describe('client', function() {
 			}
 		}).start();
 
-		const phantom = exec('phantomjs test/self/phantom.js');
+		const phantom = exec('phantomjs test/phantom.js');
 
 		tasty.once('finish', () => {
 			phantom.kill();
@@ -84,7 +84,7 @@ describe('client', function() {
 			}
 		}).start();
 
-		const phantom = exec('phantomjs test/self/phantom.js');
+		const phantom = exec('phantomjs test/phantom.js');
 
 		tasty.once('finish', () => {
 			phantom.kill();

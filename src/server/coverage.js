@@ -20,7 +20,7 @@ function instrument(code, name, config) {
 
 			// NOTE Istanbul instruments code synchronously under the hood.
 			// TODO async worker process for large codebase.
-			return instrumenter.instrumentSync(code, name.replace('/', path.sep));
+			return instrumenter.instrumentSync(code, name.replace(/\//g, path.sep));
 		default:
 			// TODO resolve plugins.
 			throw new Error(`unknown coverage instrumenter '${config.coverage.instrumenter}'`);

@@ -1,7 +1,6 @@
 coverage
+coverage_server
 dist
 node_modules
 tmp
 npm-debug.log
-phantomjs.log
-phantomjs.png

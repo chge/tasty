@@ -1,3 +1,5 @@
+// NOTE PhantomJS script.
+
 var args = require('system').args,
 	page = require('webpage').create(),
 	verbose = args.indexOf('--verbose') !== -1;
@@ -19,7 +21,7 @@ page.open('http://localhost:5678/test.html', function (status) {
 		log('phantom', 'navigate', url, allowed ? 'allow' : 'disallow', type.toLowerCase());
 
 		// WORKAROUND: page rendering causes PhantomJS to wait.
-		page.render('phantomjs.png');
+		page.render('tmp/phantomjs.png');
 	};
 
 	page.onLoadFinished = function(status) {

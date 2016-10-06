@@ -71,12 +71,12 @@ if (Object.keys(config).length === 1 && config.version === true) {
 				config['static']
 		})
 	)
-		.on('finish', (fail) => {
-			if (config.exit) {
-				console.log('exit', fail);
-				process.exit(fail | 0);
+		.on('finish', (token, fail) => {
+			if (config.watch) {
+				console.log('tasty', 'watching');
 			} else {
-				console.log('waiting for next client');
+				console.log('tasty', 'exit', fail);
+				process.exit(fail | 0);
 			}
 		})
 		.start();

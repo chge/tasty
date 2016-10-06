@@ -5,11 +5,13 @@
 [![Coverage Status](https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master)](https://coveralls.io/github/chge/tasty?branch=master)
 [![Code Climate](https://codeclimate.com/github/chge/tasty/badges/gpa.svg)](https://codeclimate.com/github/chge/tasty)
 
-Tasty helps test assembled web applications in nearly-production environments on real clients as a real user.
+Tasty helps test fully assembled web applications in nearly-production environments on real clients as a real user.
 
 ```shell
 npm install -g tasty-js
 ```
+
+The main purpose is to emulate real user experience. Interact with text and graphics, not with heartless HTML elements.
 
 Tasty supports both multiple and single page applications (with server rendering too) and code coverage.
 It respects [Content Security Policy](https://www.w3.org/TR/CSP/) and SSL/TLS.
@@ -18,7 +20,7 @@ It respects [Content Security Policy](https://www.w3.org/TR/CSP/) and SSL/TLS.
 
 Tasty server runs your tests using Tasty client to execute them inside your application.
 
-1. Add `tasty.js` script to your assembly or markup.
+1. Add `tasty.js` module to your assembly or markup.
 2. Assemble and serve your application from staging server.
 3. Provide CSP directives for Tasty and use test certificates, if needed.
 4. Write tests for your preferred test framework using Tasty async tools.
@@ -34,7 +36,7 @@ However, it's a good idea to use Selenium as a client for Tasty.
 
 # Similar tools
 
-[Protractor](http://www.protractortest.org/) is a [Selenium](https://github.com/SeleniumHQ/selenium/wiki/WebDriverJs)-based end-to-end test framework that could be used for intergration tests.
+[Protractor](http://www.protractortest.org/) and [WebdriverIO](http://webdriver.io/) are [Selenium](https://github.com/SeleniumHQ/selenium/wiki/WebDriverJs)-based end-to-end test frameworks that could be used for intergration tests.
 
 [Karma](https://karma-runner.github.io/1.0/index.html) and [Testee](https://github.com/bitovi/testee) are great tools for cross-browser unit testing.
 
@@ -59,7 +61,7 @@ Serve your application.
 </html>
 ```
 
-Write a test.
+Write a test (this one uses [Mocha](https://mochajs.org/)).
 
 ```javascript
 describe('login form', function() {
@@ -78,20 +80,18 @@ describe('login form', function() {
 Run Tasty server.
 
 ```shell
-tasty --runner=mocha --include=test.js --pass=secret --exit=false
+tasty --runner=mocha --include=test.js --pass=secret
 ```
 
-Open your application in your clients. Tasty will run tests, print all output and exit.
+Open your application in your client. Tasty will run the test, print all output and exit.
 
 # Server
 
-Tasty server is a bridge between client and test runner, that runs tests written using Tasty tools.
-
-Use `--exit=false` flag to run on several clients. See `tasty --help` for more information.
+Tasty server is a bridge between the clients and the test runner, it controls each client and runs tests written using Tasty tools.
 
 # Client
 
-Tasty client is a small extendable UMD module that connects to the server and executes tests with the same set of tools.
+Tasty client is a small extendable UMD module that connects to the server and executes its commands.
 
 # Runner
 
@@ -100,6 +100,8 @@ Tasty supports any test frameworks that support asynchronous tests.
 There are built-in runners for [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/) and [QUnit](https://qunitjs.com/). Provide `--runner=name` flag to use one of them. For other frameworks, use Tasty programmatically from your runner.
 
 [Chai](http://chaijs.com/) and other assertion/expectation libraries are supported by providing `--assert=name` and/or `--expect=name` flags.
+
+Use `--watch` flag to watch for changes or run on several clients. See `tasty --help` for more information.
 
 # Static server
 

@@ -6,7 +6,8 @@ const log = require('./log'),
 	tool = require('./tool'),
 	util = require('./util');
 
-const reason = util.reason,
+const include = util.include,
+	reason = util.reason,
 	thenable = util.thenable;
 
 tasty.connect = connect;
@@ -30,7 +31,7 @@ function tasty(config) {
 		config || {};
 	tasty.config = config;
 
-	util.include.server = config.server;
+	include.server = config.server;
 
 	log.logger = config.hasOwnProperty('log') && config.log !== true ?
 		config.log :
@@ -44,14 +45,21 @@ function connect() {
 	tasty.session() ||
 		log('server', server);
 
-	util.include('socket.io.js', () => {
-		// TODO bundle socket.io client to leave global scope clean.
-		const io = window.io || require('socket.io-client');
-
-		const socket = io(server, {
-			multiplex: false
-		})
-			.on('connect', () => {connected(socket)});
+	// TODO bundle socket.io client to leave global scope clean.
+	include('socket.io.js', () => {
+		thenable(
+			(resolve) => window.io ?
+				resolve(window.io) :
+				typeof define === 'function' && define.amd ?
+					require(['socket.io'], resolve) :
+					resolve(require('socket.io'))
+		).then(
+			(io) => {
+				const socket = io(server, {multiplex: false})
+					.on('connect', () => connected(socket));
+			},
+			(err) => {debugger;}
+		);
 	});
 }
 
@@ -93,9 +101,9 @@ function connected(socket) {
 	});
 
 	socket.on('exec', (key, callback) => {
-		log.debug('exec', util.include.server + key);
+		log.debug('exec', include.server + key);
 
-		util.include(key, () => callback([]));
+		include(key, () => callback([]));
 	});
 
 	socket.on('coverage', (key, callback) => {

@@ -45,10 +45,7 @@ if (process.argv.indexOf('--coverage') !== -1) {
 			name,
 			instrumenter.instrumentSync(
 				fs.readFileSync(name).toString(),
-				name.replace(
-					path.dirname(name),
-					'src/client'
-				)
+				path.resolve(name.replace('/tmp/', '/src/client/'))
 			)
 		);
 	});
@@ -70,7 +67,7 @@ browserify({
 	],
 	standalone: 'tasty'
 })
-	.exclude('socket.io-client')
+	.exclude('socket.io')
 	.bundle()
 	.pipe(
 		fs.createWriteStream(ROOT + 'dist/tasty.js')

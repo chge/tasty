@@ -20,7 +20,6 @@ const DEFAULTS = {
 		reporter: ''
 	},
 	exclude: '',
-	exit: true,
 	expect: false,
 	globals: true,
 	include: '',
@@ -34,7 +33,8 @@ const DEFAULTS = {
 	static: {
 		url: 'http://0.0.0.0:5678',
 		root: '.'
-	}
+	},
+	watch: false
 };
 
 tasty.config = {};

@@ -1,7 +1,6 @@
 coverage
+coverage_server
 node_modules
 tmp
 .travis.yml
 npm-debug.log
-phantomjs.log
-phantomjs.png

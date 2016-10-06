@@ -1,7 +1,7 @@
 {
   "name": "tasty-js",
   "title": "Tasty",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Integration testing helper for web",
   "main": "src/server/main.js",
   "preferGlobal": true,
@@ -31,8 +31,11 @@
     "prepublish": "node --harmony src/build",
     "test": "npm run test:cover && npm run test:run && npm run test:report",
     "test:cover": "node --harmony src/build --coverage",
-    "test:run": "node --harmony ./node_modules/istanbul/lib/cli cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --ui bdd --colors test/spec/*.js",
-    "test:report": "node --harmony ./node_modules/coveralls/bin/coveralls < ./coverage/lcov.info"
+    "test:run": "node --harmony ./node_modules/istanbul/lib/cli cover --dir ./coverage_server --report lcovonly ./node_modules/mocha/bin/_mocha -- --colors --ui bdd test/spec/*.js",
+    "test:report": "node --harmony test/coverage **/lcov.info coverage/lcov.info && node --harmony ./node_modules/coveralls/bin/coveralls < ./coverage/lcov.info"
+  },
+  "engines" : {
+    "node" : ">=4.3.2"
   },
   "repository": {
     "type": "git",
