@@ -1,149 +1,118 @@
 'use strict';
 
-module.exports = tasty;
+const Emitter = require('events').EventEmitter,
+	parseUrl = require('url').parse,
+	resolvePath = require('path').resolve;
 
-const glob = require('glob'),
-	parse = require('url').parse,
-	path = require('path');
-
-const log = require('./log'),
-	server = require('./server'),
-	tool = require('./tool'),
+const Server = require('./server'),
 	util = require('./util');
 
 const DEFAULTS = {
-	assert: false,
 	autorun: true,
-	bail: false,
-	coverage: {
-		instrumenter: '',
-		reporter: ''
-	},
 	exclude: '',
-	expect: false,
 	globals: true,
 	include: '',
-	log: false,
 	runner: 'mocha',
-	reporter: 'spec',
-	server: {
-		url: 'http://0.0.0.0:8765'
-	},
+	server: 'http://0.0.0.0:8765/',
 	slow: 0,
-	static: {
-		url: 'http://0.0.0.0:5678',
-		root: '.'
-	},
-	watch: false
+	static: '.',
+	quiet: true
 };
 
-tasty.config = {};
-tasty.finish = finish;
-tasty.start = start;
-tasty.off = off;
-tasty.on = on;
-tasty.once = once;
-tasty.tool = tool;
+class Log {
+	constructor(api) {
+		const noop = () => {},
+			prefix = 'tasty';
+		// TODO dynamic prefix?
 
-tool.server = {
-	exec: server.exec,
-	send: server.send
-};
-
-// TODO disposable API without internal state.
-
-function tasty(config) {
-	config = tasty.config = Object.assign({}, tasty.config, DEFAULTS, config);
-
-	log.logger = config.log === true ?
-		console :
-		config.log;
-
-	if (config.coverage && !config.coverage.instrumenter) {
-		config.coverage = false;
+		this.debug = api && api.debug ? api.debug.bind(api, prefix) : noop;
+		this.log = api && api.log ? api.log.bind(api, prefix) : noop;
+		this.info = api && api.info ? api.info.bind(api, prefix) : noop;
+		this.warn = api && api.warn ? api.warn.bind(api, prefix) : noop;
+		this.error = api && api.error ? api.error.bind(api, prefix) : noop;
 	}
-	if (config.runner === 'qunit' && config.bail) {
-		throw new Error('QUnit doesn\'t support bail');
-	}
-	if (config.runner === 'jasmine' && config.bail) {
-		throw new Error('Jasmine doesn\'t support bail');
-	}
-	config.tests = config.include ?
-		glob.sync(config.include, {ignore: config.exclude}) :
-		[];
-	if (config.server === false) {
-		throw new Error('nothing to do without server');
-	} else {
-		config.server = config.server === true ?
-			parse(DEFAULTS.server.url) :
-			Object.assign(
-				parse(DEFAULTS.server.url),
-				config.server ?
-					parse(
-						config.server.url ||
-							(typeof config.server === 'string' ? config.server : null) ||
-								DEFAULTS.server.url
-					) :
-					null
-			);
-	}
-	config.slow = parseInt(config.slow, 10);
-	if (isNaN(config.slow)) {
-		config.slow = 1000;
-	}
-	if (config.static) {
-		const root = config.static.root ||
-			DEFAULTS.static.root;
+}
 
-		config.static = config.static === true ?
-			parse(DEFAULTS.static.url) :
-			Object.assign(
-				parse(DEFAULTS.static.url),
-				parse(
-					config.static.url ||
-						(typeof config.static === 'string' ? config.static : null) ||
-							DEFAULTS.static.url
-				)
-			);
+class Tasty {
+	constructor(config) {
+		const tasty = this || {};
+		config = Object.assign({}, DEFAULTS, config);
 
-		config.static.root = path.resolve(
-			process.cwd(),
-			root
+		tasty.config = config;
+		tasty.emitter = new Emitter();
+		// NOTE every tool subscribes on reconnect event of every client.
+		tasty.emitter.setMaxListeners(100);
+		tasty.log = new Log(
+			config.quiet ?
+				null :
+				config.console ||
+					console
 		);
+
+		// TODO allow to filter globals.
+		if (config.bail) {
+			// TODO support with hacks?
+			if (config.runner === 'jasmine') {
+				throw new Error('Jasmine doesn\'t support bail');
+			}
+			if (config.runner === 'qunit') {
+				throw new Error('QUnit doesn\'t support bail');
+			}
+		}
+		if (config.server) {
+			config.server = config.server === true ?
+				parseUrl(DEFAULTS.server) :
+				Object.assign(
+					parseUrl(DEFAULTS.server),
+					parseUrl(config.server.indexOf('//') === -1 ? 'http://' + config.server : config.server, false, true)
+				);
+		} else {
+			throw new Error('nothing to do without server');
+		}
+		config.slow = parseInt(config.slow, 10);
+		if (isNaN(config.slow)) {
+			config.slow = 1000;
+		}
+		if (config.static) {
+			config.static = config.static === true ?
+				process.cwd() :
+				resolvePath(
+					process.cwd(),
+					config.static
+				);
+		}
+
+		tasty.server = new Server(tasty.emitter, tasty.log, config);
+
+		return tasty;
 	}
 
-	// TODO allow to filter globals?
+	start() {
+		return this.server.listen(this.config);
+	}
 
-	return tasty;
+	close() {
+		return this.server.close();
+	}
+
+	off(...args) {
+		this.emitter.removeListener(...args);
+
+		return this;
+	}
+
+	on(...args) {
+		this.emitter.on(...args);
+
+		return this;
+	}
+
+	once(...args) {
+		this.emitter.once(...args);
+
+		return this;
+	}
 }
 
-function start() {
-	server.listen(tasty.config);
-
-	return tasty;
-}
-
-function finish() {
-	// TODO report.
-	server.close();
-
-	return tasty;
-}
-
-function off(...args) {
-	server.emitter.removeListener(...args);
-
-	return tasty;
-}
-
-function on(...args) {
-	server.emitter.on(...args);
-
-	return tasty;
-}
-
-function once(...args) {
-	server.emitter.once(...args);
-
-	return tasty;
-}
+Tasty.Tasty = Tasty;
+module.exports = Tasty;

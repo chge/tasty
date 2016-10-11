@@ -1,47 +1,58 @@
 'use strict';
 
-module.exports = {
-	instrument: instrument,
-	report: report
-};
+module.exports = createCoverage;
 
-const path = require('path');
+const separator = require('path').sep;
 
-const log = require('./log'),
-	util = require('./util');
+const util = require('./util');
 
 const resolve = util.resolve;
 
-function instrument(code, name, config) {
-	switch (config.coverage.instrumenter) {
-		case 'istanbul':
-			const istanbul = require(resolve('istanbul')),
-				instrumenter = new istanbul.Instrumenter();
+class IstanbulCoverage {
+	constructor(format) {
+		const istanbul = require(resolve('istanbul'));
+		this.instrumenter = new istanbul.Instrumenter();
+		this.collector = new istanbul.Collector();
+		this.reporter = new istanbul.Reporter();
+		this.reporter.add(format || 'lcovonly');
+	}
 
-			// NOTE Istanbul instruments code synchronously under the hood.
-			// TODO async worker process for large codebase.
-			return instrumenter.instrumentSync(code, name.replace(/\//g, path.sep));
-		default:
-			// TODO resolve plugins.
-			throw new Error(`unknown coverage instrumenter '${config.coverage.instrumenter}'`);
+	instrument(code, name) {
+		// NOTE Istanbul instruments code synchronously under the hood.
+		// TODO async worker process for large codebase?
+		return new Promise(
+			(resolve, reject) => this.instrumenter.instrument(
+				code,
+				// WORKAROUND: Istanbul requires consistent separators.
+				name.replace(/\//g, separator),
+				(error, instrumented) => error ?
+					reject(error) :
+					resolve(instrumented)
+			)
+		);
+	}
+
+	report(data, type) {
+		this.collector.add(data);
+
+		return new Promise(
+			(resolve, reject) => this.reporter.write(
+				this.collector,
+				false,
+				(error) => error ?
+					reject(error) :
+					resolve()
+			)
+		);
 	}
 }
 
-function report(data, config) {
-	switch (config.coverage.instrumenter) {
+function createCoverage(config) {
+	switch (config.coverage) {
 		case 'istanbul':
-			const istanbul = require(resolve('istanbul')),
-				collector = new istanbul.Collector(),
-				reporter = new istanbul.Reporter();
-
-			collector.add(data);
-			reporter.add(config.coverage.reporter || 'text');
-
-			return new Promise(
-				(resolve) => reporter.write(collector, false, resolve)
-			);
+			return new IstanbulCoverage(config.format);
 		default:
 			// TODO resolve plugins.
-			throw new Error(`unknown coverage reporter '${config.coverage.reporter}'`);
+			throw new Error(`unknown coverage '${config.coverage}'`);
 	}
 }

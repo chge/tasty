@@ -15,6 +15,7 @@ function mime(path) {
 		'application/octet-stream';
 }
 Object.assign(mime, {
+	appcache: 'text/cache-manifest',
 	css: 'text/css',
 	htm: 'text/html',
 	html: 'text/html',
@@ -45,7 +46,7 @@ function resolve(name) {
 		} catch (thrown) {
 			const path = require('requireg').resolve(name);
 			if (!path) {
-				throw new Error(`Cannot find module '${name}'`);
+				throw new Error(`cannot find module '${name}'`);
 			}
 
 			return path;

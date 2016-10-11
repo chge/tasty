@@ -3,34 +3,34 @@
 module.exports = [
 	{
 		name: 'client.ready',
-		timeout: 30000,
+		timeout: 60000,
 		afterEach: () => {
-			client.reset();
+			client.reset(false);
 		},
 		specs: [
 			{
 				name: 'supports delay',
-				time: 2000,
+				time: 5000 + 200,
 				body: () => {
-					client.ready('delay', 1000);
+					client.ready('delay', 5000);
 					client.navigate('/async.html');
 					page.text('Async');
 				}
 			},
 			{
 				name: 'supports document',
-				time: 2000,
+				time: 5000 + 200,
 				body: () => {
 					client.ready('document');
 					client.navigate('/async.html');
 					page.text('Test');
-					runner.delay(1000);
+					runner.delay(5000);
 					page.text('Async');
 				}
 			},
 			{
 				name: 'supports until',
-				time: 2000,
+				time: 5000 + 200,
 				body: () => {
 					client.ready('until', function() {
 						return document.body.innerText.indexOf('Async') !== -1;
@@ -41,11 +41,11 @@ module.exports = [
 			},
 			{
 				name: 'supports exec',
-				time: 2000,
+				time: 5000 + 200,
 				body: () => {
 					client.ready('exec', function(tasty) {
 						return tasty.thenable(function(resolve) {
-							setTimeout(resolve, 1000);
+							setTimeout(resolve, 5000);
 						});
 					});
 					client.navigate('/async.html');
@@ -56,53 +56,55 @@ module.exports = [
 	},
 	{
 		name: 'page.ready',
-		timeout: 30000,
+		timeout: 60000,
 		specs: [
 			{
 				name: 'supports delay',
-				time: 2000,
+				time: 5000 + 200,
 				body: () => {
 					client.navigate('/async.html');
-					page.ready('delay', 1000, ['page.text']);
+					page.ready('delay', 5000, ['page.text']);
 					page.text('Test');
-					runner.delay(1000);
+					page.ready('delay', 0, ['page.text']); // WORKAROUND: skip delay after last check.
 					page.text('Async');
 				}
 			},
 			{
 				name: 'supports document',
-				time: 2000,
+				time: 5000 + 200,
 				body: () => {
 					client.navigate('/async.html');
 					page.ready('document');
 					page.text('Test');
-					runner.delay(1000);
+					runner.delay(5000);
 					page.text('Async');
 				}
 			},
 			{
 				name: 'supports until',
-				time: 2000,
+				time: 5000 + 200,
 				body: () => {
 					client.navigate('/async.html');
 					page.ready('until', function() {
 						return document.body.innerText.indexOf('Async') !== -1;
 					}, ['page.text']);
 					page.text('Test');
+					page.ready('delay', 0, ['page.text']); // WORKAROUND: skip delay after last check.
 					page.text('Async');
 				}
 			},
 			{
 				name: 'supports exec',
-				time: 2000,
+				time: 5000 + 200,
 				body: () => {
 					client.navigate('/async.html');
 					page.ready('exec', function(tasty) {
 						return tasty.thenable(function(resolve) {
-							setTimeout(resolve, 1100);
+							setTimeout(resolve, 5000);
 						});
 					}, ['page.text']);
 					page.text('Test');
+					page.ready('delay', 0, ['page.text']); // WORKAROUND: skip delay after last check.
 					page.text('Async');
 				}
 			}

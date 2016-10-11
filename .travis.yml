@@ -1,9 +1,7 @@
 language: node_js
 
 node_js:
-  - node
   - 6
-  - 6.7
   - 6.6
   - 6.5
   - 6.4
@@ -29,18 +27,11 @@ node_js:
   - 4.4
   - 4.3
 
-cache:
-  directories:
-    - travis_phantomjs
-
-before_install:
-  # Upgrade PhantomJS to v2.1.1.
-  - "export PHANTOMJS_VERSION=2.1.1"
-  - "export PATH=$PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64/bin:$PATH"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then rm -rf $PWD/travis_phantomjs; mkdir -p $PWD/travis_phantomjs; fi"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then wget https://github.com/Medium/phantomjs/releases/download/v$PHANTOMJS_VERSION/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -O $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2; fi"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then tar -xvf $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -C $PWD/travis_phantomjs; fi"
-  - "phantomjs --version"
+addons:
+  sauce_connect:
+    username: "chge"
+  jwt:
+    secure: "uh1UCBdoFZituOcZPEkzHFdarr98cGxY761p11l9cDFlaMKhHAitSdo8PxhgORMNRUrGuThtj0/4NCS/HtXvToIyzj4z0Z+Y6PPik3NelR+IdL4dSgDCRmZGxsWORJmfF4NlJD8jLYhqHM4tpc5ytjHge2RbbS+ay6sobb92gLM8P5XLtJ+wuad/DnGfCedAIwud0dIlPnHBygORQZ8uvuz7f/dThu7waXsmeIBry+otnweNuQ6O3UYN2hw44BHZZ6LBxKTkYvDXzZ1toZ7UyGyM6dsHpg35+yf9j9JFg7c2b6e9SB72jYtMA+a2XZpF1c029Kbmp9OqwNerfaOxRKSjAUpfUCDWO8E5QwW+x5epqa48CRCxjEXv013Vv0n6tY1MTagGtXjduUHFU6/qOXEEQWnctlDlF0/nml346PFDm0x52C/0BmMEg0XW6wBpwiYe68VIMVPHUIgV2vqrA8qbQmfR+TbHJNNEOKcGgUkn23qrAK1BAfuDqKxjKwoQRtw7M+96qRiGBYAY4JMdlzyXGSPLDdB+w6YaQkf/ZL03xom66nNOuol4RWVBHT2dBcfuVU7v0V+t/iw/FnNsyEFBuJ9w/cYst47JT2aRgmlfjyrzoGsdUuZvERVdrLV0HJV1195kKFMXaqky+osh0T8b5yYNpEjbm7zediIG34k="
 
 notifications:
   email: false

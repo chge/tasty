@@ -5,20 +5,20 @@
 [![Coverage Status](https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master)](https://coveralls.io/github/chge/tasty?branch=master)
 [![Code Climate](https://codeclimate.com/github/chge/tasty/badges/gpa.svg)](https://codeclimate.com/github/chge/tasty)
 
-Tasty helps test fully assembled web applications in nearly-production environments on real clients as a real user.
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/tasty.svg)](https://saucelabs.com/u/tasty)
+
+Tasty helps test fully assembled web applications in nearly-production environment on real clients as real users.
 
 ```shell
 npm install -g tasty
 ```
-
-The main purpose is to emulate real user experience. Interact with text and graphics, not with heartless HTML elements.
 
 Tasty supports both multiple and single page applications (with server rendering too) and code coverage.
 It respects [Content Security Policy](https://www.w3.org/TR/CSP/) and SSL/TLS.
 
 # How it works
 
-Tasty server runs your tests using Tasty client to execute them inside your application.
+Tasty server controls Tasty clients to run your tests against your application.
 
 1. Add `tasty.js` module to your assembly or markup.
 2. Assemble and serve your application from staging server.
@@ -28,15 +28,22 @@ Tasty server runs your tests using Tasty client to execute them inside your appl
 6. For every client Tasty will run your tests and return all output.
 7. Edit tests, Tasty will re-run them automatically, if needed.
 
-# Is [Selenium](https://github.com/SeleniumHQ/selenium) needed?
+# Is [Selenium](https://github.com/SeleniumHQ/selenium) server needed?
 
 No.
 
-However, it's a good idea to use Selenium as a client for Tasty.
+However, you can use Selenium-driven clients to run your tests using Tasty.
+
+# Why Tasty?
+
+The main purpose is to emulate real user experience. Interact with text and graphics, not with heartless HTML elements.
+
+Tasty provides you with only high-level tools to help treat your application as a black box, just like real user does.
+Don't use knowledge of your application's markup, assume you're helping a real person to achieve his/her goals.
 
 # Similar tools
 
-[Protractor](http://www.protractortest.org/) and [WebdriverIO](http://webdriver.io/) are [Selenium](https://github.com/SeleniumHQ/selenium/wiki/WebDriverJs)-based end-to-end test frameworks that could be used for intergration tests.
+[Protractor](http://www.protractortest.org/) and [WebdriverIO](http://webdriver.io/) are [Selenium](https://github.com/SeleniumHQ/selenium)-based end-to-end test frameworks useful for intergration testing. Also take a look at [Appium](http://appium.io/) and [Selendroid](http://selendroid.io/).
 
 [Karma](https://karma-runner.github.io/1.0/index.html) and [Testee](https://github.com/bitovi/testee) are great tools for cross-browser unit testing.
 
@@ -80,7 +87,7 @@ describe('login form', function() {
 Run Tasty server.
 
 ```shell
-tasty --runner=mocha --include=test.js --pass=secret
+tasty --runner mocha --include test.js --pass secret
 ```
 
 Open your application in your client. Tasty will run the test, print all output and exit.
@@ -97,16 +104,16 @@ Tasty client is a small extendable UMD module that connects to the server and ex
 
 Tasty supports any test frameworks that support asynchronous tests.
 
-There are built-in runners for [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/) and [QUnit](https://qunitjs.com/). Provide `--runner=name` flag to use one of them. For other frameworks, use Tasty programmatically from your runner.
+There are built-in runners for [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/) and [QUnit](https://qunitjs.com/). Provide `--runner <name>` flag to use one of them. For other frameworks, use Tasty programmatically from your runner.
 
-[Chai](http://chaijs.com/) and other assertion/expectation libraries are supported by providing `--assert=name` and/or `--expect=name` flags.
+[Chai](http://chaijs.com/) and other assertion/expectation libraries are supported by providing `--assert <name>` and/or `--expect <name>` flags.
 
 Use `--watch` flag to watch for changes or run on several clients. See `tasty --help` for more information.
 
 # Static server
 
-You can run built-in static server by passing `--static-root=path` and `--static-url=URL` flags.
-The `--static` flag alone runs static server from CWD on `http://localhost:5678/`.
+You can run built-in static server on the same URL by passing `--static <path/to/root>` flag.
+The `--static` flag without path serves content from CWD.
 
 # Code coverage
 
@@ -168,7 +175,7 @@ it('works', function(done) {
 Some tools could be called without arguments to get data from client.
 
 ```javascript
-it('reads', function(done) {
+it('reads', function() {
 	page.text(
 		page.title(),
 		'h1'
@@ -179,7 +186,7 @@ it('reads', function(done) {
 ```
 
 ```javascript
-it('remembers', function(done) {
+it('remembers', function() {
 	runner.push(
 		page.read('h1')
 	);
@@ -195,7 +202,7 @@ it('remembers', function(done) {
 ```
 
 ```javascript
-it('remembers', function(done) {
+it('remembers', function() {
 	runner.set(
 		'title',
 		page.read('h1')
@@ -228,7 +235,7 @@ it('remembers', function(done) {
 
 For testing SPA (or rich MPA) you can provide a method for Tasty to ensure that client is ready for the next action.
 
-Note that built-in methods cannot be combined. To register persistent method(s) call `client.ready(...)`, for temporary methods use `page.ready(...)`.
+Note that built-in methods cannot be combined. Call `client.ready(...)` to register persistent method and use `page.ready(...)` for temporary methods.
 
 The simpliest way is to just wait after using some tools.
 
@@ -261,6 +268,7 @@ Another way is to provide some application-specific code.
 ```javascript
 client.ready(
 	'until',
+	// This function is executed on client, test will continue when it return true.
 	function() {
 		return !document.getElementsByClassName('progress').length;
 	},
@@ -271,7 +279,9 @@ client.ready(
 ```javascript
 client.ready(
 	'exec',
+	// This function is executed on client.
 	function(tasty) {
+		// tasty.thenable is a builtin Promise for non-supporting browsers.
 		return tasty.thenable(
 			function(resolve, reject) {
 				...
@@ -287,7 +297,7 @@ client.ready(
 The `queue(...)` call with function allows you to add some custom logic into test, but you should use `queue.*` namespace for tools.
 
 ```javascript
-it('chooses', function(done) {
+it('chooses', function() {
 	queue(
 		() => queue.page.text('Welcome back')
 			.then(
@@ -303,7 +313,7 @@ it('chooses', function(done) {
 The `queue.namespace.tool` is the same as `namespace.tool`, but runs immediately. You should use `queue.*` tools only inside `queue(...)` call if you want to preserve execution order.
 
 ```javascript
-it('searches', function(done) {
+it('searches', function() {
 	runner.until(
 		queue(
 			() => queue.page.text('Chapter 42', 'h1')
@@ -363,7 +373,7 @@ Use [reCAPTCHA testing key](https://developers.google.com/recaptcha/docs/faq) or
 
 ### SSL/TLS
 
-Use [Let's encrypt](https://letsencrypt.org/).
+Use [Let's encrypt](https://letsencrypt.org/) or self-signed certificates.
 
 # Building
 
@@ -373,20 +383,12 @@ npm run prepublish
 
 # Testing
 
-Requires [PhantomJS](http://phantomjs.org/) to be available in shell as `phantomjs`.
+Automated for [SauceLabs](https://saucelabs.com/) environment. Requires `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables, which are provided by [TravisCI](https://travis-ci.org/) automatically.
 
 ```shell
 npm test
 ```
 
-Make sure to clear PhantomJS persistent cache located in user home.
-
-`AppData\Local\Ofi Labs\PhantomJS`
-
-`Library/Caches/Ofi Labs/PhantomJS`
-
-`.local/share/Ofi Labs/PhantomJS`
-
 # Windows
 
-Everything works fine.
+Everything works fine, yay!

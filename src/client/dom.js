@@ -44,7 +44,7 @@ function find(regexp, selector) {
 	// NOTE Node.textContent doesn't respect CSS text-transform, while HTMLElement.innerText does.
 	while (node = walker.nextNode()) {
 		if (precursor.test(node.textContent) &&
-			regexp.test(node.parentElement.innerText)
+			node.parentNode && regexp.test(node.parentNode.innerText)
 		) {
 			found = node;
 			break;
@@ -93,7 +93,7 @@ function reach(node) {
 		parent = actual;
 
 	while (parent !== node) {
-		if (!(parent = parent.parentElement)) {
+		if (!(parent = parent.parentNode)) {
 			return [actual, x, y];
 		}
 	}

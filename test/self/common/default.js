@@ -3,10 +3,11 @@
 module.exports = [
 	{
 		name: 'client.navigate',
+		timeout: 30000,
 		specs: [
 			{
 				name: 'navigates client',
-				time: 500,
+				time: 1000,
 				body: () => {
 					client.navigate('/test.html');
 					client.location('/test.html');
@@ -20,10 +21,11 @@ module.exports = [
 	},
 	{
 		name: 'page.loaded',
+		timeout: 30000,
 		specs: [
 			{
-				name: 'checks resource',
-				time: 500,
+				name: 'checks resources',
+				time: 1000,
 				body: () => {
 					client.navigate('/test.html');
 					page.loaded('/manifest.appcache');
@@ -41,10 +43,11 @@ module.exports = [
 	},
 	{
 		name: 'page.text',
+		timeout: 30000,
 		specs: [
 			{
 				name: 'checks text',
-				time: 750,
+				time: 1000,
 				body: () => {
 					client.navigate('/test.html');
 					page.text('Test');

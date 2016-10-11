@@ -4,7 +4,8 @@ const fs = require('fs'),
 	glob = require('glob').sync,
 	path = require('path');
 
-const browserify = require(resolve('browserify')),
+const resolve = require('./server/util').resolve,
+	browserify = require(resolve('browserify')),
 	ts = require(resolve('typescript'));
 
 const ROOT = __dirname + '/../';
@@ -73,20 +74,3 @@ browserify({
 		fs.createWriteStream(ROOT + 'dist/tasty.js')
 			.on('finish', () => process.exit(0))
 	);
-
-function resolve(name) {
-	try {
-		return require.resolve(name);
-	} catch (thrown) {
-		try {
-			return require.resolve(process.cwd() + '/node_modules/' + name);
-		} catch (thrown) {
-			const path = require('requireg').resolve(name);
-			if (!path) {
-				throw new Error(`Cannot find module '${name}'`);
-			}
-
-			return path;
-		}
-	}
-}

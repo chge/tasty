@@ -1,38 +1,119 @@
 'use strict';
 
-module.exports = tool;
+module.exports = createTool;
 
-const log = require('./log');
+function createTool(token, server, config) {
+	const box = function tool(...args) {
+		return tool.add(...args);
+	};
+	box.add = add.bind(null, box, server);
+	// TODO readonly?
+	box.token = token;
 
-// TODO pass inject config?
+	return fill(box, server, config);
+}
 
-// NOTE user must inject tool.server.exec(token, fn, args, reconnect);
-// NOTE user must inject tool.server.send(token, name, args, reconnect);
-
-function tool(path, handle) {
+function add(box, server, path, handle) {
 	path = path.split('.');
 	let space = path[1] ? path[0] : null,
 		name = path[1] || path[0],
 		scope = space ?
-			tool[space] = tool[space] || {} :
-			tool;
+			box[space] = box[space] || {} :
+			box;
 
 	return scope[name] = typeof handle === 'function' ?
 		handle :
-		// NOTE preserve this.
-		function(...args) {
-			return tool.server.send(
-				this,
-				'tool',
-				[space + '.' + name].concat(args),
-				// NOTE force wait for reconnect.
-				// TODO consider sync message.
-				!!handle
-			);
-		};
+		(...args) => server.send(
+			box.token,
+			'tool',
+			[space + '.' + name].concat(args)
+		);
 }
 
-function register(persistent, method, value, filter) {
+function fill(tool, server, config) {
+	// NOTE client.
+
+	tool('client.breakpoint');
+	tool('client.exec', function exec(fn, ...args) {
+		return server.exec(this, fn.toString(), args);
+	});
+
+	tool('client.location');
+	tool('client.navigate');
+
+	tool('client.ready', function ready(...args) {
+		return registerReady.apply(this, [server, true].concat(args));
+	});
+
+	tool('client.reload');
+	tool('client.reset', function reset(url, persistent) {
+		if (persistent !== false) {
+			server.deleteScripts(this);
+		}
+
+		return server.send(this, 'tool', ['client.reset', url]);
+	});
+
+	// NOTE page.
+
+	tool('page.font');
+	tool('page.loaded');
+
+	tool('page.ready', function ready(...args) {
+		return registerReady.apply(this, [server, false].concat(args));
+	});
+
+	tool('page.text');
+	tool('page.title');
+
+	// NOTE input.
+
+	tool('input.click');
+	tool('input.paste');
+	tool('input.type');
+
+	// NOTE runner.
+
+	tool('runner.delay', function delay(ms) {
+		return new Promise(function(resolve) {
+			setTimeout(resolve, ms | 0);
+		});
+	});
+
+	tool('runner.until', function until(tool, ...args) {
+		return new Promise(function(resolve) {
+			const repeat = function() {
+				tool.handle.apply(null, args)
+					.then(
+						resolve,
+						() => setTimeout(repeat, 100)
+					)
+			};
+			repeat();
+		});
+	});
+
+	tool('runner.while', function until(tool, ...args) {
+		return new Promise(function(resolve) {
+			const repeat = function() {
+				let result;
+				tool.handle.apply(null, args)
+					.then(
+						(r) => {
+							result = r;
+							setTimeout(repeat, 100);
+						},
+						() => resolve(result)
+					)
+			};
+			repeat();
+		});
+	});
+
+	return tool;
+}
+
+function registerReady(server, persistent, method, value, filter) {
 	filter = Array.isArray(filter) ?
 		filter :
 		filter ?
@@ -45,7 +126,7 @@ function register(persistent, method, value, filter) {
 
 	switch (method) {
 		case 'delay':
-			return tool.server.exec(
+			return server.exec(
 				this,
 `function ready(method, value, filter) {
 	var tasty = this.tasty || this.require('tasty');
@@ -63,12 +144,10 @@ function register(persistent, method, value, filter) {
 	);
 }`,
 				[method, value, filter],
-				// TODO consider sync message.
-				false,
 				persistent
 			);
 		case 'document':
-			return tool.server.exec(
+			return server.exec(
 				this,
 `function ready(method, value, filter) {
 	var tasty = this.tasty || this.require('tasty');
@@ -88,12 +167,10 @@ function register(persistent, method, value, filter) {
 	);
 }`,
 				[method, value, filter],
-				// TODO consider sync message.
-				false,
 				persistent
 			);
 		case 'exec':
-			return tool.server.exec(
+			return server.exec(
 				this,
 `function ready(filter) {
 	var tasty = this.tasty || this.require('tasty')
@@ -110,15 +187,13 @@ function register(persistent, method, value, filter) {
 	);
 }`,
 				[filter],
-				// TODO consider sync message.
-				false,
 				persistent
 			);
 		case 'until':
 			// TODO configurable.
 			const period = 100;
 
-			return tool.server.exec(
+			return server.exec(
 				this,
 `function ready(filter, period) {
 	var tasty = this.tasty || this.require('tasty');
@@ -139,93 +214,10 @@ function register(persistent, method, value, filter) {
 	);
 }`,
 				[filter, period],
-				// TODO consider sync message.
-				false,
 				persistent
 			);
 		default:
 			// TODO allow client to implement?
-			throw new Error('unknown ready method ' + method);
+			throw new Error(`unknown ready method '${method}'`);
 	}
 }
-
-// NOTE client.
-
-tool('client.breakpoint');
-tool('client.exec', function exec(fn, ...args) {
-	return tool.server.exec(this, fn.toString(), args);
-});
-
-tool('client.location');
-tool('client.navigate', true);
-
-tool('client.ready', function ready(...args) {
-	return register.apply(this, [true].concat(args));
-});
-
-tool('client.reload', true);
-tool('client.reset', function reset(url, persistent) {
-	persistent = url !== false &&
-		persistent !== false;
-	if (persistent) {
-		delete tool.server.exec.persistent[this];
-	}
-
-	return tool.server.send(this, 'tool', ['client.reset', url], true);
-});
-
-// NOTE page.
-
-tool('page.font');
-tool('page.loaded');
-
-tool('page.ready', function ready(...args) {
-	return register.apply(this, [false].concat(args));
-});
-
-tool('page.text');
-tool('page.title');
-
-// NOTE input.
-
-tool('input.click');
-tool('input.paste');
-tool('input.type');
-
-// NOTE runner.
-
-tool('runner.delay', function delay(ms) {
-	return new Promise(function(resolve) {
-		setTimeout(resolve, ms | 0);
-	});
-});
-
-tool('runner.until', function until(tool, ...args) {
-	return new Promise(function(resolve) {
-		const repeat = function() {
-			tool.handle.apply(null, args)
-				.then(
-					resolve,
-					() => setTimeout(repeat, 100)
-				)
-		};
-		repeat();
-	});
-});
-
-tool('runner.while', function until(tool, ...args) {
-	return new Promise(function(resolve) {
-		const repeat = function() {
-			let result;
-			tool.handle.apply(null, args)
-				.then(
-					(r) => {
-						result = r;
-						setTimeout(repeat, 100);
-					},
-					() => resolve(result)
-				)
-		};
-		repeat();
-	});
-});

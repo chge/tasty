@@ -1,309 +1,463 @@
 'use strict';
 
-const Emitter = require('events').EventEmitter,
-	emitter = new Emitter();
+module.exports = createServer;
 
-module.exports = {
-	close: close,
-	exec: exec,
-	emitter: emitter,
-	listen: listen,
-	send: send
-};
+const glob = require('glob'),
+	fs = require('fs'),
+	createHttp = require('http').createServer,
+	createHttps = require('https').createServer,
+	resolvePath = require('path').resolve,
+	SocketIO = require('socket.io');
 
-const fs = require('fs'),
-	http = require('http'),
-	https = require('https'),
-	socketio = require('socket.io'),
-	url = require('url');
-
-const coverage = require('./coverage'),
-	log = require('./log'),
-	prepare = require('./runner').prepare,
-	tool = require('./tool'),
+const createCoverage = require('./coverage'),
+	createRunner = require('./runner'),
 	util = require('./util');
 
 const mime = util.mime,
 	random = util.random;
 
-let io,
-	runners = {},
-	statics;
+class Server {
+	constructor(emitter, log, config) {
+		this.config = config;
+		this.count = 0;
+		this.coverage = config.coverage ?
+			createCoverage(config) :
+			null;
+		this.emitter = emitter;
+		this.log = log;
+		this.runner = {};
+		this.script = {
+			id: 0
+		};
+	}
 
-function listen(config) {
-	let server = http.createServer((request, response) => {
-		switch (request.url) {
-			case '/':
-			case config.server.path:
-				response.setHeader('Content-Type', mime('txt'));
-				response.writeHead('400');
-				response.end(`400 Bad Request\nLoad ${url.format(config.server)}tasty.js on your page.`);
-				break;
-			case config.server.path + 'tasty.js':
-				response.setHeader('Content-Type', mime('js'));
-				response.end(
-					fs.readFileSync(__dirname + '/../../dist/tasty.js')
-				);
-				break;
-			case config.server.path + 'socket.io.js':
-				response.setHeader('Content-Type', mime('js'));
-				response.end(
-					fs.readFileSync(__dirname + '/../../node_modules/socket.io-client/socket.io.js')
-				);
-				break;
-			default:
-				if (exec.code[request.url]) {
-					response.setHeader('Content-Type', mime('js'));
-					response.end(
-						exec.code[request.url]
-					);
-				} else {
-					response.setHeader('Content-Type', mime('txt'));
-					response.writeHead('404');
-					response.end('404 Not Found');
-				}
-		}
-	})
-		.listen(
-			config.server.port | 0,
-			config.server.hostname === '0.0.0.0' ?
-				null :
-				config.server.hostname
-		);
+	listen() {
+		return new Promise((resolve, reject) => {
+			const config = this.config;
 
-	log('server', url.format(config.server));
+			Promise.all([
+				config.cert ?
+					this.readFile(config.cert) :
+					null,
+				config.key ?
+					this.readFile(config.key) :
+					null
+			])
+				.then(
+					(credentials) => {
+						const cert = credentials[0],
+							key = credentials[1],
+							passphrase = config.passphrase;
 
-	// TODO file watch.
-
-	io = socketio(server).path(config.server.path)
-		.on('connection', (socket) => {
-			// WORKAROUND: client performs sync before reconnect to get ack on ack.
-			socket.on('sync', (data, callback) => callback());
-
-			// WORKAROUND: we use socket.io rooms to handle reconnects properly.
-			socket.on('register', (token, callback) => {
-				let runner = register(token, socket, config);
-				runner ?
-					callback(runner.token) :
-					callback(token);
-
-				if (runner && config.autorun) {
-					emitter.emit('start', token);
-
-					runner.run()
-						.then(
-							(result) => {
-								log('client', runner.token, 'success');
-							},
-							(error) => {
-								log('client', runner.token, 'failure', error && error.stack ? error.stack : error);
-
-								runner.error = error;
+						if (config.server.protocol === 'https:') {
+							if (!cert) {
+								throw config.cert ?
+									new Error('invalid cert ' + config.cert) :
+									new Error('cert is required');
 							}
+							if (!key) {
+								throw config.key ?
+									new Error('invalid key ' + config.key) :
+									new Error('key is required');
+							}
+							this.server = createHttps({
+								cert: cert,
+								key: key,
+								passphrase: passphrase
+							});
+						} else {
+							this.server = createHttp();
+						}
+						this.server.listen(
+							(config.server.port | 0) || 80,
+							config.server.hostname === '0.0.0.0' ?
+								null :
+								config.server.hostname
 						)
-						.then(() => {
-							runner.finish = true;
-							finish(runner.token, config);
-						});
-				}
+							.once('listening', () => {
+								this.onListening();
+								resolve(this);
+							})
+							.on('request', this.onRequest.bind(this))
+							.on('error', (error) => {
+								this.log.error('server', error);
+								reject(error);
+							});
+
+						this.io = SocketIO(this.server)
+							.path(config.server.path || '/')
+							.on('connection', this.onConnection.bind(this))
+							.on('error', (error) => {
+								this.log.error('server', error);
+								reject(error);
+							});
+					}
+				);
+		});
+	}
+
+	close() {
+		return new Promise((resolve, reject) => {
+			this.server.once('close', resolve);
+
+			Object.keys(this.io.sockets).forEach(
+				(id) => this.io.sockets[id].disconnect()
+			);
+			this.io.server.close();
+			this.log.log('server', 'closed');
+		});
+	}
+
+	register(token, socket) {
+		this.count = this.count | 0;
+		const config = this.config,
+			log = this.log.log;
+
+		let runner = this.runner[token];
+		if (token && token.length === 4 && runner) {
+			socket.join(token);
+
+			if (runner.end) {
+				this.end(token, config);
+			} else {
+				// TODO chain?
+				const urls = this.script[token];
+				Promise.all(
+					urls ?
+						urls.map(
+							(url) => this.send(token, 'exec', url.slice(1), this.script[url])
+						) :
+						[]
+				)
+					.then(
+						() => this.emitter.emit('reconnect.' + token)
+					);
+			}
+
+			return null;
+		}
+		token = this.newToken();
+
+		socket.join(token);
+
+		log('client', token, 'runner', config.runner);
+		config.slow &&
+			log('client', token, 'slow', config.slow, 'ms');
+
+		const files = config.include ?
+			glob.sync(config.include, {ignore: config.exclude}) :
+			[];
+		files.length ?
+			log('test files', files) :
+			log('no test files found');
+
+		runner = this.runner[token] = createRunner(token, files, this, this.emitter, config);
+		runner.token = token;
+		runner.onTest = (name) => {
+			this.emitter.emit('test', token, name);
+			this.send(token, 'message', name);
+		};
+		runner.onPass = (name) => {
+			this.emitter.emit('pass', token, name);
+		};
+		runner.onFail = (name, error) => {
+			this.emitter.emit('fail', token, name, error);
+		};
+
+		return runner;
+	}
+
+	send(token, name, data) {
+		// WORKAROUND: we use socket.io rooms to handle reconnects properly.
+		return new Promise((resolve, reject) => {
+			this.io.in(token).clients((error, ids) => {
+				ids.forEach((id) => {
+					this.emitter.once('reconnect.' + token, resolve);
+
+					this.io.connected[id].emit(name, data, (response) => {
+						let error = response[0],
+							result = response[1];
+						error ?
+							reject(
+								Object.assign(new Error(), error)
+							) :
+							resolve(result);
+					})
+				});
 			});
 		});
+	}
 
-	if (config.static) {
-		log('static', url.format(config.static), 'from', config.static.root);
+	exec(token, code, args, persistent) {
+		let id = ++this.script.id,
+			url = '/exec.' + token + '.' + id + '.js',
+			values = JSON.stringify(args);
+
+		if (persistent) {
+			this.script[token] = this.script[token] || [];
+			this.script[token].push(url);
+		}
+		this.script[url] = `(${code}).apply(this,${values});`;
+		return this.send(token, 'exec', url.slice(1))
+			.then(() => {
+				if (!persistent) {
+					delete this.script[url];
+				}
+			});
+	}
+
+	end(token) {
+		const config = this.config;
+
+		// TODO timeout.
+		return Promise.resolve()
+			.then(() => {
+				if (this.coverage && config.format) {
+					this.log.log('client', token, 'coverage', config.format);
+
+					return this.send(token, 'coverage')
+						.then(
+							(data) => this.coverage.report(data)
+						)
+						.catch(
+							(error) => this.log.error(error)
+						);
+				}
+			})
+			.then(
+				() => this.send(token, 'end')
+			)
+			.then(
+				() => null,
+				(error) => error
+			)
+			.then((error) => {
+				this.log.log('client', token, 'ended');
+
+				this.emitter.emit('end', token, this.runner[token].error || error);
+
+				delete this.runner[token];
+				delete this.script[token];
+			});
+	}
+
+	newToken() {
+		// TODO better.
+		return [
+			(++this.count).toString(16),
+			random(0, 15).toString(16),
+			random(0, 15).toString(16),
+			random(0, 15).toString(16)
+		].join('').substr(0, 4);
+	}
+
+	deleteScripts(token) {
+		delete this.script[token];
+	}
+
+	readFile(path) {
+		return new Promise(
+			(resolve, reject) => fs.readFile(
+				path,
+				(error, content) => error ?
+					reject(error) :
+					resolve(content)
+			)
+		);
+	}
+
+	onListening() {
+		const config = this.config,
+			log = this.log.log;
+
+		log('server', config.server.href);
+		config.static &&
+			log('static', 'from', config.static);
 		config.coverage &&
-			log('static', 'coverage', config.coverage.instrumenter);
+			log('static', 'coverage', config.coverage);
+	}
 
-		statics = http.createServer((request, response) => {
-			try {
-				// TODO configurable index.
-				const path = config.static.root +
-					(request.url === '/' ? '/index.html' : request.url);
+	onConnection(socket) {
+		const config = this.config,
+			log = this.log.log;
 
-				if (fs.existsSync(path)) {
-					const type = mime(path);
-					let content = fs.readFileSync(path);
+		// WORKAROUND: we use socket.io rooms to handle reconnects properly.
+		socket.on('register', (token, callback) => {
+			let runner = this.register(token, socket, config);
+			runner ?
+				callback(runner.token) :
+				callback(token);
 
-					if (config.coverage) {
-						if (type === mime.js) {
-							try {
-								content = coverage.instrument(content.toString(), path, config);
-							} catch (thrown) {
-								content = `
+			if (runner && config.autorun) {
+				this.emitter.emit('start', token);
+
+				runner.run()
+					.then(
+						(result) => {
+							log('client', runner.token, 'success');
+						},
+						(error) => {
+							log('client', runner.token, 'failure', error && error.stack ? error.stack : error);
+
+							runner.error = error;
+						}
+					)
+					.then(() => {
+						runner.end = true;
+						this.end(runner.token, config);
+					});
+			}
+		});
+	}
+
+	onRequest(request, response) {
+		try {
+			const config = this.config,
+				url = request.url;
+			if (url === config.server.path + 'tasty.js') {
+				this.serveFile(url, __dirname + '/../../dist/tasty.js', response);
+			} else if (url === config.server.path + 'socket.io.js') {
+				this.serveFile(url, __dirname + '/../../node_modules/socket.io-client/socket.io.js', response);
+			} else if (this.script[url]) {
+				this.serveScript(url, response);
+			} else if (url === '/' || url === config.server.path) {
+				this.serveBadRequest(url, response);
+			} else if (config.static) {
+				this.serveStatic(request, response);
+			} else {
+				this.serveNotFound(url, null, response);
+			}
+		} catch (thrown) {
+			this.serveError(thrown, response);
+		}
+	}
+
+	serveScript(url, response) {
+		this.log.debug('server', 'script', url);
+
+		// NOTE no considerable sources to instrument.
+		response.setHeader('Content-Type', mime.js);
+		response.end(
+			this.script[url]
+		);
+	}
+
+	serveStatic(request, response) {
+		const config = this.config,
+			url = request.url,
+			path = resolvePath(config.static + url);
+
+		// TODO configurable index?
+		fs.access(path, fs.R_OK, (error) => {
+			error ?
+				this.serveNotFound(url, path, response) :
+				config.coverage && mime(path) === mime.js ?
+					this.serveInstrumented(url, path, response) :
+					this.serveFile(url, path, response);
+		});
+	}
+
+	serveInstrumented(url, path, response) {
+		try {
+			const config = this.config;
+			this.readFile(path)
+				.then(
+					(content) => this.coverage.instrument(content.toString(), path)
+				)
+				.then(
+					(instrumented) => {
+						this.log.debug('static', 200, url, 'coverage', path);
+
+						response.setHeader('Content-Type', mime.js);
+						response.end(instrumented);
+					},
+					(error) => {
+						this.serveJsError(url, error, response);
+					}
+				);
+		} catch (thrown) {
+			this.serveJsError(url, thrown, response);
+		}
+	}
+
+	serveJsError(url, error, response) {
+		this.log.debug('static', 200, url, error);
+		response.setHeader('Content-Type', mime.js);
+		response.end(`
 (function() {
-	var error = new Error(${JSON.stringify(thrown.message)});
+	var error = new Error(${JSON.stringify(error.message)});
 	error.name = ${JSON.stringify(request.url)};
 	throw error;
 /*
-${thrown.stack}
+${error.stack}
 */
 })();
-`;
-							}
-						} else if (type === mime.html) {
-							// WORKAROUND: Istanbul uses eval to get top-level scope.
-							content = config.coverage.instrumenter === 'istanbul' ?
-								content.toString().replace('script-src ', "script-src 'unsafe-eval' ") :
-								content;
-						}
-					}
-
-					response.setHeader('Content-Type', type);
-					response.end(content);
-				} else {
-					response.setHeader('Content-Type', mime('txt'));
-					response.writeHead(404);
-					response.end('404 Not Found');
-				}
-			} catch (thrown) {
-				response.setHeader('Content-Type', mime('txt'));
-				if (thrown.code === 'EISDIR') {
-					response.writeHead(403);
-					response.end('403 Forbidden');
-				} else {
-					response.writeHead(500);
-					response.end('500 Internal Server Error\n\n' + (thrown.stack || thrown));
-				}
-			}
-		})
-			.listen(
-				config.static.port | 0,
-				config.static.hostname === '0.0.0.0' ?
-					null :
-					config.static.hostname
-			);
+`
+		);
 	}
 
-	config.tests.length ?
-		log('tests', config.tests) :
-		log('no tests found');
-}
+	serveFile(url, path, response) {
+		this.log.debug('static', 200, url, 'as', path);
 
-function close() {
-	io.server.close();
-	log('server', 'closed');
+		const config = this.config,
+			type = mime(path);
 
-	statics.close();
-	log('static', 'closed');
-}
-
-function register(token, socket, config) {
-	register.count = register.count | 0;
-	let runner;
-
-	if (token && token.length === 4 && (runner = runners[token])) {
-		socket.join(token);
-
-		if (runner.finish) {
-			finish(token, config);
-		} else {
-			// TODO chain?
-			const keys = exec.persistent ?
-				exec.persistent[token] :
-				null;
-			Promise.all(
-				keys ?
-					Object.keys(keys).map(
-						(key) => send(token, 'exec', key.slice(1), keys[key])
-					) :
-					[]
-			)
+		response.setHeader('Content-Type', type);
+		if (config.coverage === 'istanbul' && type === mime.html) {
+			// WORKAROUND: Istanbul uses eval to get top-level scope.
+			this.readFile(path)
 				.then(
-					() => emitter.emit('reconnect.' + token)
-				);
-		}
-
-		return null;
-	}
-	// TODO better.
-	token = ('' + (++register.count) + random(0, 9) + random(0, 9) + random(0, 9)).substr(0, 4);
-
-	socket.join(token);
-
-	runner = runners[token] = prepare(token, config);
-	runner.token = token;
-
-	return runner;
-}
-
-function send(token, name, data, reconnect) {
-	// WORKAROUND: we use socket.io rooms to handle reconnects properly.
-	return new Promise((resolve, reject) => {
-		io.in(token).clients(function (error, ids) {
-			ids.forEach((id) => {
-				io.connected[id].emit(name, data, (response) => {
-					let error = response[0],
-						result = response[1];
-					if (error) {
-						error = Object.assign(new Error(), error);
-						reconnect ?
-							emitter.once('reconnect.' + token, () => reject(error)) :
-							reject(error);
-					} else {
-						reconnect ?
-							emitter.once('reconnect.' + token, () => resolve(result)) :
-							resolve(result);
-					}
-				})
-			});
-		});
-	});
-}
-
-function exec(token, code, args, reconnect, persistent) {
-	let id = ++exec.id,
-		key = '/exec.' + token + '.' + id + '.js',
-		values = JSON.stringify(args);
-
-	exec.code[key] = `(${code}).apply(this,${values});`;
-	if (persistent) {
-		exec.persistent = exec.persistent || {};
-		exec.persistent[token] = exec.persistent[token] || {};
-		exec.persistent[token][key] = !!reconnect;
-	}
-
-	return send(token, 'exec', key.slice(1), reconnect)
-		.then(() => {
-			if (!persistent) {
-				delete exec[key];
-			}
-		});
-}
-exec.id = 0;
-exec.code = {};
-exec.persistent = {};
-
-function finish(token, config) {
-	// TODO timeout.
-	return Promise.resolve()
-		.then(() => {
-			if (config.coverage && config.coverage.reporter) {
-				log('client', token, 'coverage', config.coverage.reporter);
-
-				return send(token, 'coverage')
-					.then(
-						(data) => coverage.report(data, config)
+					(content) => response.end(
+						content.toString()
+							.replace('script-src ', "script-src 'unsafe-eval' ")
 					)
-					.catch(
-						(error) => log(error)
-					);
-			}
-		})
-		.then(
-			() => send(token, 'finish')
-		)
-		.then(
-			() => null,
-			(error) => error
-		)
-		.then((error) => {
-			log('client', token, 'finished');
+					// TODO handle error.
+				);
+		} else {
+			fs.createReadStream(path)
+				.on(
+					'error',
+					(error) => error.code === 'EISDIR' ?
+						this.serveForbidden(url, path, response) :
+						this.serveError(thrown, response)
+				)
+				.pipe(response);
+		}
+	}
 
-			if (exec.persistent) {
-				delete exec.persistent[token];
-			}
-			const fail = runners[token] && runners[token].error || error;
+	serveBadRequest(url, response) {
+		this.log.debug('static', 400, url);
 
-			emitter.emit('finish', token, fail);
-		});
+		response.setHeader('Content-Type', mime.txt);
+		response.writeHead('400');
+		response.end(`400 Bad Request\n\nLoad ${this.config.server.href}tasty.js on your page.`);
+	}
+
+	serveForbidden(url, path, response) {
+		this.log.debug('static', 403, url, 'as', path);
+
+		response.setHeader('Content-Type', mime.txt);
+		response.writeHead(403);
+		response.end('403 Forbidden');
+	}
+
+	serveNotFound(url, path, response) {
+		this.log.debug('static', 404, url, 'as', path);
+
+		response.setHeader('Content-Type', mime.txt);
+		response.writeHead(404);
+		response.end('404 Not Found');
+	}
+
+	serveError(error, response) {
+		this.log.debug('static', 500, error);
+
+		response.setHeader('Content-Type', mime.txt);
+		response.writeHead(500);
+		response.end('500 Internal Server Error\n\n' + (error ? error.stack || error : error));
+	}
+}
+
+function createServer(emitter, log, config) {
+	return new Server(emitter, log, config);
 }

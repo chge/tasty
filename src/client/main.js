@@ -67,8 +67,6 @@ function connected(socket) {
 	let reconnect = !!tasty.session();
 	log(reconnect ? 'reconnected' : 'connected');
 
-	tool.sync = sync.bind(socket);
-
 	socket.on('tool', (data, callback) => {
 		const name = data[0],
 			args = data.slice(1);
@@ -114,8 +112,8 @@ function connected(socket) {
 		log.debug('coverage', key);
 	});
 
-	socket.on('finish', (data, callback) => {
-		log.info('finish');
+	socket.on('end', (data, callback) => {
+		log.info('end');
 		tasty.session(null);
 		callback([]);
 		socket.close();
@@ -130,12 +128,5 @@ function connected(socket) {
 			log.error('not registered');
 			socket.close();
 		}
-	});
-}
-
-function sync(callback) {
-	return thenable((resolve) => {
-		resolve();
-		this.emit('sync', tasty.session(), callback);
 	});
 }

@@ -4,80 +4,71 @@
 
 process.title = 'Tasty';
 
-let tasty = require('./server/main');
-
-// TODO use minimist.
-let config = {};
-[].slice.call(process.argv, 2).forEach((arg) => {
-	arg = arg.split('=');
-	let name = arg[0].split('--')[1],
-		value = arg[1];
-	if (name) {
-		config[name] = arg.length === 1 ?
-			true :
-			value === 'false' ?
-				false :
-				value === 'true' ?
-					true :
-					value;
-	}
+const config = require('minimist')(process.argv.slice(2), {
+	alias: {
+		'b': 'bail', 'c': 'coverage', 'x': 'exclude', 'f': 'format', 'h': 'help', 'i': 'include',
+		'p': 'reporter', 'r': 'runner', 's': 'server', 't': 'static', 'v': 'version', 'q': 'quiet', 'w': 'watch'
+	},
+	boolean: ['bail', 'help', 'version', 'verbose', 'quiet', 'watch'],
+	string: ['assert', 'cert', 'coverage', 'expect', 'exclude', 'format', 'include', 'key', 'passphrase', 'reporter', 'runner', 'server', 'slow', 'static']
 });
 
-if (Object.keys(config).length === 1 && config.version === true) {
+const Tasty = require('./server/main');
+
+if (config.version) {
 	console.log(
 		'Tasty',
 		require('../package.json').version
 	);
 	process.exit(0);
-} else if (!Object.keys(config).length || Object.keys(config).length === 1 && config.help === true) {
+} else if (config.help) {
 	console.log(
-`Usage: tasty --include=glob ...
+`Usage: tasty [options]
 
-  --assert=module-name
-  --bail=true|false
-  --expect=module-name
-  --exclude=file-glob
-  --exit=true|false
-  --globals=true|false
-  --include=file-glob
-  --mode=single|multiple
-  --log=true|false
-  --runner=module-name|mocha|jasmine|qunit
-  --server
-  --server=true|false
-  --server-url=http://localhost:8765/path
-  --slow=ms
-  --static
-  --static=true|false
-  --static-url=http://localhost:5678/path
-  --static-root=path
+  --assert <name>        Module to use as assertion library.
+  -b, --bail             Fail fast, stop test runner on first fail.
+  --cert <path>          Certificate for Tasty server.
+  -c, --coverage <name>  Module to use as coverage instrumenter.
+  --expect <name>        Module to use as expectation library.
+  -f, --format <name>    Module to use as coverage report generator.
+  -x, --exclude <glob>   Exclude test files.
+  -h, --help             Print this help and exit.
+  -i, --include <glob>   Include test files.
+  --key <path>           Certificate key for Tasty server.
+  --passphrase <string>  Certificate key passphrase for Tasty server.
+  -p, --reporter <name>  Module to use as test reporter.
+  -r, --runner <name>    Module to use as test runner, built-ins:
+                         mocha, jasmine, qunit.
+  -s, --server <url>     Protocol, host, port and path for Tasty server.
+                         If omitted, use http://localhost:8765/
+  --slow <ms>            Pause after each tool.
+                         If blank, delay 500 ms.
+  -t, --static <path>    Start built-in static server from path.
+                         If blank, serve from CWD.
+  --verbose              Verbose Tasty-specific output.
+  -v, --version          Print Tasty version and exit.
+  -q, --quiet            Don't print Tasty-specific output.
+  -w, --watch            Continue after first client.
 `
 	);
 	process.exit(0);
 } else {
-	tasty(
+	const tasty = new Tasty(
 		Object.assign(config, {
-			coverage: config['coverage-reporter'] ?
-				{instrumenter: config['coverage'], reporter: config['coverage-reporter']} :
-				config['coverage'] ?
-					{instrumenter: config['coverage']} :
-					false,
-			log: config['log'] || true,
-			server: config['server-url'] ?
-				{url: config['server-url']} :
-				config['server'],
-			static: config['static-url'] || config['static-root'] ?
-				{url: config['static-url'], root: config['static-root']} :
-				config['static']
+			server: config['server'] || true
 		})
-	)
-		.on('finish', (token, fail) => {
-			if (config.watch) {
-				console.log('tasty', 'watching');
-			} else {
-				console.log('tasty', 'exit', fail);
-				process.exit(fail | 0);
-			}
-		})
-		.start();
+	);
+	tasty.on('end', (token, fail) => {
+		if (config.watch) {
+			tasty.log &&
+				tasty.log.log('tasty', 'watching');
+		} else {
+			tasty.log &&
+				tasty.log.log('tasty', 'exit', fail);
+
+			tasty.close();
+			process.exit(fail | 0);
+		}
+	})
+	.start();
 }

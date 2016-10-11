@@ -1,41 +1,66 @@
+'use strict';
+
 const chai = require('chai'),
 	expect = chai.expect,
-	tasty = require('../..');
+	Tasty = require('../..');
 
 describe('tasty', function() {
-	afterEach(function() {
-		tasty.finish();
+	it('exports default API', function() {
+		const tasty = new Tasty();
+
+		return tasty.start()
+			.then(
+				() => tasty.close()
+			);
 	});
 
-	it('exports API', function() {
-		tasty({
-			static: true
-		}).start();
+	it('exports named API', function() {
+		const tasty = new Tasty.Tasty();
+
+		return tasty.start()
+			.then(
+				() => tasty.close()
+			);
 	});
 
 	it('supports logging', function() {
-		tasty({
+		const tasty = new Tasty({
 			log: {
 				log: () => {}
 			}
-		}).start();
+		});
+
+		return tasty.start()
+			.then(
+				() => tasty.close()
+			);
 	});
 
 	it('supports coverage', function() {
-		tasty({
+		const tasty = new Tasty({
 			coverage: 'istanbul'
-		}).start();
+		});
+
+		return tasty.start()
+			.then(
+				() => tasty.close()
+			);
 	});
 
 	it('supports static', function() {
-		tasty({
+		const tasty = new Tasty({
 			static: true
-		}).start();
+		});
+
+		return tasty.start()
+			.then(
+				() => tasty.close()
+			);
 	});
 
 	it('fails without server', function() {
 		expect(function() {
-			tasty({
+			new Tasty({
 				server: false
 			});
 		}).to.throw(Error);
@@ -43,7 +68,7 @@ describe('tasty', function() {
 
 	it('fails on wrong configration', function() {
 		expect(function() {
-			tasty({
+			new Tasty({
 				bail: true,
 				runner: 'jasmine'
 			});

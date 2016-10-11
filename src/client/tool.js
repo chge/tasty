@@ -1,7 +1,5 @@
 'use strict';
 
-// NOTE user must inject tool.sync(callback);
-
 module.exports = tool;
 
 tool.hook = hook;
@@ -103,64 +101,67 @@ tool('client.location', function location(what) {
 				window.location.pathname :
 				window.location.href
 	)) {
-		throw reason('location', window.location.pathname, 'is not', what);
+		throw reason('location', window.location.pathname, 'is not', what.source);
 	}
 });
 
 tool('client.navigate', function navigate(url) {
-	// TODO allow to skip navigation if url already matches.
-	return tool.sync(() => {
+	// TODO allow to skip navigation if url already matches?
+	return thenable(() => {
+		// NOTE never resolve.
 		window.location = url;
 	});
 });
 
 tool('client.reload', function reload() {
-	return tool.sync(() => {
+	return thenable(() => {
+		// NOTE never resolve.
 		window.location.reload(true);
 	});
 });
 
 tool('client.reset', function reset(url) {
-	return tool.sync(() => {
-		const token = util.session(),
-			done = () => {
-				util.session(token);
-				typeof url === 'string' ?
-					(window.location = url) :
+	const token = util.session(),
+		done = () => {
+			util.session(token);
+			if (typeof url === 'string') {
+				window.location = url;
+			} else {
+				url === false ||
 					window.location.reload(true);
-			};
-		// NOTE clear cookies.
-		document.cookie.split(';').forEach(
-			(pair) => {
-				document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
 			}
-		);
-
-		// NOTE clear Storage.
-		localStorage.clear();
-		sessionStorage.clear();
-		// NOTE clear indexedDB.
-		let chain = thenable();
-		if (window.indexedDB && indexedDB.webkitGetDatabaseNames) {
-			let request = indexedDB.webkitGetDatabaseNames();
-			request.onsuccess = (event) => {
-				[].forEach.call(
-					event.target.result,
-					(name) => {
-						chain = chain.then(() => thenable((resolve, reject) => {
-							request = indexedDB.deleteDatabase(name);
-							request.onsuccess = resolve;
-							request.onerror = (event) => log.error(event);
-							request.onblocked = (event) => log.error(event);
-						}));
-					}
-				);
-			};
-			request.onfailure = (event) => log.error(event);
+		};
+	// NOTE clear cookies.
+	document.cookie.split(';').forEach(
+		(pair) => {
+			document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
 		}
-		chain.then(done, done);
-		// TODO other.
-	});
+	);
+
+	// NOTE clear Storage.
+	localStorage.clear();
+	sessionStorage.clear();
+	// NOTE clear indexedDB.
+	let chain = thenable();
+	if (window.indexedDB && indexedDB.webkitGetDatabaseNames) {
+		let request = indexedDB.webkitGetDatabaseNames();
+		request.onsuccess = (event) => {
+			[].forEach.call(
+				event.target.result,
+				(name) => {
+					chain = chain.then(() => thenable((resolve, reject) => {
+						request = indexedDB.deleteDatabase(name);
+						request.onsuccess = resolve;
+						request.onerror = (event) => log.error(event);
+						request.onblocked = (event) => log.error(event);
+					}));
+				}
+			);
+		};
+		request.onfailure = (event) => log.error(event);
+	}
+	chain.then(done, done);
+	// TODO other.
 });
 
 // NOTE page.
@@ -233,7 +234,7 @@ tool('page.text', function text(what, selector, reachable) {
 			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
 		);
 	}
-	found = found.parentElement;
+	found = found.parentNode;
 	if (!dom.is(found, !reachable)) {
 		throw reason(
 			selector ? 'node ' + selector + ' with text' : 'text', what, 'is not fully visible'
@@ -255,7 +256,7 @@ tool('page.title', function title(what) {
 		new RegExp(escape(what, true));
 
 	if (!what.test(document.title)) {
-		throw reason('title', document.title, 'is not', what);
+		throw reason('title', document.title, 'is not', what.source);
 	}
 });
 
@@ -274,7 +275,7 @@ tool('input.click', function click(what, selector, reachable) {
 			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
 		);
 	}
-	found = found.parentElement;
+	found = found.parentNode;
 	if (found.disabled) {
 		throw reason(
 			'node', format(found), 'with text', what, 'is disabled'

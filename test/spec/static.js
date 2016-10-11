@@ -1,88 +1,62 @@
+'use strict';
+
 const chai = require('chai'),
 	expect = chai.expect,
-	tasty = require('../..');
+	Tasty = require('../..');
 
-const URL = 'http://localhost:5678';
+const URL1 = 'http://localhost:8765',
+	URL2 = 'http://localhost:6789';
 
 chai.use(require('chai-http'));
 
 describe('static', function() {
-	afterEach(function() {
-		tasty.finish();
-	});
-
 	it('serves by default', function() {
-		tasty({
+		const tasty = new Tasty({
 			static: true
-		}).start();
+		});
 
-		return chai.request(URL)
-			.get('/')
+		return tasty.start()
+			.then(
+				() => chai.request(URL1).get('/')
+			)
 			.catch(
-				(response) => expect(response).to.have.status(404)
+				(response) => expect(response).to.have.status(400)
+			)
+			.then(
+				() => tasty.close()
 			);
 	});
 
 	it('serves from CWD', function() {
-		tasty({
+		const tasty = new Tasty({
 			static: true
-		}).start();
+		});
 
-		return chai.request(URL)
-			.get('/package.json')
+		return tasty.start()
+			.then(
+				() => chai.request(URL1).get('/package.json')
+			)
 			.then(
 				(response) => {
 					expect(response).to.have.status(200);
 					expect(response).to.be.json;
 					expect(response.body.name).to.equal('tasty');
 				}
+			)
+			.then(
+				() => tasty.close()
 			);
 	});
 
 	it('serves from given root', function() {
-		tasty({
-			static: {
-				root: 'test/res'
-			}
-		}).start();
+		const tasty = new Tasty({
+			static: 'test/root'
+		});
 
-		return chai.request(URL)
-			.get('/test.html')
+		return tasty.start()
 			.then(
-				(response) => {
-					expect(response).to.have.status(200);
-					expect(response).to.be.html;
-				}
-			);
-	});
-
-	it('serves on given URL', function() {
-		tasty({
-			static: {
-				url: 'http://localhost:6789',
-				root: 'test/res'
-			}
-		}).start();
-
-		return chai.request('http://localhost:6789')
-			.get('/test.html')
-			.then(
-				(response) => {
-					expect(response).to.have.status(200);
-					expect(response).to.be.html;
-				}
-			);
-	});
-
-	it('allows path traversal', function() {
-		tasty({
-			static: {
-				root: 'test'
-			}
-		}).start();
-
-		return chai.request(URL)
-			.get('/res/other.html')
+				() => chai.request(URL1).get('/test.html')
+			)
 			.then(
 				(response) => {
 					expect(response).to.have.status(200);
@@ -90,7 +64,48 @@ describe('static', function() {
 				}
 			)
 			.then(
-				() => chai.request(URL)
+				() => tasty.close()
+			);
+	});
+
+	it('serves on given URL', function() {
+		const tasty = new Tasty({
+			server: URL2,
+			static: 'test/root'
+		});
+
+		return tasty.start()
+			.then(
+				() => chai.request(URL2).get('/test.html')
+			)
+			.then(
+				(response) => {
+					expect(response).to.have.status(200);
+					expect(response).to.be.html;
+				}
+			)
+			.then(
+				() => tasty.close()
+			);
+	});
+
+	it('allows path traversal', function() {
+		const tasty = new Tasty({
+			static: 'test'
+		});
+
+		return tasty.start()
+			.then(
+				() => chai.request(URL1).get('/root/other.html')
+			)
+			.then(
+				(response) => {
+					expect(response).to.have.status(200);
+					expect(response).to.be.html;
+				}
+			)
+			.then(
+				() => chai.request(URL1)
 					.get('/../package.json')
 					.then(
 						(response) => {
@@ -99,18 +114,26 @@ describe('static', function() {
 							expect(response.body.name).to.equal('tasty');
 						}
 					)
+			)
+			.then(
+				() => tasty.close()
 			);
 	});
 
 	it('catches errors', function() {
-		tasty({
+		const tasty = new Tasty({
 			static: true
-		}).start();
+		});
 
-		return chai.request(URL)
-			.get('//')
+		return tasty.start()
+			.then(
+				() => chai.request(URL1).get('//')
+			)
 			.catch(
 				(response) => expect(response).to.have.status(403)
+			)
+			.then(
+				() => tasty.close()
 			);
 	});
 });
