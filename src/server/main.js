@@ -91,7 +91,7 @@ class Tasty {
 		return this.server.listen(this.config);
 	}
 
-	close() {
+	stop() {
 		return this.server.close();
 	}
 

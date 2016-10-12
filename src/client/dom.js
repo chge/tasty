@@ -41,10 +41,9 @@ function find(regexp, selector) {
 		found,
 		node;
 
-	// NOTE Node.textContent doesn't respect CSS text-transform, while HTMLElement.innerText does.
 	while (node = walker.nextNode()) {
 		if (precursor.test(node.textContent) &&
-			node.parentNode && regexp.test(node.parentNode.innerText)
+			regexp.test(innerText(node.parentNode))
 		) {
 			found = node;
 			break;
@@ -52,6 +51,31 @@ function find(regexp, selector) {
 	}
 
 	return found;
+}
+
+function innerText(node) {
+	if (!node) {
+		return null;
+	}
+	if (node.innerText) {
+		return node.innerText;
+	}
+
+	// NOTE Node.textContent doesn't respect CSS text-transform, while HTMLElement.innerText does.
+	const style = window.getComputedStyle(node);
+	switch (style.textTransform) {
+		case 'uppercase':
+			return node.textContent.toUpperCase();
+		case 'lowercase':
+			return node.textContent.toLowerCase();
+		case 'capitalize':
+			return node.textContent.replace(
+				/\b./g,
+				(letter) => letter.toUpperCase()
+			);
+	}
+
+	return node.textContent;
 }
 
 function focus(node) {

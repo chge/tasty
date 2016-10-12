@@ -2,6 +2,7 @@ language: node_js
 
 node_js:
   - 6
+  - 6.7
   - 6.6
   - 6.5
   - 6.4
@@ -10,6 +11,7 @@ node_js:
   - 6.1
   - 6.0
   - 5
+  - 5.12
   - 5.11
   - 5.10
   - 5.9
@@ -23,15 +25,16 @@ node_js:
   - 5.1
   - 5.0
   - 4
+  - 4.6
   - 4.5
   - 4.4
   - 4.3
 
 addons:
   sauce_connect:
-    username: "chge"
+    username: "tasty"
   jwt:
-    secure: "uh1UCBdoFZituOcZPEkzHFdarr98cGxY761p11l9cDFlaMKhHAitSdo8PxhgORMNRUrGuThtj0/4NCS/HtXvToIyzj4z0Z+Y6PPik3NelR+IdL4dSgDCRmZGxsWORJmfF4NlJD8jLYhqHM4tpc5ytjHge2RbbS+ay6sobb92gLM8P5XLtJ+wuad/DnGfCedAIwud0dIlPnHBygORQZ8uvuz7f/dThu7waXsmeIBry+otnweNuQ6O3UYN2hw44BHZZ6LBxKTkYvDXzZ1toZ7UyGyM6dsHpg35+yf9j9JFg7c2b6e9SB72jYtMA+a2XZpF1c029Kbmp9OqwNerfaOxRKSjAUpfUCDWO8E5QwW+x5epqa48CRCxjEXv013Vv0n6tY1MTagGtXjduUHFU6/qOXEEQWnctlDlF0/nml346PFDm0x52C/0BmMEg0XW6wBpwiYe68VIMVPHUIgV2vqrA8qbQmfR+TbHJNNEOKcGgUkn23qrAK1BAfuDqKxjKwoQRtw7M+96qRiGBYAY4JMdlzyXGSPLDdB+w6YaQkf/ZL03xom66nNOuol4RWVBHT2dBcfuVU7v0V+t/iw/FnNsyEFBuJ9w/cYst47JT2aRgmlfjyrzoGsdUuZvERVdrLV0HJV1195kKFMXaqky+osh0T8b5yYNpEjbm7zediIG34k="
+    secure: "aXO1EoblOPDTFdmCwAnhA6kvUu53Ra26fVtyKRTLhdkKIVJ4XOEXundiSGESff7FgM7kGkQkGiP4peK7Dvqe7ED/C3+wR8py1dLMvzn8rFzWqIyvGhIU1rsn5jNebAbnj+8KECmRM9ioRRCZhWG0emkHhlcrlt1JHB5Hg8V5WA6J/2bM9h+GShyD5kgJ+KYaoWs4gRZWDOuTNfWW2+P7mW4AsRpfGLLhfcPav2yDauCNEu6JYS77SKrcDY9pamL49NHEXs7D+I/x6Lg1Dl2TkNnZtCK9czwJp6dPq+Yb8f2TX3sJlPFiGsUcnh9igqWKaDNZ7UsFk2JCxXLXD6Lx2c1JNEx7SzHkw70kWHZfyqCnzPMVpTBL1xSTpzCMIr0x0arKYU08ezU/vb/L7ntfPum3BtxaOiDPZEMSKQhwpuvYDSOUpOWy2JbQ+VTFP91371OnTa4Q88qaZ16o4B6ZAccjz23oELYeBJtop5qpedWKt/8fsFYNZSmFL/pva6kbblfKx9dLLc/FHUgKsuFONCogUxu7VSbZyh8MFhKrxNTqT7ORHg/1Ef/rkNnZ+Eyfo7Qx9BkG1gm7xZ3bm2e46yWx3aAb6D36xLzVwRGdG+j5bGCTVszJdFoyShah7+ndzWif3PQLXp0lUCwd6f8hiJVL3DeLPoDgRZJkay4ohBw="
 
 notifications:
   email: false

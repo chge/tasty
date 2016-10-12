@@ -98,6 +98,9 @@ class Server {
 
 	close() {
 		return new Promise((resolve, reject) => {
+			if (!this.server) {
+				throw new Error('server is not listening');
+			}
 			this.server.once('close', resolve);
 
 			Object.keys(this.io.sockets).forEach(
@@ -315,8 +318,10 @@ class Server {
 			const config = this.config,
 				url = request.url;
 			if (url === config.server.path + 'tasty.js') {
+				this.log.debug('server', 'script', url);
 				this.serveFile(url, __dirname + '/../../dist/tasty.js', response);
 			} else if (url === config.server.path + 'socket.io.js') {
+				this.log.debug('server', 'script', url);
 				this.serveFile(url, __dirname + '/../../node_modules/socket.io-client/socket.io.js', response);
 			} else if (this.script[url]) {
 				this.serveScript(url, response);

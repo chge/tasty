@@ -131,7 +131,7 @@ function registerReady(server, persistent, method, value, filter) {
 `function ready(method, value, filter) {
 	var tasty = this.tasty || this.require('tasty');
 	tasty.hook(
-		filter.map(function(name) {
+		tasty.map(filter, function(name) {
 			return 'after.' + name;
 		}),
 		function delay(result) {
@@ -152,7 +152,7 @@ function registerReady(server, persistent, method, value, filter) {
 `function ready(method, value, filter) {
 	var tasty = this.tasty || this.require('tasty');
 	tasty.hook(
-		filter.map(function(name) {
+		tasty.map(filter, function(name) {
 			return 'after.' + name;
 		}),
 		function document(result) {
@@ -175,7 +175,7 @@ function registerReady(server, persistent, method, value, filter) {
 `function ready(filter) {
 	var tasty = this.tasty || this.require('tasty')
 	tasty.hook(
-		filter.map(function(name) {
+		tasty.map(filter, function(name) {
 			return 'after.' + name;
 		}),
 		function exec(result) {
@@ -198,7 +198,7 @@ function registerReady(server, persistent, method, value, filter) {
 `function ready(filter, period) {
 	var tasty = this.tasty || this.require('tasty');
 	tasty.hook(
-		filter.map(function(name) {
+		tasty.map(filter, function(name) {
 			return 'after.' + name;
 		}),
 		function until(result) {

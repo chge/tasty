@@ -66,7 +66,7 @@ if (config.version) {
 			tasty.log &&
 				tasty.log.log('tasty', 'exit', fail);
 
-			tasty.close();
+			tasty.stop();
 			process.exit(fail | 0);
 		}
 	})

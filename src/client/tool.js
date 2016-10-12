@@ -1,11 +1,12 @@
 'use strict';
 
+// NOTE user must inject tool.console;
+
 module.exports = tool;
 
 tool.hook = hook;
 
 const dom = require('./dom'),
-	log = require('./log'),
 	util = require('./util');
 
 const delay = util.delay,
@@ -35,7 +36,7 @@ function tool(name, handle, callback) {
 	const space = name.split('.')[0],
 		args = handle;
 
-	log.debug('tool', name, handle);
+	tool.console.debug('tasty', 'tool', name, handle);
 
 	return hook(name, 'before.tool', args)
 		.then((result) => hook(result, 'before.' + space, args))
@@ -51,10 +52,10 @@ function hook(result, key, args) {
 		let keys = result,
 			listener = key;
 
-		keys = Array.isArray(keys) ?
+		keys = util.isArray(keys) ?
 			keys :
 			[keys];
-		keys.forEach((k) => {
+		util.forEach(keys, (k) => {
 			hook[k] = listener;
 		});
 
@@ -64,11 +65,11 @@ function hook(result, key, args) {
 	const listener = hook[key];
 	if (listener) {
 		if (listener.skip) {
-			log.debug('hook', key, 'skip');
+			tool.console.debug('tasty', 'hook', key, 'skip');
 
 			delete listener.skip;
 		} else {
-			log.debug('hook', key, listener.name || '(anonymous)', listener.once ? 'once' : '');
+			tool.console.debug('tasty', 'hook', key, listener.name || '(anonymous)', listener.once ? 'once' : '');
 
 			result = listener.apply(this, arguments);
 			if (listener.once) {
@@ -132,7 +133,8 @@ tool('client.reset', function reset(url) {
 			}
 		};
 	// NOTE clear cookies.
-	document.cookie.split(';').forEach(
+	util.forEach(
+		document.cookie.split(';'),
 		(pair) => {
 			document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
 		}
@@ -146,19 +148,19 @@ tool('client.reset', function reset(url) {
 	if (window.indexedDB && indexedDB.webkitGetDatabaseNames) {
 		let request = indexedDB.webkitGetDatabaseNames();
 		request.onsuccess = (event) => {
-			[].forEach.call(
+			util.forEach(
 				event.target.result,
 				(name) => {
 					chain = chain.then(() => thenable((resolve, reject) => {
 						request = indexedDB.deleteDatabase(name);
 						request.onsuccess = resolve;
-						request.onerror = (event) => log.error(event);
-						request.onblocked = (event) => log.error(event);
+						request.onerror = (event) => tool.console.error('tasty', event);
+						request.onblocked = (event) => tool.console.error('tasty', event);
 					}));
 				}
 			);
 		};
-		request.onfailure = (event) => log.error(event);
+		request.onfailure = (event) => tool.console.error('tasty', event);
 	}
 	chain.then(done, done);
 	// TODO other.
@@ -322,7 +324,7 @@ tool('input.type', function type(text) {
 
 	return thenable((resolve) => {
 		let chain = thenable();
-		[].forEach.call(text, (char) => {
+		util.forEach(text, (char) => {
 			chain = chain
 				.then(
 					() => {

@@ -11,12 +11,15 @@ const include = util.include,
 	thenable = util.thenable;
 
 tasty.connect = connect;
+tasty.forEach = util.forEach;
 tasty.hook = tool.hook;
+tasty.isArray = util.isArray;
+tasty.map = util.map;
 tasty.session = util.session;
 tasty.thenable = thenable;
 tasty.tool = tool;
 
-[].forEach.call(document.scripts, (script) => {
+tasty.forEach(document.scripts, (script) => {
 	if (script.src.indexOf('/tasty.js') !== -1) {
 		const server = script.getAttribute('data-server') ||
 			script.src.split('tasty.js')[0];
@@ -33,9 +36,13 @@ function tasty(config) {
 
 	include.server = config.server;
 
-	log.logger = config.hasOwnProperty('log') && config.log !== true ?
-		config.log :
-		console;
+	tasty.console = tool.console = log.init(
+		config.hasOwnProperty('log') ?
+			config.log === true ?
+				window.console :
+				config.log :
+			window.console
+	);
 
 	return tasty;
 }
@@ -43,7 +50,7 @@ function tasty(config) {
 function connect() {
 	const server = tasty.config.server;
 	tasty.session() ||
-		log('server', server);
+		tasty.console.log('tasty', 'server', server);
 
 	// TODO bundle socket.io client to leave global scope clean.
 	include('socket.io.js', () => {
@@ -65,7 +72,7 @@ function connect() {
 
 function connected(socket) {
 	let reconnect = !!tasty.session();
-	log(reconnect ? 'reconnected' : 'connected');
+	tasty.console.log('tasty', reconnect ? 'reconnected' : 'connected');
 
 	socket.on('tool', (data, callback) => {
 		const name = data[0],
@@ -73,7 +80,7 @@ function connected(socket) {
 
 		const respond = (result) => {
 			if (result instanceof Error) {
-				log.error(result);
+				tasty.console.error('tasty', result);
 				result = [util.format(result)];
 			} else {
 				result = [null, result];
@@ -93,27 +100,27 @@ function connected(socket) {
 	});
 
 	socket.on('message', (text, callback) => {
-		log(text);
+		tasty.console.log('tasty', text);
 
 		callback([]);
 	});
 
 	socket.on('exec', (key, callback) => {
-		log.debug('exec', include.server + key);
+		tasty.console.debug('tasty', 'exec', include.server + key);
 
 		include(key, () => callback([]));
 	});
 
 	socket.on('coverage', (key, callback) => {
 		key = key || '__coverage__';
-		log.debug('coverage', key);
+		tasty.console.debug('tasty', 'coverage', key);
 
 		callback([null, window[key]]);
-		log.debug('coverage', key);
+		tasty.console.debug('tasty', 'coverage', key);
 	});
 
 	socket.on('end', (data, callback) => {
-		log.info('end');
+		tasty.console.info('tasty', 'end');
 		tasty.session(null);
 		callback([]);
 		socket.close();
@@ -122,10 +129,10 @@ function connected(socket) {
 	socket.emit('register', tasty.session(), (token) => {
 		if (token) {
 			tasty.session(token);
-			log.debug('registered', token);
+			tasty.console.debug('tasty', 'registered', token);
 		} else {
 			tasty.session(null);
-			log.error('not registered');
+			tasty.console.error('tasty', 'not registered');
 			socket.close();
 		}
 	});

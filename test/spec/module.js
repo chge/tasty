@@ -10,7 +10,7 @@ describe('tasty', function() {
 
 		return tasty.start()
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -19,7 +19,7 @@ describe('tasty', function() {
 
 		return tasty.start()
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -32,7 +32,7 @@ describe('tasty', function() {
 
 		return tasty.start()
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -43,7 +43,7 @@ describe('tasty', function() {
 
 		return tasty.start()
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -54,7 +54,7 @@ describe('tasty', function() {
 
 		return tasty.start()
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 

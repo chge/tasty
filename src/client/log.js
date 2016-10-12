@@ -1,21 +1,24 @@
 'use strict';
 
-module.exports = log;
+module.exports = {
+	init: init
+};
 
-function log(...args) {
-	log.logger.log('tasty', ...args);
+let console;
+
+function init(logger) {
+	const wrap = (method) => function() {
+		method &&
+			Function.prototype.apply.call(method, logger, arguments);
+	};
+
+	console = {
+		debug: wrap(logger.debug),
+		log: wrap(logger.log),
+		info: wrap(logger.info),
+		warn: wrap(logger.warn),
+		error: wrap(logger.error)
+	};
+
+	return console;
 }
-
-log.log = log;
-
-log.debug = function debug(...args) {
-	log.logger.debug('tasty', ...args);
-};
-
-log.info = function info(...args) {
-	log.logger.info('tasty', ...args);
-};
-
-log.error = function error(...args) {
-	log.logger.error('tasty', ...args);
-};

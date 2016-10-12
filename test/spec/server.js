@@ -24,7 +24,7 @@ describe('server', function() {
 				}
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -44,7 +44,7 @@ describe('server', function() {
 				}
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -64,7 +64,7 @@ describe('server', function() {
 				}
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -81,7 +81,7 @@ describe('server', function() {
 				}
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -96,7 +96,7 @@ describe('server', function() {
 				(response) => expect(response).to.have.status(404)
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 });

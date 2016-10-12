@@ -33,7 +33,7 @@ module.exports = [
 				time: 5000 + 200,
 				body: () => {
 					client.ready('until', function() {
-						return document.body.innerText.indexOf('Async') !== -1;
+						return document.body.innerHTML.indexOf('Async') !== -1;
 					});
 					client.navigate('/async.html');
 					page.text('Async');
@@ -86,7 +86,7 @@ module.exports = [
 				body: () => {
 					client.navigate('/async.html');
 					page.ready('until', function() {
-						return document.body.innerText.indexOf('Async') !== -1;
+						return document.body.innerHTML.indexOf('Async') !== -1;
 					}, ['page.text']);
 					page.text('Test');
 					page.ready('delay', 0, ['page.text']); // WORKAROUND: skip delay after last check.

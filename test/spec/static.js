@@ -23,7 +23,7 @@ describe('static', function() {
 				(response) => expect(response).to.have.status(400)
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -44,7 +44,7 @@ describe('static', function() {
 				}
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -64,7 +64,7 @@ describe('static', function() {
 				}
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -85,7 +85,7 @@ describe('static', function() {
 				}
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -116,7 +116,7 @@ describe('static', function() {
 					)
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 
@@ -133,7 +133,7 @@ describe('static', function() {
 				(response) => expect(response).to.have.status(403)
 			)
 			.then(
-				() => tasty.close()
+				() => tasty.stop()
 			);
 	});
 });

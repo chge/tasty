@@ -1,183 +1,243 @@
 'use strict';
 
-const SauceLabs = require('saucelabs'),
-	Tasty = require('../..'),
+const Tasty = require('../..'),
 	webdriver = require('selenium-webdriver');
 
 // NOTE https://wiki.saucelabs.com/display/DOCS/Platform+Configurator
 const LINUX = 'Linux',
-	OSX = 'OS X 10.11',
-	WINDOWS = 'Windows 10';
+	OSX11 = 'OS X 10.11',
+	OSX10 = 'OS X 10.10',
+	OSX9 = 'OS X 10.9',
+	OSX8 = 'OS X 10.8',
+	WINDOWS10 = 'Windows 10',
+	WINDOWS7 = 'Windows 7',
+	WINDOWSXP = 'Windows XP';
 const CHROME = 'chrome',
 	EDGE = 'MicrosoftEdge',
 	FIREFOX = 'firefox',
 	IE = 'internet explorer',
 	OPERA = 'opera',
 	SAFARI = 'safari';
-const CASE = [
+const CAPS = [
 	//{appiumVersion: '1.5.3', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait', platformName: 'Android', platformVersion: '5.1'},
 	//{appiumVersion: '1.5.3', browserName: 'Safari', deviceName: 'iPhone 6s Simulator', deviceOrientation: 'portrait', platformName: 'iOS', platformVersion: '9.3'},
 	// TODO Android.
 	// TODO iOS.
-	{platform: WINDOWS, browserName: IE, version: '11.103'},
 	{platform: LINUX, browserName: CHROME, version: '48.0'},
 	{platform: LINUX, browserName: CHROME, version: '47.0'},
 	{platform: LINUX, browserName: CHROME, version: '46.0'},
 	{platform: LINUX, browserName: CHROME, version: '45.0'},
+	{platform: LINUX, browserName: CHROME, version: '44.0'},
 	{platform: LINUX, browserName: FIREFOX, version: '45.0'},
 	{platform: LINUX, browserName: FIREFOX, version: '44.0'},
 	{platform: LINUX, browserName: FIREFOX, version: '43.0'},
+	{platform: LINUX, browserName: FIREFOX, version: '42.0'},
+	{platform: LINUX, browserName: FIREFOX, version: '41.0'},
 	{platform: LINUX, browserName: OPERA, version: '12.15'},
-	{platform: OSX, browserName: CHROME, version: '53.0'},
-	{platform: OSX, browserName: CHROME, version: '52.0'},
-	{platform: OSX, browserName: CHROME, version: '51.0'},
-	{platform: OSX, browserName: FIREFOX, version: '49.0'},
-	{platform: OSX, browserName: FIREFOX, version: '48.0'},
-	{platform: OSX, browserName: FIREFOX, version: '47.0'},
-	{platform: OSX, browserName: SAFARI, version: '9.0'},
-	{platform: WINDOWS, browserName: CHROME, version: '53.0'},
-	{platform: WINDOWS, browserName: CHROME, version: '52.0'},
-	{platform: WINDOWS, browserName: CHROME, version: '51.0'},
-	{platform: WINDOWS, browserName: CHROME, version: '50.0'},
-	{platform: WINDOWS, browserName: EDGE, version: '13.10586'},
-	{platform: WINDOWS, browserName: FIREFOX, version: '49.0'},
-	{platform: WINDOWS, browserName: FIREFOX, version: '48.0'},
-	{platform: WINDOWS, browserName: FIREFOX, version: '47.0'},
-	{platform: WINDOWS, browserName: FIREFOX, version: '46.0'},
+	{platform: OSX11, browserName: CHROME, version: '53.0'},
+	{platform: OSX11, browserName: CHROME, version: '52.0'},
+	{platform: OSX11, browserName: CHROME, version: '51.0'},
+	{platform: OSX11, browserName: CHROME, version: '50.0'},
+	{platform: OSX11, browserName: CHROME, version: '49.0'},
+	{platform: OSX11, browserName: FIREFOX, version: '49.0'},
+	{platform: OSX11, browserName: FIREFOX, version: '48.0'},
+	{platform: OSX11, browserName: FIREFOX, version: '47.0'},
+	{platform: OSX11, browserName: FIREFOX, version: '46.0'},
+	{platform: OSX11, browserName: FIREFOX, version: '45.0'},
+	{platform: OSX11, browserName: SAFARI, version: '9.0'},
+	{platform: OSX10, browserName: SAFARI, version: '8.0'},
+	{platform: OSX9, browserName: SAFARI, version: '7.0'},
+	{platform: OSX8, browserName: SAFARI, version: '6.0'},
+	{platform: WINDOWS10, browserName: IE, version: '11.103'},
+	{platform: WINDOWS7, browserName: IE, version: '11.0'},
+	{platform: WINDOWS7, browserName: IE, version: '10.0'},
+	{platform: WINDOWS7, browserName: IE, version: '9.0'},
+	{platform: WINDOWSXP, browserName: IE, version: '9.0'},
+	{platform: WINDOWS10, browserName: CHROME, version: '53.0'},
+	{platform: WINDOWS10, browserName: CHROME, version: '52.0'},
+	{platform: WINDOWS10, browserName: CHROME, version: '51.0'},
+	{platform: WINDOWS10, browserName: CHROME, version: '50.0'},
+	{platform: WINDOWS10, browserName: CHROME, version: '49.0'},
+	{platform: WINDOWS7, browserName: CHROME, version: '53.0'},
+	{platform: WINDOWS7, browserName: CHROME, version: '52.0'},
+	{platform: WINDOWS7, browserName: CHROME, version: '51.0'},
+	{platform: WINDOWS7, browserName: CHROME, version: '50.0'},
+	{platform: WINDOWS7, browserName: CHROME, version: '49.0'},
+	{platform: WINDOWSXP, browserName: CHROME, version: '49.0'},
+	{platform: WINDOWS10, browserName: EDGE, version: '13.10586'},
+	{platform: WINDOWS10, browserName: FIREFOX, version: '49.0'},
+	{platform: WINDOWS10, browserName: FIREFOX, version: '48.0'},
+	{platform: WINDOWS10, browserName: FIREFOX, version: '47.0'},
+	{platform: WINDOWS10, browserName: FIREFOX, version: '46.0'},
+	{platform: WINDOWS10, browserName: FIREFOX, version: '45.0'},
+	{platform: WINDOWS7, browserName: FIREFOX, version: '49.0'},
+	{platform: WINDOWS7, browserName: FIREFOX, version: '48.0'},
+	{platform: WINDOWS7, browserName: FIREFOX, version: '47.0'},
+	{platform: WINDOWS7, browserName: FIREFOX, version: '46.0'},
+	{platform: WINDOWS7, browserName: FIREFOX, version: '45.0'},
+	{platform: WINDOWSXP, browserName: FIREFOX, version: '45.0'},
+	{platform: WINDOWS7, browserName: OPERA, version: '11.64'},
+	{platform: WINDOWS7, browserName: OPERA, version: '12.12'},
+	{platform: WINDOWS7, browserName: SAFARI, version: '5.1'},
 ];
 
+// NOTE each Travis job checks 3 browsers, each on different test framework.
 const env = process.env,
-	saucelabs = new SauceLabs({
-		username: env.SAUCE_USERNAME,
-		password: env.SAUCE_ACCESS_KEY
-	});
-let number = (env.TRAVIS_JOB_NUMBER || '1').split('.');
-number = (number[1] || number[0]) | 0;
+	number = (env.TRAVIS_JOB_NUMBER || '0.1').split('.')[1] | 0,
+	version = env.npm_package_version;
 
-function run(config, name) {
-	return new Promise((resolve, reject) => {
-		const tasty = new Tasty(config);
-
-		const driver = new webdriver.Builder()
-			.usingServer(`http://${env.SAUCE_USERNAME}:${env.SAUCE_ACCESS_KEY}@localhost:4445/wd/hub`)
-			.withCapabilities(Object.assign(
-				{
-					'tunnel-identifier': env.TRAVIS_JOB_NUMBER
-				},
-				CASE[number - 1] || CASE[random(0, CASE.length - 1)]
-			))
-			.build();
-
-		// WORKAROUND: keepalive for Selenium.
-		const keepalive = () => {
-			try {
-				// TODO check if driver is still connected.
-				driver.getTitle();
-				setTimeout(keepalive, 30000);
-			} catch (thrown) {
-				// NOTE noop.
-			}
-		};
-		setTimeout(keepalive, 30000);
-
-		let job;
-		driver.getSession()
-			.then((session) => {
-				job = session.id_;
-
-				return tasty.start();
-			})
-			.then(
-				() => driver.get('http://localhost:8765/test.html')
-			)
-			.then(
-				() => tasty.once('end', (token, error) => {
-					saucelabs.updateJob(
-						job,
-						{
-							name: name,
-							passed: !error
-						},
-						(err) => {
-							Promise.all([
-								tasty.close(),
-								quit(driver)
-							]).then(
-								() => error ?
-									reject(error) :
-									resolve(),
-								reject
-							);
-						}
-					);
-				})
-			);;
-	});
-}
-
-function quit(driver) {
-	return driver.manage().logs().get('browser')
-		.then(
-			(entries) => entries.map(
-				(entry) => entry.level.name_ === 'ERROR' &&
-					console.log(entry.message)
-			),
-			// NOTE noop.
-			(error) => {}
-		)
-		.then(
-			() => driver.quit()
-		)
-		.then(
-			() => {},
-			// NOTE noop.
-			(error) => {}
-		);
-}
-
-function random(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-describe('client', function() {
+describe(clientName(number * 3 - 2), function() {
 	this.timeout(300000);
 
-	it('passes jasmine suite', function() {
+	let tasty, driver;
+	afterEach(() => teardown(tasty, driver));
+
+	it('passes Jasmine suite', function() {
 		this.slow(20000);
 
-		return run({
+		tasty = new Tasty({
 			coverage: 'istanbul',
 			format: 'lcovonly',
 			include: 'test/self/jasmine/*.js',
 			runner: 'jasmine',
 			reporter: 'jasmine-spec-reporter',
 			static: 'test/root'
-		}, this.test.fullTitle());
-	});
+		});
+		driver = setup(clientCaps(number * 3 - 2));
 
-	it('passes mocha suite', function() {
+		return run(tasty, driver);
+	});
+});
+
+describe(clientName(number * 3 - 1), function() {
+	this.timeout(300000);
+
+	let tasty, driver;
+	afterEach(() => teardown(tasty, driver));
+
+	it('passes Mocha suite', function() {
 		this.slow(20000);
 
-		return run({
+		tasty = new Tasty({
 			assert: 'chai',
 			coverage: 'istanbul',
 			format: 'lcovonly',
 			expect: 'chai',
 			include: 'test/self/mocha/*.js',
 			static: 'test/root'
-		}, this.test.fullTitle());
-	});
+		});
+		driver = setup(clientCaps(number * 3 - 1));
 
-	it('passes qunit suite', function() {
+		return run(tasty, driver);
+	});
+});
+
+describe(clientName(number * 3), function() {
+	this.timeout(300000);
+
+	let tasty, driver;
+	afterEach(() => teardown(tasty, driver));
+
+	it('passes QUnit suite', function() {
 		this.slow(20000);
 
-		return run({
+		tasty = new Tasty({
 			coverage: 'istanbul',
 			format: 'lcovonly',
-			log: true,
 			include: 'test/self/qunit/*.js',
 			runner: 'qunit',
 			static: 'test/root'
-		}, this.test.fullTitle());
+		});
+		driver = setup(clientCaps(number * 3));
+
+		return run(tasty, driver);
 	});
 });
+
+function setup(caps) {
+	const driver = new webdriver.Builder()
+		.usingServer(`http://${env.SAUCE_USERNAME}:${env.SAUCE_ACCESS_KEY}@localhost:4445/wd/hub`)
+		.withCapabilities(Object.assign(
+			{
+				// NOTE seconds.
+				'commandTimeout': 300,
+				'idleTimeout': 300,
+				'maxDuration': 300,
+				'tunnel-identifier': env.TRAVIS_JOB_NUMBER
+			},
+			caps
+		))
+		.build();
+
+	driver.executeScript(`sauce:job-info=${JSON.stringify({name: clientName(caps), build: version})}`);
+
+	return driver;
+}
+
+function run(tasty, driver) {
+	return tasty.start()
+		.then(
+			() => driver.get('http://localhost:8765/test.html')
+		)
+		.then(
+			() => new Promise((resolve, reject) => {
+				tasty.once(
+					'end',
+					(token, error) => driver.executeScript(`sauce:job-result=${!error}`)
+						.then(
+							() => error ?
+								reject(error) :
+								resolve(),
+							reject
+						)
+				);
+			})
+		);
+}
+
+function teardown(tasty, driver) {
+	return Promise.resolve(
+		tasty ?
+			tasty.stop() :
+			null
+	)
+		.then(
+			() => driver.manage().logs().get('browser')
+		)
+		.then(
+			(entries) => entries.map(
+				(entry) => entry.level.name_ === 'ERROR' &&
+					console.error(entry.message)
+			),
+			(error) => {} // NOTE noop.
+		)
+		.then(
+			() => driver.quit()
+		)
+		.catch(
+			(error) => {} // NOTE noop.
+		);
+}
+
+function clientName(index) {
+	const caps = isNaN(index) ?
+		index :
+		clientCaps(index);
+
+	return [
+		caps.browserName.substr(0, 1).toUpperCase() + caps.browserName.substr(1),
+		caps.version,
+		'on',
+		caps.platform
+	].join(' ');
+}
+
+function clientCaps(index) {
+	return index ?
+		CAPS[index % (CAPS.length - 1)] :
+		CAPS[random(0, CAPS.length - 1)];
+}
+
+function random(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
