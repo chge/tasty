@@ -101,13 +101,13 @@ class Server {
 			if (!this.server) {
 				throw new Error('server is not listening');
 			}
-			this.server.once('close', resolve);
-
 			Object.keys(this.io.sockets).forEach(
 				(id) => this.io.sockets[id].disconnect()
 			);
-			this.io.server.close();
-			this.log.log('server', 'closed');
+			this.server.close(() => {
+				this.log.log('server', 'stopped');
+				resolve();
+			});
 		});
 	}
 
@@ -408,8 +408,8 @@ ${error.stack}
 			type = mime(path);
 
 		response.setHeader('Content-Type', type);
-		if (config.coverage === 'istanbul' && type === mime.html) {
-			// WORKAROUND: Istanbul uses eval to get top-level scope.
+		if (type === mime.html && (config.coverage === 'istanbul' || config.coverage === 'nyc')) {
+			// WORKAROUND: Istanbul and NYC use eval to get top-level scope.
 			this.readFile(path)
 				.then(
 					(content) => response.end(

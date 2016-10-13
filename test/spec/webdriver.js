@@ -1,15 +1,31 @@
 'use strict';
 
+const env = process.env,
+	number = (env.TRAVIS_JOB_NUMBER || '').split('.')[1] | 0,
+	version = env.npm_package_version;
+
+if (!number) {
+	describe('webdriver', function() {
+		it.skip('suite skipped');
+	});
+
+	return;
+}
+
 const Tasty = require('../..'),
 	webdriver = require('selenium-webdriver');
 
 // NOTE https://wiki.saucelabs.com/display/DOCS/Platform+Configurator
-const LINUX = 'Linux',
+const ANDROID = 'Android',
+	LINUX = 'Linux',
+	IOS = 'iOS',
 	OSX11 = 'OS X 10.11',
 	OSX10 = 'OS X 10.10',
 	OSX9 = 'OS X 10.9',
 	OSX8 = 'OS X 10.8',
 	WINDOWS10 = 'Windows 10',
+	WINDOWS81 = 'Windows 8.1',
+	WINDOWS8 = 'Windows 8',
 	WINDOWS7 = 'Windows 7',
 	WINDOWSXP = 'Windows XP';
 const CHROME = 'chrome',
@@ -17,74 +33,128 @@ const CHROME = 'chrome',
 	FIREFOX = 'firefox',
 	IE = 'internet explorer',
 	OPERA = 'opera',
-	SAFARI = 'safari';
+	SAFARI = 'safari',
+	WEBVIEW = 'WebView';
+// NOTE Caps <= Travis Node versions x 3.
 const CAPS = [
-	//{appiumVersion: '1.5.3', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait', platformName: 'Android', platformVersion: '5.1'},
-	//{appiumVersion: '1.5.3', browserName: 'Safari', deviceName: 'iPhone 6s Simulator', deviceOrientation: 'portrait', platformName: 'iOS', platformVersion: '9.3'},
-	// TODO Android.
-	// TODO iOS.
-	{platform: LINUX, browserName: CHROME, version: '48.0'},
-	{platform: LINUX, browserName: CHROME, version: '47.0'},
-	{platform: LINUX, browserName: CHROME, version: '46.0'},
-	{platform: LINUX, browserName: CHROME, version: '45.0'},
-	{platform: LINUX, browserName: CHROME, version: '44.0'},
-	{platform: LINUX, browserName: FIREFOX, version: '45.0'},
-	{platform: LINUX, browserName: FIREFOX, version: '44.0'},
-	{platform: LINUX, browserName: FIREFOX, version: '43.0'},
-	{platform: LINUX, browserName: FIREFOX, version: '42.0'},
-	{platform: LINUX, browserName: FIREFOX, version: '41.0'},
-	{platform: LINUX, browserName: OPERA, version: '12.15'},
-	{platform: OSX11, browserName: CHROME, version: '53.0'},
-	{platform: OSX11, browserName: CHROME, version: '52.0'},
-	{platform: OSX11, browserName: CHROME, version: '51.0'},
-	{platform: OSX11, browserName: CHROME, version: '50.0'},
-	{platform: OSX11, browserName: CHROME, version: '49.0'},
-	{platform: OSX11, browserName: FIREFOX, version: '49.0'},
-	{platform: OSX11, browserName: FIREFOX, version: '48.0'},
-	{platform: OSX11, browserName: FIREFOX, version: '47.0'},
-	{platform: OSX11, browserName: FIREFOX, version: '46.0'},
-	{platform: OSX11, browserName: FIREFOX, version: '45.0'},
-	{platform: OSX11, browserName: SAFARI, version: '9.0'},
-	{platform: OSX10, browserName: SAFARI, version: '8.0'},
-	{platform: OSX9, browserName: SAFARI, version: '7.0'},
-	{platform: OSX8, browserName: SAFARI, version: '6.0'},
-	{platform: WINDOWS10, browserName: IE, version: '11.103'},
-	{platform: WINDOWS7, browserName: IE, version: '11.0'},
-	{platform: WINDOWS7, browserName: IE, version: '10.0'},
-	{platform: WINDOWS7, browserName: IE, version: '9.0'},
-	{platform: WINDOWSXP, browserName: IE, version: '9.0'},
-	{platform: WINDOWS10, browserName: CHROME, version: '53.0'},
-	{platform: WINDOWS10, browserName: CHROME, version: '52.0'},
-	{platform: WINDOWS10, browserName: CHROME, version: '51.0'},
-	{platform: WINDOWS10, browserName: CHROME, version: '50.0'},
-	{platform: WINDOWS10, browserName: CHROME, version: '49.0'},
-	{platform: WINDOWS7, browserName: CHROME, version: '53.0'},
-	{platform: WINDOWS7, browserName: CHROME, version: '52.0'},
-	{platform: WINDOWS7, browserName: CHROME, version: '51.0'},
-	{platform: WINDOWS7, browserName: CHROME, version: '50.0'},
-	{platform: WINDOWS7, browserName: CHROME, version: '49.0'},
-	{platform: WINDOWSXP, browserName: CHROME, version: '49.0'},
-	{platform: WINDOWS10, browserName: EDGE, version: '13.10586'},
-	{platform: WINDOWS10, browserName: FIREFOX, version: '49.0'},
-	{platform: WINDOWS10, browserName: FIREFOX, version: '48.0'},
-	{platform: WINDOWS10, browserName: FIREFOX, version: '47.0'},
-	{platform: WINDOWS10, browserName: FIREFOX, version: '46.0'},
-	{platform: WINDOWS10, browserName: FIREFOX, version: '45.0'},
-	{platform: WINDOWS7, browserName: FIREFOX, version: '49.0'},
-	{platform: WINDOWS7, browserName: FIREFOX, version: '48.0'},
-	{platform: WINDOWS7, browserName: FIREFOX, version: '47.0'},
-	{platform: WINDOWS7, browserName: FIREFOX, version: '46.0'},
-	{platform: WINDOWS7, browserName: FIREFOX, version: '45.0'},
-	{platform: WINDOWSXP, browserName: FIREFOX, version: '45.0'},
-	{platform: WINDOWS7, browserName: OPERA, version: '11.64'},
-	{platform: WINDOWS7, browserName: OPERA, version: '12.12'},
-	{platform: WINDOWS7, browserName: SAFARI, version: '5.1'},
+	// NOTE Appium.
+	{platformName: ANDROID, platformVersion: '5.1', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
+	{platformName: ANDROID, platformVersion: '5.0', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
+	{platformName: ANDROID, platformVersion: '4.4', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
+	// NOTE Selendroid.
+	{title: WEBVIEW, browserName: 'android', version: '4.3', platform: LINUX, deviceName: 'Android Emulator', deviceType: 'phone', deviceOrientation: 'portrait'},
+	{title: WEBVIEW, browserName: 'android', version: '4.2', platform: LINUX, deviceName: 'Android Emulator', deviceType: 'phone', deviceOrientation: 'portrait'},
+	{title: WEBVIEW, browserName: 'android', version: '4.1', platform: LINUX, deviceName: 'Android Emulator', deviceType: 'phone', deviceOrientation: 'portrait'},
+	{title: WEBVIEW, browserName: 'android', version: '4.0', platform: LINUX, deviceName: 'Android Emulator', deviceType: 'phone', deviceOrientation: 'portrait'},
+	// NOTE Appium.
+	{platformName: IOS, platformVersion: '9.3', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.2', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.1', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.0', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.4', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.3', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.2', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.1', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.3', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.2', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.1', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.0', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.4', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.3', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.2', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.1', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
+	// NOTE Selenium.
+	{browserName: CHROME, version: '53.0', platform: OSX11},
+	{browserName: CHROME, version: '53.0', platform: WINDOWS10},
+	{browserName: CHROME, version: '53.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '53.0', platform: WINDOWS8},
+	{browserName: CHROME, version: '53.0', platform: WINDOWS7},
+	{browserName: CHROME, version: '52.0', platform: OSX11},
+	{browserName: CHROME, version: '52.0', platform: WINDOWS10},
+	{browserName: CHROME, version: '52.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '52.0', platform: WINDOWS8},
+	{browserName: CHROME, version: '52.0', platform: WINDOWS7},
+	{browserName: CHROME, version: '51.0', platform: OSX11},
+	{browserName: CHROME, version: '51.0', platform: WINDOWS10},
+	{browserName: CHROME, version: '51.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '51.0', platform: WINDOWS8},
+	{browserName: CHROME, version: '51.0', platform: WINDOWS7},
+	{browserName: CHROME, version: '50.0', platform: OSX11},
+	{browserName: CHROME, version: '50.0', platform: WINDOWS10},
+	{browserName: CHROME, version: '50.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '50.0', platform: WINDOWS8},
+	{browserName: CHROME, version: '50.0', platform: WINDOWS7},
+	{browserName: CHROME, version: '49.0', platform: OSX11},
+	{browserName: CHROME, version: '49.0', platform: WINDOWS10},
+	{browserName: CHROME, version: '49.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '49.0', platform: WINDOWS8},
+	{browserName: CHROME, version: '49.0', platform: WINDOWS7},
+	{browserName: CHROME, version: '49.0', platform: WINDOWSXP},
+	{browserName: CHROME, version: '48.0', platform: LINUX},
+	{browserName: CHROME, version: '48.0', platform: WINDOWSXP},
+	{browserName: CHROME, version: '47.0', platform: LINUX},
+	{browserName: CHROME, version: '47.0', platform: WINDOWSXP},
+	{browserName: CHROME, version: '46.0', platform: LINUX},
+	{browserName: CHROME, version: '46.0', platform: WINDOWSXP},
+	{browserName: CHROME, version: '45.0', platform: LINUX},
+	{browserName: CHROME, version: '45.0', platform: WINDOWSXP},
+	{browserName: CHROME, version: '44.0', platform: LINUX},
+	{browserName: CHROME, version: '44.0', platform: WINDOWSXP},
+	{browserName: EDGE, version: '13.10586', platform: WINDOWS10},
+	{browserName: FIREFOX, version: '49.0', platform: OSX11},
+	{browserName: FIREFOX, version: '49.0', platform: WINDOWS10},
+	{browserName: FIREFOX, version: '49.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '49.0', platform: WINDOWS8},
+	{browserName: FIREFOX, version: '49.0', platform: WINDOWS7},
+	{browserName: FIREFOX, version: '48.0', platform: OSX11},
+	{browserName: FIREFOX, version: '48.0', platform: WINDOWS10},
+	{browserName: FIREFOX, version: '48.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '48.0', platform: WINDOWS8},
+	{browserName: FIREFOX, version: '48.0', platform: WINDOWS7},
+	{browserName: FIREFOX, version: '47.0', platform: OSX11},
+	{browserName: FIREFOX, version: '47.0', platform: WINDOWS10},
+	{browserName: FIREFOX, version: '47.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '47.0', platform: WINDOWS8},
+	{browserName: FIREFOX, version: '47.0', platform: WINDOWS7},
+	{browserName: FIREFOX, version: '46.0', platform: OSX11},
+	{browserName: FIREFOX, version: '46.0', platform: WINDOWS10},
+	{browserName: FIREFOX, version: '46.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '46.0', platform: WINDOWS8},
+	{browserName: FIREFOX, version: '46.0', platform: WINDOWS7},
+	{browserName: FIREFOX, version: '45.0', platform: OSX11},
+	{browserName: FIREFOX, version: '45.0', platform: WINDOWS10},
+	{browserName: FIREFOX, version: '45.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '45.0', platform: WINDOWS8},
+	{browserName: FIREFOX, version: '45.0', platform: WINDOWS7},
+	{browserName: FIREFOX, version: '45.0', platform: WINDOWSXP},
+	{browserName: FIREFOX, version: '45.0', platform: LINUX},
+	{browserName: FIREFOX, version: '45.0', platform: WINDOWSXP},
+	{browserName: FIREFOX, version: '44.0', platform: LINUX},
+	{browserName: FIREFOX, version: '44.0', platform: WINDOWSXP},
+	{browserName: FIREFOX, version: '43.0', platform: LINUX},
+	{browserName: FIREFOX, version: '43.0', platform: WINDOWSXP},
+	{browserName: FIREFOX, version: '42.0', platform: LINUX},
+	{browserName: FIREFOX, version: '42.0', platform: WINDOWSXP},
+	{browserName: FIREFOX, version: '41.0', platform: LINUX},
+	{browserName: FIREFOX, version: '41.0', platform: WINDOWSXP},
+	{browserName: IE, version: '11.103', platform: WINDOWS10},
+	{browserName: IE, version: '11.0', platform: WINDOWS81},
+	{browserName: IE, version: '11.0', platform: WINDOWS8},
+	{browserName: IE, version: '11.0', platform: WINDOWS7},
+	{browserName: IE, version: '10.0', platform: WINDOWS8},
+	{browserName: IE, version: '10.0', platform: WINDOWS7},
+	{browserName: IE, version: '9.0', platform: WINDOWS7},
+	{browserName: IE, version: '8.0', platform: WINDOWS7},
+	{browserName: IE, version: '8.0', platform: WINDOWSXP},
+	{browserName: OPERA, version: '12.15', platform: LINUX},
+	{browserName: OPERA, version: '12.12', platform: WINDOWSXP},
+	{browserName: OPERA, version: '11.64', platform: WINDOWSXP},
+	{browserName: SAFARI, version: '9.0', platform: OSX11},
+	{browserName: SAFARI, version: '8.0', platform: OSX10},
+	{browserName: SAFARI, version: '7.0', platform: OSX9},
+	{browserName: SAFARI, version: '6.0', platform: OSX8},
+	{browserName: SAFARI, version: '5.1', platform: WINDOWS7},
 ];
-
-// NOTE each Travis job checks 3 browsers, each on different test framework.
-const env = process.env,
-	number = (env.TRAVIS_JOB_NUMBER || '0.1').split('.')[1] | 0,
-	version = env.npm_package_version;
 
 describe(clientName(number * 3 - 2), function() {
 	this.timeout(300000);
@@ -142,7 +212,7 @@ describe(clientName(number * 3), function() {
 		this.slow(20000);
 
 		tasty = new Tasty({
-			coverage: 'istanbul',
+			coverage: 'nyc',
 			format: 'lcovonly',
 			include: 'test/self/qunit/*.js',
 			runner: 'qunit',
@@ -163,13 +233,13 @@ function setup(caps) {
 				'commandTimeout': 300,
 				'idleTimeout': 300,
 				'maxDuration': 300,
-				'tunnel-identifier': env.TRAVIS_JOB_NUMBER
+				'name': clientName(caps),
+				'tunnel-identifier': env.TRAVIS_JOB_NUMBER,
+				'build': version
 			},
 			caps
 		))
 		.build();
-
-	driver.executeScript(`sauce:job-info=${JSON.stringify({name: clientName(caps), build: version})}`);
 
 	return driver;
 }
@@ -205,9 +275,8 @@ function teardown(tasty, driver) {
 			() => driver.manage().logs().get('browser')
 		)
 		.then(
-			(entries) => entries.map(
-				(entry) => entry.level.name_ === 'ERROR' &&
-					console.error(entry.message)
+			(entries) => entries.forEach(
+				(entry) => console.log(entry.level.name_, entry.message.replace(/\n+$/, ''))
 			),
 			(error) => {} // NOTE noop.
 		)
@@ -221,23 +290,34 @@ function teardown(tasty, driver) {
 
 function clientName(index) {
 	const caps = isNaN(index) ?
-		index :
-		clientCaps(index);
+			index :
+			clientCaps(index),
+		device = caps.deviceName ?
+			caps.deviceName.split(' ')[0] :
+			null,
+		platform = caps.platform ||
+			caps.platformName;
 
 	return [
-		caps.browserName.substr(0, 1).toUpperCase() + caps.browserName.substr(1),
+		caps.title || capitalize(caps.browserName),
 		caps.version,
 		'on',
-		caps.platform
-	].join(' ');
+		device === platform ?
+			null :
+			device,
+		platform,
+		caps.platformVersion
+	].filter(
+		(item) => !!item
+	).join(' ');
 }
 
 function clientCaps(index) {
-	return index ?
-		CAPS[index % (CAPS.length - 1)] :
-		CAPS[random(0, CAPS.length - 1)];
+	return CAPS[index % (CAPS.length - 1) - 1];
 }
 
-function random(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
+function capitalize(string) {
+	return string ?
+		string.substr(0, 1).toUpperCase() + string.substr(1) :
+		string;
 }

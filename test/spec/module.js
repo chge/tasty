@@ -66,7 +66,23 @@ describe('tasty', function() {
 		}).to.throw(Error);
 	});
 
-	it('fails on wrong configration', function() {
+	it('fails on unknown coverage toolchain', function() {
+		expect(function() {
+			new Tasty({
+				coverage: 'big-kahuna-coverage'
+			});
+		}).to.throw(Error);
+	});
+
+	it('fails on unknown runner toolchain', function() {
+		expect(function() {
+			new Tasty({
+				coverage: 'runner-royale'
+			});
+		}).to.throw(Error);
+	});
+
+	it('fails on wrong runner configration', function() {
 		expect(function() {
 			new Tasty({
 				bail: true,

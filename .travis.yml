@@ -1,25 +1,35 @@
 language: node_js
 
 node_js:
+  - node
   - 6
+  - 6.8
   - 6.7
   - 6.6
   - 6.5
   - 6.4
-  - 6.3
-  - 6.2
+  - 6.3.1
+  - 6.3.0
+  - 6.2.2
+  - 6.2.1
+  - 6.2.0
   - 6.1
   - 6.0
   - 5
   - 5.12
-  - 5.11
-  - 5.10
-  - 5.9
+  - 5.11.1
+  - 5.11.0
+  - 5.10.1
+  - 5.10.0
+  - 5.9.1
+  - 5.9.0
   - 5.8
-  - 5.7
+  - 5.7.1
+  - 5.7.0
   - 5.6
   - 5.5
-  - 5.4
+  - 5.4.1
+  - 5.4.0
   - 5.3
   - 5.2
   - 5.1
@@ -33,6 +43,7 @@ node_js:
 addons:
   sauce_connect:
     username: "tasty"
+    no_ssl_bump_domains: all
   jwt:
     secure: "aXO1EoblOPDTFdmCwAnhA6kvUu53Ra26fVtyKRTLhdkKIVJ4XOEXundiSGESff7FgM7kGkQkGiP4peK7Dvqe7ED/C3+wR8py1dLMvzn8rFzWqIyvGhIU1rsn5jNebAbnj+8KECmRM9ioRRCZhWG0emkHhlcrlt1JHB5Hg8V5WA6J/2bM9h+GShyD5kgJ+KYaoWs4gRZWDOuTNfWW2+P7mW4AsRpfGLLhfcPav2yDauCNEu6JYS77SKrcDY9pamL49NHEXs7D+I/x6Lg1Dl2TkNnZtCK9czwJp6dPq+Yb8f2TX3sJlPFiGsUcnh9igqWKaDNZ7UsFk2JCxXLXD6Lx2c1JNEx7SzHkw70kWHZfyqCnzPMVpTBL1xSTpzCMIr0x0arKYU08ezU/vb/L7ntfPum3BtxaOiDPZEMSKQhwpuvYDSOUpOWy2JbQ+VTFP91371OnTa4Q88qaZ16o4B6ZAccjz23oELYeBJtop5qpedWKt/8fsFYNZSmFL/pva6kbblfKx9dLLc/FHUgKsuFONCogUxu7VSbZyh8MFhKrxNTqT7ORHg/1Ef/rkNnZ+Eyfo7Qx9BkG1gm7xZ3bm2e46yWx3aAb6D36xLzVwRGdG+j5bGCTVszJdFoyShah7+ndzWif3PQLXp0lUCwd6f8hiJVL3DeLPoDgRZJkay4ohBw="
 

@@ -25,6 +25,7 @@
     "jasmine": "^2.5.2",
     "jasmine-spec-reporter": "^2.7.0",
     "mocha": "^3.1.0",
+    "nyc": "^8.3.1",
     "qunitjs": "^2.0.1",
     "selenium-webdriver": "^3.0.0-beta-3",
     "typescript": "^2.0.3"
@@ -33,8 +34,9 @@
     "prepublish": "node --harmony src/build",
     "test": "npm run test:cover && npm run test:run && npm run test:report",
     "test:cover": "node --harmony src/build --coverage",
-    "test:run": "node --harmony ./node_modules/istanbul/lib/cli cover --dir ./coverage_server --report lcovonly ./node_modules/mocha/bin/_mocha -- --colors --reporter list --ui bdd test/spec/*.js",
-    "test:report": "node --harmony test/report **/lcov.info coverage/lcov.info && node --harmony ./node_modules/coveralls/bin/coveralls < ./coverage/lcov.info"
+    "test:run": "node --harmony node_modules/nyc/bin/nyc --reporter lcovonly --report-dir coverage_server --temp-directory coverage_server node_modules/mocha/bin/mocha --colors --harmony --reporter list --ui bdd test/spec/*.js",
+    "test:report": "node --harmony test/report **/*.info coverage.info && node --harmony node_modules/coveralls/bin/coveralls < coverage.info",
+    "test:windows": "node --harmony node_modules/mocha/bin/mocha --colors --harmony --reporter list --ui bdd test/spec/*.js"
   },
   "engines": {
     "node": ">=4.3.2"

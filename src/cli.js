@@ -29,16 +29,17 @@ if (config.version) {
   -b, --bail             Fail fast, stop test runner on first fail.
   --cert <path>          Certificate for Tasty server.
   -c, --coverage <name>  Module to use as coverage instrumenter.
+                         Built-ins: istanbul, nyc.
   --expect <name>        Module to use as expectation library.
-  -f, --format <name>    Module to use as coverage report generator.
+  -f, --format <name>    Module to use as coverage reporter.
   -x, --exclude <glob>   Exclude test files.
   -h, --help             Print this help and exit.
   -i, --include <glob>   Include test files.
   --key <path>           Certificate key for Tasty server.
   --passphrase <string>  Certificate key passphrase for Tasty server.
   -p, --reporter <name>  Module to use as test reporter.
-  -r, --runner <name>    Module to use as test runner, built-ins:
-                         mocha, jasmine, qunit.
+  -r, --runner <name>    Module to use as test runner.
+                         Built-ins: mocha, jasmine, qunit.
   -s, --server <url>     Protocol, host, port and path for Tasty server.
                          If omitted, use http://localhost:8765/
   --slow <ms>            Pause after each tool.
@@ -58,16 +59,22 @@ if (config.version) {
 			server: config['server'] || true
 		})
 	);
-	tasty.on('end', (token, fail) => {
+	tasty.on('end', (token, error) => {
 		if (config.watch) {
 			tasty.log &&
-				tasty.log.log('tasty', 'watching');
+				tasty.log.log('watching');
 		} else {
+			const code = error ?
+				(error.code | 0) || 1 :
+				0;
+
 			tasty.log &&
-				tasty.log.log('tasty', 'exit', fail);
+				tasty.log.log('exit', code);
 
 			tasty.stop();
-			process.exit(fail | 0);
+			// NOTE sometimes server ignores callback when running from CLI.
+			// TODO .then();
+			process.exit(code)
 		}
 	})
 	.start();

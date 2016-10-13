@@ -29,10 +29,14 @@ class MochaRunner {
 
 	run() {
 		return new Promise((resolve, reject) => {
-			this.mocha.run((fails) => {
-				fails ?
-					reject(fails) :
+			this.mocha.run((failed) => {
+				if (failed) {
+					const error = new Error(`${failed} failed`);
+					error.code = failed;
+					reject(error);
+				} else {
 					resolve();
+				}
 			})
 				.on(
 					'test',
@@ -85,21 +89,27 @@ class JasmineRunner {
 					const fail = spec.failedExpectations[0],
 						error = new Error(fail.message);
 					error.stack = fail.stack;
+					this.failed++;
 					this.onFail(spec.fullName, error);
 				} else {
 					this.onPass(spec.fullName);
 				}
 			}
 		});
+		this.failed = 0;
 		this.jasmine = jasmine;
 	}
 
 	run() {
 		return new Promise((resolve, reject) => {
 			this.jasmine.onComplete((passed) => {
-				passed ?
-					resolve() :
-					reject(1); // TODO number of fails.
+				if (passed) {
+					resolve();
+				} else {
+					const error = new Error(`${this.failed} failed`);
+					error.code = this.failed;
+					reject(error);
+				}
 			});
 			this.jasmine.execute();
 		});
@@ -192,9 +202,13 @@ class QUnitRunner {
 
 			// TODO configurable reporter.
 			QUnit.done((details) => {
-				details.failed ?
-					reject(details.failed) :
+				if (details.failed) {
+					const error = new Error(`${details.failed} failed`);
+					error.code = details.failed;
+					reject(error);
+				} else {
 					resolve();
+				}
 			});
 			this.files.map(
 				(file) => sandbox.require(

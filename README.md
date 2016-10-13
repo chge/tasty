@@ -1,11 +1,10 @@
 # Tasty
 
 [![npm](https://img.shields.io/npm/v/tasty.svg)](https://www.npmjs.com/package/tasty)
-[![Build Status](https://travis-ci.org/chge/tasty.svg?branch=master)](https://travis-ci.org/chge/tasty)
-[![Coverage Status](https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master)](https://coveralls.io/github/chge/tasty?branch=master)
-[![Code Climate](https://codeclimate.com/github/chge/tasty/badges/gpa.svg)](https://codeclimate.com/github/chge/tasty)
-
-[![Sauce Test Status](https://saucelabs.com/browser-matrix/tasty.svg)](https://saucelabs.com/u/tasty)
+[![build](https://travis-ci.org/chge/tasty.svg?branch=master)](https://travis-ci.org/chge/tasty)
+[![windows](https://ci.appveyor.com/api/projects/status/github/chge/tasty?branch=master&svg=true)](https://ci.appveyor.com/project/chge/tasty)
+[![coverage](https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master)](https://coveralls.io/github/chge/tasty?branch=master)
+[![code climate](https://codeclimate.com/github/chge/tasty/badges/gpa.svg)](https://codeclimate.com/github/chge/tasty)
 
 Tasty helps test fully assembled web applications in nearly-production environment on real clients as real users.
 
@@ -118,7 +117,7 @@ The `--static` flag without path serves content from CWD.
 # Code coverage
 
 When serving application from own server, you should instrument JavaScript code for coverage by yourself.
-Tasty's static server has built-in support for [Istanbul](https://gotwarlost.github.io/istanbul/) to automatically do it for you.
+Tasty's static server has built-in support for [Istanbul](https://gotwarlost.github.io/istanbul) and [NYC](https://istanbul.js.org/) (aka Istanbul 2) to automatically do it for you.
 
 # CSP
 
@@ -129,8 +128,8 @@ connect-src localhost:8765/path ws://localhost:8765/path wss://localhost:8765/pa
 script-src localhost:8765/path/*.js
 ```
 
-Unfortunately, [Istanbul](https://gotwarlost.github.io/istanbul)'s coverage instrumenter uses `new Function()` to get top-level scope.
-To use it, you have to add the following directive:
+Unfortunately, both [Istanbul](https://gotwarlost.github.io/istanbul) and [NYC](https://istanbul.js.org/) instrumenters use `new Function()` to get top-level scope.
+To use one of them, you have to add the following directive:
 
 ```
 script-src 'unsafe-eval'
@@ -139,6 +138,10 @@ script-src 'unsafe-eval'
 Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.
 
 Check out a [great tool](https://report-uri.io/home/generate) for generating and validating CSP directives.
+
+# Browser support
+
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/tasty.svg)](https://saucelabs.com/u/tasty)
 
 # Tools
 
@@ -383,7 +386,7 @@ npm run prepublish
 
 # Testing
 
-Automated for [SauceLabs](https://saucelabs.com/) environment. Requires `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables, which are provided by [TravisCI](https://travis-ci.org/) automatically.
+Automated for [SauceLabs](https://saucelabs.com/) environment. Requires `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` and `TRAVIS_JOB_NUMBER` environment variables, which are provided by [TravisCI](https://docs.travis-ci.com/user/sauce-connect) automatically.
 
 ```shell
 npm test

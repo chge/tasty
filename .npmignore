@@ -1,6 +1,7 @@
+.nyc_output
 coverage
 coverage_server
 node_modules
 tmp
-.travis.yml
+*.info
 npm-debug.log

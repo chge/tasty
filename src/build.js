@@ -21,7 +21,7 @@ const result = ts.createProgram(
 		noEmitOnError: true,
 		outDir: ROOT + 'tmp',
 		pretty: true,
-		removeComments: true,
+		removeComments: false,
 		target: ts.ScriptTarget.ES3
 	}
 )
@@ -38,13 +38,13 @@ if (result.emitSkipped) {
 }
 
 if (process.argv.indexOf('--coverage') !== -1) {
-	const Instrumenter = require(resolve('istanbul')).Instrumenter,
-		instrumenter = new Instrumenter();
+	const NYC = require(resolve('nyc')),
+		nyc = new NYC();
 
 	glob(ROOT + 'tmp/*.js').forEach((name) => {
 		fs.writeFileSync(
 			name,
-			instrumenter.instrumentSync(
+			nyc.instrumenter().instrumentSync(
 				fs.readFileSync(name).toString(),
 				path.resolve(name.replace('/tmp/', '/src/client/'))
 			)
