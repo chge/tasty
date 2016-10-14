@@ -1,7 +1,7 @@
 {
   "name": "tasty",
   "title": "Tasty",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Integration testing helper for web",
   "main": "src/server/main.js",
   "preferGlobal": true,
@@ -36,8 +36,8 @@
     "pretest": "node --harmony src/build --coverage",
     "test": "npm run test:coverage && npm run test:support",
     "test:coverage": "node --harmony node_modules/nyc/bin/nyc --reporter lcovonly --report-dir coverage_server --temp-directory coverage_server node_modules/mocha/bin/mocha --colors --harmony --reporter list --ui bdd test/spec/*.js",
-    "test:support": "node --harmony src/build && node --harmony node_modules/mocha/bin/mocha --colors --reporter list --ui bdd test/support.js",
-    "test:windows": "node --harmony node_modules/mocha/bin/mocha --colors --ui bdd test/spec/*.js",
+    "test:support": "node --harmony src/build && node --harmony node_modules/mocha/bin/mocha --colors --harmony --reporter list --ui bdd test/support.js",
+    "test:windows": "node --harmony node_modules/mocha/bin/mocha --colors --harmony --reporter list --ui bdd test/spec/**/!(headless).js",
     "posttest": "node --harmony test/report **/*.info coverage.info && node --harmony node_modules/coveralls/bin/coveralls < coverage.info"
   },
   "engines": {

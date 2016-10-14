@@ -326,7 +326,7 @@ function capitalize(string) {
 }
 
 function formatMessage(message, url, line, col) {
-	const wrapped = message.message;
+	const wrapped = parseJson(message).message;
 
 	return wrapped ?
 		formatMessage(wrapped.text, wrapped.url, wrapped.line, wrapped.column) :
@@ -337,4 +337,12 @@ function formatMessage(message, url, line, col) {
 		].filter(
 			(item) => !!item
 		);
+}
+
+function parseJson(raw) {
+	try {
+		return JSON.parse(raw);
+	} catch (thrown) {
+		return raw;
+	}
 }
