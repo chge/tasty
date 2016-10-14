@@ -21,20 +21,20 @@ tasty.tool = tool;
 
 tasty.forEach(document.scripts, (script) => {
 	if (script.src.indexOf('/tasty.js') !== -1) {
-		const server = script.getAttribute('data-server') ||
+		const url = script.getAttribute('data-url') ||
 			script.src.split('tasty.js')[0];
-		server &&
-			tasty({server: server}).connect();
+		url &&
+			tasty({url: url}).connect();
 	}
 });
 
 function tasty(config) {
 	config = typeof config === 'string' ?
-		{server: config} :
+		{url: config} :
 		config || {};
 	tasty.config = config;
 
-	include.server = config.server;
+	include.url = config.url;
 
 	tasty.console = tool.console = log.init(
 		config.hasOwnProperty('log') ?
@@ -48,9 +48,9 @@ function tasty(config) {
 }
 
 function connect() {
-	const server = tasty.config.server;
+	const url = tasty.config.url;
 	tasty.session() ||
-		tasty.console.log('tasty', 'server', server);
+		tasty.console.log('tasty', 'server', url);
 
 	// TODO bundle socket.io client to leave global scope clean.
 	include('socket.io.js', () => {
@@ -62,7 +62,7 @@ function connect() {
 					resolve(require('socket.io'))
 		).then(
 			(io) => {
-				const socket = io(server, {multiplex: false})
+				const socket = io(url, {multiplex: false})
 					.on('connect', () => connected(socket));
 			},
 			(err) => {debugger;}
@@ -106,7 +106,7 @@ function connected(socket) {
 	});
 
 	socket.on('exec', (key, callback) => {
-		tasty.console.debug('tasty', 'exec', include.server + key);
+		tasty.console.debug('tasty', 'exec', include.url + key);
 
 		include(key, () => callback([]));
 	});

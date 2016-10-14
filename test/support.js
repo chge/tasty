@@ -158,7 +158,7 @@ const CAPS = [
 	{browserName: SAFARI, version: '5.1', platform: WINDOWS7},
 ];
 
-describe(clientName(number * 3 - 2), function() {
+describe(clientName((number - 1) * 3), function() {
 	this.timeout(300000);
 
 	let tasty, driver;
@@ -173,13 +173,13 @@ describe(clientName(number * 3 - 2), function() {
 			reporter: 'jasmine-spec-reporter',
 			static: 'test/root'
 		});
-		driver = setup(clientCaps(number * 3 - 2));
+		driver = setup(clientCaps((number - 1) * 3));
 
 		return run(tasty, driver);
 	});
 });
 
-describe(clientName(number * 3 - 1), function() {
+describe(clientName((number - 1) * 3 + 1), function() {
 	this.timeout(300000);
 
 	let tasty, driver;
@@ -189,18 +189,17 @@ describe(clientName(number * 3 - 1), function() {
 		this.slow(20000);
 
 		tasty = new Tasty({
-			assert: 'chai',
-			expect: 'chai',
+			addon: 'chai,chai-as-promised',
 			include: 'test/self/mocha/support.js',
 			static: 'test/root'
 		});
-		driver = setup(clientCaps(number * 3 - 1));
+		driver = setup(clientCaps((number - 1) * 3 + 1));
 
 		return run(tasty, driver);
 	});
 });
 
-describe(clientName(number * 3), function() {
+describe(clientName((number - 1) * 3 + 2), function() {
 	this.timeout(300000);
 
 	let tasty, driver;
@@ -214,7 +213,7 @@ describe(clientName(number * 3), function() {
 			runner: 'qunit',
 			static: 'test/root'
 		});
-		driver = setup(clientCaps(number * 3));
+		driver = setup(clientCaps((number - 1) * 3 + 2));
 
 		return run(tasty, driver);
 	});
@@ -316,7 +315,7 @@ function clientName(index) {
 }
 
 function clientCaps(index) {
-	return CAPS[index % (CAPS.length - 1) - 1];
+	return CAPS[index % CAPS.length];
 }
 
 function capitalize(string) {

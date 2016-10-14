@@ -87,6 +87,13 @@ tool('client.breakpoint', function breakpoint() {
 	debugger;
 });
 
+tool('client.go', function go(value) {
+	return thenable(() => {
+		// NOTE never resolve.
+		window.history.go(value);
+	});
+});
+
 tool('client.location', function location(what) {
 	if (!arguments.length) {
 		return window.location.pathname;
@@ -107,7 +114,7 @@ tool('client.location', function location(what) {
 });
 
 tool('client.navigate', function navigate(url) {
-	// TODO allow to skip navigation if url already matches?
+	// TODO allow to skip navigation if url already matches.
 	return thenable(() => {
 		// NOTE never resolve.
 		window.location = url;

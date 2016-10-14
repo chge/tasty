@@ -255,13 +255,7 @@ function createRunner(token, files, server, emitter, config) {
 }
 
 function createContext(token, server, config) {
-	const assert = config.assert ?
-			require(resolve(config.assert)) :
-			null,
-		expect = config.expect ?
-			require(resolve(config.expect)) :
-			null,
-		tool = createTool(token, server, config);
+	const tool = createTool(token, server, config);
 
 	const queue = function queue(...links) {
 		if (links.length) {
@@ -290,8 +284,15 @@ function createContext(token, server, config) {
 
 	// NOTE support for for runner.get/set/pop/push/until/while.
 	const wrap = (tool) => (...args) => new Promise(
-		(resolve) => queue.push(
-			() => tool.apply(token, args).then(resolve)
+		(resolve, reject) => queue.push(
+			() => tool.apply(token, args)
+				.then(
+					resolve,
+					(error) => {
+						reject(error);
+						throw error;
+					}
+				)
 		)
 	);
 
@@ -320,12 +321,27 @@ function createContext(token, server, config) {
 		inject(tool, scope, true);
 		scope.queue = queue;
 
-		if (assert) {
-			scope.assert = assert.assert || assert;
-		}
-		if (expect) {
-			scope.expect = expect.expect || expect;
-		}
+		config.addon &&
+			config.addon.split(',')
+				.sort(
+					(a, b) => a.localeCompare(b)
+				)
+				.forEach((name) => {
+					const module = require(resolve(name));
+					scope[name] = module;
+
+					// NOTE support for assterion/expectation libraries.
+					if (module.assert) {
+						scope.assert = module.assert;
+					}
+					if (module.expect) {
+						scope.expect = module.expect;
+					}
+
+					// WORKAROUND for chai plugins.
+					/^chai-/.test(name) && scope.chai &&
+						scope.chai.use(module);
+				});
 	};
 
 	inject(tool, queue, false);

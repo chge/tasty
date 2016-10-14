@@ -9,9 +9,11 @@ describe('headless client', function() {
 	this.timeout(20000);
 
 	let tasty, phantom;
-	afterEach(() => {
-		phantom.kill();
-		return tasty.stop();
+	afterEach((done) => {
+		phantom.once('close', done);
+		tasty.stop().then(
+			() => phantom.kill()
+		);
 	});
 
 	it('passes Jasmine suite', function(done) {
@@ -20,6 +22,7 @@ describe('headless client', function() {
 		tasty = new Tasty({
 			coverage: 'istanbul',
 			format: 'lcovonly',
+			headless: true,
 			include: 'test/self/jasmine/common.js',
 			reporter: 'jasmine-spec-reporter',
 			runner: 'jasmine',
@@ -37,10 +40,10 @@ describe('headless client', function() {
 		this.slow(10000);
 
 		tasty = new Tasty({
-			assert: 'chai',
+			addon: 'chai,chai-as-promised',
 			coverage: 'istanbul',
-			expect: 'chai',
 			format: 'lcovonly',
+			headless: true,
 			include: 'test/self/mocha/common.js',
 			static: 'test/root'
 		});
@@ -58,6 +61,7 @@ describe('headless client', function() {
 		tasty = new Tasty({
 			coverage: 'nyc',
 			format: 'lcovonly',
+			headless: true,
 			include: 'test/self/qunit/common.js',
 			runner: 'qunit',
 			static: 'test/root'

@@ -12,11 +12,11 @@ const DEFAULTS = {
 	exclude: '',
 	globals: true,
 	include: '',
+	quiet: true,
 	runner: 'mocha',
-	server: 'http://0.0.0.0:8765/',
 	slow: 0,
 	static: '.',
-	quiet: true
+	url: 'http://0.0.0.0:8765/'
 };
 
 class Log {
@@ -59,16 +59,6 @@ class Tasty {
 				throw new Error('QUnit doesn\'t support bail');
 			}
 		}
-		if (config.server) {
-			config.server = config.server === true ?
-				parseUrl(DEFAULTS.server) :
-				Object.assign(
-					parseUrl(DEFAULTS.server),
-					parseUrl(config.server.indexOf('//') === -1 ? 'http://' + config.server : config.server, false, true)
-				);
-		} else {
-			throw new Error('nothing to do without server');
-		}
 		config.slow = parseInt(config.slow, 10);
 		if (isNaN(config.slow)) {
 			config.slow = 1000;
@@ -80,6 +70,16 @@ class Tasty {
 					process.cwd(),
 					config.static
 				);
+		}
+		if (config.url) {
+			config.url = config.url === true ?
+				parseUrl(DEFAULTS.url) :
+				Object.assign(
+					parseUrl(DEFAULTS.url),
+					parseUrl(config.url.indexOf('//') === -1 ? 'http://' + config.url : config.url, false, true)
+				);
+		} else {
+			throw new Error('nothing to do without server');
 		}
 
 		tasty.server = new Server(tasty.emitter, tasty.log, config);

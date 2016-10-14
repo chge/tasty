@@ -67,10 +67,10 @@ describe('tasty', function() {
 			);
 	});
 
-	it('throws without server', function() {
+	it('throws without URL', function() {
 		expect(() => {
 			new Tasty({
-				server: false
+				url: false
 			});
 		}).to.throw(Error);
 	});

@@ -15,14 +15,14 @@ module.exports = [
 			},
 			{
 				name: 'require scope',
-				skip: !tasty.config.expect,
+				skip: !global.chai,
 				body: () => {
 					expect(() => tasty.globals()).to.throw(Error);
 				}
 			},
 			{
 				name: 'are defined after call',
-				skip: !tasty.config.expect,
+				skip: !global['chai-as-promised'],
 				body: () => {
 					tasty.globals(global);
 

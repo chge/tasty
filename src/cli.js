@@ -6,11 +6,11 @@ process.title = 'Tasty';
 
 const config = require('minimist')(process.argv.slice(2), {
 	alias: {
-		'b': 'bail', 'c': 'coverage', 'x': 'exclude', 'f': 'format', 'h': 'help', 'i': 'include',
-		'p': 'reporter', 'r': 'runner', 's': 'server', 't': 'static', 'v': 'version', 'q': 'quiet', 'w': 'watch'
+		'b': 'bail', 'c': 'coverage', 'e': 'exclude', 'x': 'exclude', 'f': 'format', 'h': 'help', 'i': 'include',
+		'p': 'reporter', 'q': 'quiet', 'r': 'runner', 's': 'static', 'u': 'url', 'v': 'version', 'w': 'watch'
 	},
 	boolean: ['bail', 'help', 'version', 'verbose', 'quiet', 'watch'],
-	string: ['assert', 'cert', 'coverage', 'expect', 'exclude', 'format', 'include', 'key', 'passphrase', 'reporter', 'runner', 'server', 'slow', 'static']
+	string: ['addon', 'cert', 'coverage', 'exclude', 'format', 'include', 'key', 'passphrase', 'reporter', 'runner', 'server', 'slow', 'static']
 });
 
 const Tasty = require('./server/main');
@@ -25,30 +25,29 @@ if (config.version) {
 	console.log(
 `Usage: tasty [options]
 
-  --assert <name>        Module to use as assertion library.
+  --addon <name>,<name>  Module(s) to use as additional tools.
   -b, --bail             Fail fast, stop test runner on first fail.
   --cert <path>          Certificate for Tasty server.
   -c, --coverage <name>  Module to use as coverage instrumenter.
                          Built-ins: istanbul, nyc.
-  --expect <name>        Module to use as expectation library.
-  -f, --format <name>    Module to use as coverage reporter.
-  -x, --exclude <glob>   Exclude test files.
+  -f, --format <name>    Report format for coverage reporter.
+  -e,x, --exclude <glob> Exclude test files.
   -h, --help             Print this help and exit.
   -i, --include <glob>   Include test files.
   --key <path>           Certificate key for Tasty server.
   --passphrase <string>  Certificate key passphrase for Tasty server.
   -p, --reporter <name>  Module to use as test reporter.
+  -q, --quiet            Don't print Tasty-specific output.
   -r, --runner <name>    Module to use as test runner.
                          Built-ins: mocha, jasmine, qunit.
-  -s, --server <url>     Protocol, host, port and path for Tasty server.
                          If omitted, use http://localhost:8765/
   --slow <ms>            Pause after each tool.
                          If blank, delay 500 ms.
-  -t, --static <path>    Start built-in static server from path.
+  -s, --static <path>    Start built-in static server from path.
                          If blank, serve from CWD.
+  -u, --url <url>        Protocol, host, port and path for Tasty server.
   --verbose              Verbose Tasty-specific output.
   -v, --version          Print Tasty version and exit.
-  -q, --quiet            Don't print Tasty-specific output.
   -w, --watch            Continue after first client.
 `
 	);
@@ -56,7 +55,7 @@ if (config.version) {
 } else {
 	const tasty = new Tasty(
 		Object.assign(config, {
-			server: config['server'] || true
+			url: config['url'] || true
 		})
 	);
 	tasty.on('end', (token, error) => {

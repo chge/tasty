@@ -70,7 +70,7 @@ describe('static', function() {
 
 	it('serves on given URL', function() {
 		const tasty = new Tasty({
-			server: URL2,
+			url: URL2,
 			static: 'test/root'
 		});
 

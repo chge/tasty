@@ -32,7 +32,7 @@ describe('server', function() {
 
 	it('listens on given URL', function() {
 		const tasty = new Tasty({
-			server: URL2
+			url: URL2
 		});
 
 		return tasty.start()
@@ -52,7 +52,7 @@ describe('server', function() {
 
 	it('listens on given URL alternatively', function() {
 		const tasty = new Tasty({
-			server: URL2
+			url: URL2
 		});
 
 		return tasty.start()
@@ -106,7 +106,7 @@ describe('server', function() {
 		const tasty = new Tasty({
 			cert: 'test/cert.pem',
 			key: 'test/key.pem',
-			server: URL3
+			url: URL3
 		});
 
 		// NOTE chai-http seems to fail on self-signed cert.
@@ -134,7 +134,7 @@ describe('server', function() {
 
 	it('rejects to start HTTPS without certificate', function() {
 		const tasty = new Tasty({
-			server: URL3
+			url: URL3
 		});
 
 		return expect(tasty.start())
@@ -145,7 +145,7 @@ describe('server', function() {
 	it('rejects to start HTTPS without certificate key', function() {
 		const tasty = new Tasty({
 			cert: 'test/cert.pem',
-			server: URL3
+			url: URL3
 		});
 
 		return expect(tasty.start())

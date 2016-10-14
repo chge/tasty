@@ -105,7 +105,8 @@ Tasty supports any test frameworks that support asynchronous tests.
 
 There are built-in runners for [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/) and [QUnit](https://qunitjs.com/). Provide `--runner <name>` flag to use one of them. For other frameworks, use Tasty programmatically from your runner.
 
-[Chai](http://chaijs.com/) and other assertion/expectation libraries are supported by providing `--assert <name>` and/or `--expect <name>` flags.
+[Chai](http://chaijs.com/), its [plugins](http://chaijs.com/plugins) and other helper libraries are supported by providing `--addon <name>,<name>...` flags.
+For example, `--addon chai,chai-as-promised,chai-http` works fine.
 
 Use `--watch` flag to watch for changes or run on several clients. See `tasty --help` for more information.
 

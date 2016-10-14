@@ -49,7 +49,7 @@ class Server {
 							key = credentials[1],
 							passphrase = config.passphrase;
 
-						if (config.server.protocol === 'https:') {
+						if (config.url.protocol === 'https:') {
 							if (!cert) {
 								return reject(
 									config.cert ?
@@ -73,10 +73,10 @@ class Server {
 							this.server = createHttp();
 						}
 						this.server.listen(
-							(config.server.port | 0) || 80,
-							config.server.hostname === '0.0.0.0' ?
+							(config.url.port | 0) || 80,
+							config.url.hostname === '0.0.0.0' ?
 								null :
-								config.server.hostname
+								config.url.hostname
 						)
 							.once('listening', () => {
 								this.onListening();
@@ -89,7 +89,7 @@ class Server {
 							});
 
 						this.io = SocketIO(this.server)
-							.path(config.server.path || '/')
+							.path(config.url.path || '/')
 							.on('connection', this.onConnection.bind(this))
 							.on('error', (error) => {
 								this.log.error('server', error);
@@ -243,6 +243,7 @@ class Server {
 			.then((error) => {
 				this.log.log('client', token, 'ended');
 
+				this.emitter.removeAllListeners('reconnect.' + token);
 				this.emitter.emit('end', token, this.runner[token].error || error);
 
 				delete this.runner[token];
@@ -279,7 +280,7 @@ class Server {
 		const config = this.config,
 			log = this.log.log;
 
-		log('server', config.server.href);
+		log('server', config.url.href);
 		config.static &&
 			log('static', 'from', config.static);
 		config.coverage &&
@@ -323,15 +324,15 @@ class Server {
 		try {
 			const config = this.config,
 				url = request.url;
-			if (url === config.server.path + 'tasty.js') {
+			if (url === config.url.path + 'tasty.js') {
 				this.log.debug('server', 'script', url);
 				this.serveFile(url, __dirname + '/../../dist/tasty.js', response);
-			} else if (url === config.server.path + 'socket.io.js') {
+			} else if (url === config.url.path + 'socket.io.js') {
 				this.log.debug('server', 'script', url);
 				this.serveFile(url, __dirname + '/../../node_modules/socket.io-client/socket.io.js', response);
 			} else if (this.script[url]) {
 				this.serveScript(url, response);
-			} else if (url === '/' || url === config.server.path) {
+			} else if (url === '/' || url === config.url.path) {
 				this.serveBadRequest(url, response);
 			} else if (config.static) {
 				this.serveStatic(request, response);
@@ -441,7 +442,7 @@ ${error.stack}
 
 		response.setHeader('Content-Type', mime.txt);
 		response.writeHead('400');
-		response.end(`400 Bad Request\n\nLoad ${this.config.server.href}tasty.js on your page.`);
+		response.end(`400 Bad Request\n\nLoad ${this.config.url.href}tasty.js on your page.`);
 	}
 
 	serveForbidden(url, path, response) {

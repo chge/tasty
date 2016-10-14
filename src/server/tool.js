@@ -4,7 +4,7 @@ module.exports = createTool;
 
 function createTool(token, server, config) {
 	const box = function tool(...args) {
-		return tool.add(...args);
+		return box.add(...args);
 	};
 	box.add = add.bind(null, box, server);
 	// TODO readonly?
@@ -38,6 +38,7 @@ function fill(tool, server, config) {
 		return server.exec(this, fn.toString(), args);
 	});
 
+	tool('client.go');
 	tool('client.location');
 	tool('client.navigate');
 

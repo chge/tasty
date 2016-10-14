@@ -1,6 +1,6 @@
 'use strict';
 
-// NOTE user must inject include.server;
+// NOTE user must inject include.url;
 
 module.exports = {
 	delay: delay,
@@ -26,7 +26,7 @@ function include(src, callback) {
 			document.getElementsByTagName('head')[0] ||
 				document.documentElement;
 	script.async = true;
-	script.src = include.server + src;
+	script.src = include.url + src;
 	script.onload = script.onreadystatechange = function() {
 		if (!script.readyState || /loaded|complete/.test(script.readyState)) {
 			script.onload = script.onreadystatechange = null;
