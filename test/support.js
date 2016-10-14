@@ -272,7 +272,14 @@ function teardown(tasty, driver) {
 		)
 		.then(
 			(entries) => entries.forEach(
-				(entry) => console.log(entry.level.name_, entry.message.replace(/\n+$/, ''))
+				(entry) => console.log.apply(
+					console,
+					[entry.level.name_].concat(
+						formatMessage(
+							entry.message
+						)
+					)
+				)
 			),
 			(error) => {} // NOTE noop.
 		)
@@ -316,4 +323,18 @@ function capitalize(string) {
 	return string ?
 		string.substr(0, 1).toUpperCase() + string.substr(1) :
 		string;
+}
+
+function formatMessage(message, url, line, col) {
+	const wrapped = message.message;
+
+	return wrapped ?
+		formatMessage(wrapped.text, wrapped.url, wrapped.line, wrapped.column) :
+		[
+			url,
+			line ? line + ':' + col : null,
+			message.replace(/\n+$/, '')
+		].filter(
+			(item) => !!item
+		);
 }
