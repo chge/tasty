@@ -8,20 +8,44 @@ const resolve = require('./server/util').resolve,
 	browserify = require(resolve('browserify')),
 	ts = require(resolve('typescript'));
 
-const ROOT = __dirname + '/../';
+const ROOT = __dirname + '/../',
+	coverage = process.argv.indexOf('--coverage');
+let SRC = 'src/client/*.js';
 
+if (coverage !== -1) {
+	const NYC = require(resolve('nyc')),
+		nyc = new NYC();
+
+	mkdirp('tmp');
+	mkdirp('tmp/covered');
+	glob(ROOT + SRC).forEach((name) => {
+		console.log('instrumenting', name);
+		fs.writeFileSync(
+			name.replace('src/client', 'tmp/covered'),
+			nyc.instrumenter().instrumentSync(
+				fs.readFileSync(name).toString(),
+				path.resolve(name.replace('/tmp/', '/src/client/'))
+			)
+		);
+	});
+
+	SRC = 'tmp/covered/*.js';
+}
+
+console.log('transpiling', ROOT + SRC);
 const result = ts.createProgram(
-	glob(ROOT + 'src/client/*.js'),
+	glob(ROOT + SRC),
 	{
 		allowJs: true,
-		inlineSourceMap: true,
-		inlineSources: true,
+		overwrite: true,
+		inlineSourceMap: !coverage,
+		inlineSources: !coverage,
 		module: ts.ModuleKind.None,
 		newLine: 'lf',
 		noEmitOnError: true,
 		outDir: ROOT + 'tmp',
 		pretty: true,
-		removeComments: false,
+		removeComments: true,
 		target: ts.ScriptTarget.ES3
 	}
 )
@@ -29,27 +53,17 @@ const result = ts.createProgram(
 
 if (result.emitSkipped) {
 	result.diagnostics.forEach((item) => {
-		const data = item.file.getLineAndCharacterOfPosition(item.start),
+		const code = 'TS' + item.code,
 			message = ts.flattenDiagnosticMessageText(item.messageText, '\n');
-		console.log(`${item.file.fileName} (${data.line + 1},${data.character + 1}): ${message}`);
+		if (item.file) {
+			const data = item.file.getLineAndCharacterOfPosition(item.start);
+			console.log(code, item.file.fileName, `(${data.line + 1},${data.character + 1}):`, message);
+		} else {
+			console.log(code, message);
+		}
 	});
 
 	process.exit(1);
-}
-
-if (process.argv.indexOf('--coverage') !== -1) {
-	const NYC = require(resolve('nyc')),
-		nyc = new NYC();
-
-	glob(ROOT + 'tmp/*.js').forEach((name) => {
-		fs.writeFileSync(
-			name,
-			nyc.instrumenter().instrumentSync(
-				fs.readFileSync(name).toString(),
-				path.resolve(name.replace('/tmp/', '/src/client/'))
-			)
-		);
-	});
 }
 
 try {
@@ -74,3 +88,13 @@ browserify({
 		fs.createWriteStream(ROOT + 'dist/tasty.js')
 			.on('finish', () => process.exit(0))
 	);
+
+function mkdirp(name) {
+	try {
+		fs.mkdirSync(name);
+	} catch (thrown) {
+		if (thrown.code !== 'EEXIST') {
+			throw thrown;
+		}
+	}
+}

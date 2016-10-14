@@ -31,7 +31,7 @@ function click(node) {
 
 function find(regexp, selector) {
 	// TODO selector: query nodes, walk through them.
-	const walker = document.createTreeWalker(
+	var walker = document.createTreeWalker(
 			document.body,
 			NodeFilter.SHOW_TEXT,
 			null,

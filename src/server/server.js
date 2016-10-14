@@ -51,14 +51,18 @@ class Server {
 
 						if (config.server.protocol === 'https:') {
 							if (!cert) {
-								throw config.cert ?
-									new Error('invalid cert ' + config.cert) :
-									new Error('cert is required');
+								return reject(
+									config.cert ?
+										new Error('invalid cert ' + config.cert) :
+										new Error('cert is required')
+								);
 							}
 							if (!key) {
-								throw config.key ?
-									new Error('invalid key ' + config.key) :
-									new Error('key is required');
+								return reject(
+									config.key ?
+										new Error('invalid key ' + config.key) :
+										new Error('key is required')
+								);
 							}
 							this.server = createHttps({
 								cert: cert,
@@ -99,7 +103,9 @@ class Server {
 	close() {
 		return new Promise((resolve, reject) => {
 			if (!this.server) {
-				throw new Error('server is not listening');
+				return reject(
+					new Error('server is not listening')
+				);
 			}
 			Object.keys(this.io.sockets).forEach(
 				(id) => this.io.sockets[id].disconnect()

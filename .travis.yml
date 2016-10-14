@@ -47,5 +47,18 @@ addons:
   jwt:
     secure: "aXO1EoblOPDTFdmCwAnhA6kvUu53Ra26fVtyKRTLhdkKIVJ4XOEXundiSGESff7FgM7kGkQkGiP4peK7Dvqe7ED/C3+wR8py1dLMvzn8rFzWqIyvGhIU1rsn5jNebAbnj+8KECmRM9ioRRCZhWG0emkHhlcrlt1JHB5Hg8V5WA6J/2bM9h+GShyD5kgJ+KYaoWs4gRZWDOuTNfWW2+P7mW4AsRpfGLLhfcPav2yDauCNEu6JYS77SKrcDY9pamL49NHEXs7D+I/x6Lg1Dl2TkNnZtCK9czwJp6dPq+Yb8f2TX3sJlPFiGsUcnh9igqWKaDNZ7UsFk2JCxXLXD6Lx2c1JNEx7SzHkw70kWHZfyqCnzPMVpTBL1xSTpzCMIr0x0arKYU08ezU/vb/L7ntfPum3BtxaOiDPZEMSKQhwpuvYDSOUpOWy2JbQ+VTFP91371OnTa4Q88qaZ16o4B6ZAccjz23oELYeBJtop5qpedWKt/8fsFYNZSmFL/pva6kbblfKx9dLLc/FHUgKsuFONCogUxu7VSbZyh8MFhKrxNTqT7ORHg/1Ef/rkNnZ+Eyfo7Qx9BkG1gm7xZ3bm2e46yWx3aAb6D36xLzVwRGdG+j5bGCTVszJdFoyShah7+ndzWif3PQLXp0lUCwd6f8hiJVL3DeLPoDgRZJkay4ohBw="
 
+cache:
+  directories:
+    - travis_phantomjs
+
+before_install:
+  # Upgrade PhantomJS to v2.1.1.
+  - "export PHANTOMJS_VERSION=2.1.1"
+  - "export PATH=$PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64/bin:$PATH"
+  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then rm -rf $PWD/travis_phantomjs; mkdir -p $PWD/travis_phantomjs; fi"
+  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then wget https://github.com/Medium/phantomjs/releases/download/v$PHANTOMJS_VERSION/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -O $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2; fi"
+  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then tar -xvf $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -C $PWD/travis_phantomjs; fi"
+  - "phantomjs --version"
+
 notifications:
   email: false

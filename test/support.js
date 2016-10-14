@@ -4,6 +4,7 @@ const env = process.env,
 	number = (env.TRAVIS_JOB_NUMBER || '').split('.')[1] | 0,
 	version = env.npm_package_version;
 
+// TODO skip for pull requests.
 if (!number) {
 	describe('webdriver', function() {
 		it.skip('suite skipped');
@@ -12,7 +13,7 @@ if (!number) {
 	return;
 }
 
-const Tasty = require('../..'),
+const Tasty = require('..'),
 	webdriver = require('selenium-webdriver');
 
 // NOTE https://wiki.saucelabs.com/display/DOCS/Platform+Configurator
@@ -100,7 +101,8 @@ const CAPS = [
 	{browserName: CHROME, version: '45.0', platform: WINDOWSXP},
 	{browserName: CHROME, version: '44.0', platform: LINUX},
 	{browserName: CHROME, version: '44.0', platform: WINDOWSXP},
-	{browserName: EDGE, version: '13.10586', platform: WINDOWS10},
+	{browserName: EDGE, version: '14', platform: WINDOWS10},
+	{browserName: EDGE, version: '13', platform: WINDOWS10},
 	{browserName: FIREFOX, version: '49.0', platform: OSX11},
 	{browserName: FIREFOX, version: '49.0', platform: WINDOWS10},
 	{browserName: FIREFOX, version: '49.0', platform: WINDOWS81},
@@ -137,7 +139,7 @@ const CAPS = [
 	{browserName: FIREFOX, version: '42.0', platform: WINDOWSXP},
 	{browserName: FIREFOX, version: '41.0', platform: LINUX},
 	{browserName: FIREFOX, version: '41.0', platform: WINDOWSXP},
-	{browserName: IE, version: '11.103', platform: WINDOWS10},
+	{browserName: IE, version: '11', platform: WINDOWS10},
 	{browserName: IE, version: '11.0', platform: WINDOWS81},
 	{browserName: IE, version: '11.0', platform: WINDOWS8},
 	{browserName: IE, version: '11.0', platform: WINDOWS7},
@@ -166,9 +168,7 @@ describe(clientName(number * 3 - 2), function() {
 		this.slow(20000);
 
 		tasty = new Tasty({
-			coverage: 'istanbul',
-			format: 'lcovonly',
-			include: 'test/self/jasmine/*.js',
+			include: 'test/self/jasmine/support.js',
 			runner: 'jasmine',
 			reporter: 'jasmine-spec-reporter',
 			static: 'test/root'
@@ -190,10 +190,8 @@ describe(clientName(number * 3 - 1), function() {
 
 		tasty = new Tasty({
 			assert: 'chai',
-			coverage: 'istanbul',
-			format: 'lcovonly',
 			expect: 'chai',
-			include: 'test/self/mocha/*.js',
+			include: 'test/self/mocha/support.js',
 			static: 'test/root'
 		});
 		driver = setup(clientCaps(number * 3 - 1));
@@ -212,9 +210,7 @@ describe(clientName(number * 3), function() {
 		this.slow(20000);
 
 		tasty = new Tasty({
-			coverage: 'nyc',
-			format: 'lcovonly',
-			include: 'test/self/qunit/*.js',
+			include: 'test/self/qunit/support.js',
 			runner: 'qunit',
 			static: 'test/root'
 		});

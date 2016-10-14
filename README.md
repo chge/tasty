@@ -386,11 +386,22 @@ npm run prepublish
 
 # Testing
 
-Automated for [SauceLabs](https://saucelabs.com/) environment. Requires `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` and `TRAVIS_JOB_NUMBER` environment variables, which are provided by [TravisCI](https://docs.travis-ci.com/user/sauce-connect) automatically.
+Automated for [SauceLabs](https://saucelabs.com/) environment.
 
 ```shell
 npm test
 ```
+
+Main tests require `phantomjs` executable to be accessible in the command line.
+Make sure to clear PhantomJS persistent cache located in user home.
+
+`AppData\Local\Ofi Labs\PhantomJS`
+
+`Library/Caches/Ofi Labs/PhantomJS`
+
+`.local/share/Ofi Labs/PhantomJS`
+
+Real-browser tests require `TRAVIS_JOB_NUMBER`, `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables, which are provided by [TravisCI](https://docs.travis-ci.com/user/sauce-connect) automatically.
 
 # Windows
 

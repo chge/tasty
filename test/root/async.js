@@ -6,4 +6,4 @@ setTimeout(function() {
 	body.appendChild(
 		document.createTextNode('Async')
 	);
-}, 5000);
+}, 500);
