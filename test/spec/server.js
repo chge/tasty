@@ -37,7 +37,7 @@ describe('server', function() {
 
 		return tasty.start()
 			.then(
-				() => chai.request(URL2).get('/socket.io.js')
+				() => chai.request(URL2).get('/tasty.js')
 			)
 			.then(
 				(response) => {
@@ -57,7 +57,7 @@ describe('server', function() {
 
 		return tasty.start()
 			.then(
-				() => chai.request(URL2).get('/socket.io.js')
+				() => chai.request(URL2).get('/tasty.js')
 			)
 			.then(
 				(response) => {

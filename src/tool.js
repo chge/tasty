@@ -2,12 +2,12 @@
 
 // NOTE user must inject tool.console;
 
-module.exports = tool;
+export default tool;
 
 tool.hook = hook;
 
-const dom = require('./dom'),
-	util = require('./util');
+import * as dom from './dom';
+import * as util from './util';
 
 const delay = util.delay,
 	escape = util.escape,
@@ -143,7 +143,7 @@ tool('client.reset', function reset(url) {
 	util.forEach(
 		document.cookie.split(';'),
 		(pair) => {
-			document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
+			//document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
 		}
 	);
 

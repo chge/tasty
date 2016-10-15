@@ -1,17 +1,19 @@
 'use strict';
 
-const env = process.env,
-	number = (env.TRAVIS_JOB_NUMBER || '').split('.')[1] | 0,
-	version = env.npm_package_version;
-
+const env = process.env;
 // TODO skip for pull requests.
-if (!number) {
-	describe('webdriver', function() {
+if (!env.TRAVIS_JOB_NUMBER) {
+	describe('support', function() {
 		it.skip('suite skipped');
 	});
 
 	return;
 }
+
+const number = env.TRAVIS_JOB_NUMBER.split('.'),
+	shift = number[0] | 0,
+	index = (number[1] | 0) - 1,
+	version = env.npm_package_version;
 
 const Tasty = require('..'),
 	webdriver = require('selenium-webdriver');
@@ -65,6 +67,11 @@ const CAPS = [
 	{platformName: IOS, platformVersion: '8.2', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '8.1', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
 	// NOTE Selenium.
+	{browserName: CHROME, version: 'beta', platform: OSX11},
+	{browserName: CHROME, version: 'beta', platform: WINDOWS10},
+	{browserName: CHROME, version: 'beta', platform: WINDOWS81},
+	{browserName: CHROME, version: 'beta', platform: WINDOWS8},
+	{browserName: CHROME, version: 'beta', platform: WINDOWS7},
 	{browserName: CHROME, version: '53.0', platform: OSX11},
 	{browserName: CHROME, version: '53.0', platform: WINDOWS10},
 	{browserName: CHROME, version: '53.0', platform: WINDOWS81},
@@ -141,7 +148,6 @@ const CAPS = [
 	{browserName: FIREFOX, version: '41.0', platform: WINDOWSXP},
 	{browserName: IE, version: '11', platform: WINDOWS10},
 	{browserName: IE, version: '11.0', platform: WINDOWS81},
-	{browserName: IE, version: '11.0', platform: WINDOWS8},
 	{browserName: IE, version: '11.0', platform: WINDOWS7},
 	{browserName: IE, version: '10.0', platform: WINDOWS8},
 	{browserName: IE, version: '10.0', platform: WINDOWS7},
@@ -158,7 +164,7 @@ const CAPS = [
 	{browserName: SAFARI, version: '5.1', platform: WINDOWS7},
 ];
 
-describe(clientName((number - 1) * 3), function() {
+describe(clientName(shift + index * 3), function() {
 	this.timeout(300000);
 
 	let tasty, driver;
@@ -173,13 +179,13 @@ describe(clientName((number - 1) * 3), function() {
 			reporter: 'jasmine-spec-reporter',
 			static: 'test/root'
 		});
-		driver = setup(clientCaps((number - 1) * 3));
+		driver = setup(clientCaps(shift + index * 3));
 
 		return run(tasty, driver);
 	});
 });
 
-describe(clientName((number - 1) * 3 + 1), function() {
+describe(clientName(shift + index * 3 + 1), function() {
 	this.timeout(300000);
 
 	let tasty, driver;
@@ -193,13 +199,13 @@ describe(clientName((number - 1) * 3 + 1), function() {
 			include: 'test/self/mocha/support.js',
 			static: 'test/root'
 		});
-		driver = setup(clientCaps((number - 1) * 3 + 1));
+		driver = setup(clientCaps(shift + index * 3 + 1));
 
 		return run(tasty, driver);
 	});
 });
 
-describe(clientName((number - 1) * 3 + 2), function() {
+describe(clientName(shift + index * 3 + 2), function() {
 	this.timeout(300000);
 
 	let tasty, driver;
@@ -213,7 +219,7 @@ describe(clientName((number - 1) * 3 + 2), function() {
 			runner: 'qunit',
 			static: 'test/root'
 		});
-		driver = setup(clientCaps((number - 1) * 3 + 2));
+		driver = setup(clientCaps(shift + index * 3 + 2));
 
 		return run(tasty, driver);
 	});

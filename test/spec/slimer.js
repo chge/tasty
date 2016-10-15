@@ -1,18 +1,19 @@
 'use strict';
 
 const child = require('child_process'),
+	slimerjs = require('slimerjs'),
 	Tasty = require('../..');
 
 const URL = 'http://localhost:8765/test.html';
 
-describe('headless client', function() {
+describe('slimer', function() {
 	this.timeout(20000);
 
-	let tasty, phantom;
+	let tasty, slimer;
 	afterEach((done) => {
-		phantom.once('close', done);
+		slimer.once('close', done);
 		tasty.stop().then(
-			() => phantom.kill()
+			() => slimer.kill()
 		);
 	});
 
@@ -22,7 +23,6 @@ describe('headless client', function() {
 		tasty = new Tasty({
 			coverage: 'istanbul',
 			format: 'lcovonly',
-			headless: true,
 			include: 'test/self/jasmine/common.js',
 			reporter: 'jasmine-spec-reporter',
 			runner: 'jasmine',
@@ -31,7 +31,7 @@ describe('headless client', function() {
 
 		tasty.start()
 			.then(() => {
-				phantom = run();
+				slimer = run();
 			});
 		tasty.once('end', (id, error) => done(error));
 	});
@@ -43,14 +43,13 @@ describe('headless client', function() {
 			addon: 'chai,chai-as-promised',
 			coverage: 'istanbul',
 			format: 'lcovonly',
-			headless: true,
 			include: 'test/self/mocha/common.js',
 			static: 'test/root'
 		});
 
 		tasty.start()
 			.then(() => {
-				phantom = run();
+				slimer = run();
 			});
 		tasty.once('end', (id, error) => done(error));
 	});
@@ -59,9 +58,8 @@ describe('headless client', function() {
 		this.slow(10000);
 
 		tasty = new Tasty({
-			coverage: 'nyc',
+			coverage: 'istanbul',
 			format: 'lcovonly',
-			headless: true,
 			include: 'test/self/qunit/common.js',
 			runner: 'qunit',
 			static: 'test/root'
@@ -69,12 +67,23 @@ describe('headless client', function() {
 
 		tasty.start()
 			.then(() => {
-				phantom = run();
+				slimer = run();
 			});
 		tasty.once('end', (id, error) => done(error));
 	});
 });
 
 function run() {
-	return child.exec(`phantomjs test/phantom.js "${URL}"`);
+	return child.execFile(
+		slimerjs.path,
+		[
+			'test/slimer.js',
+			URL,
+			'–error-log-file=slimer.log'
+		],
+		(error) => {
+			error && !error.killed &&
+				console.error(error);
+		}
+	);
 }

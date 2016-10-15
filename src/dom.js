@@ -1,20 +1,8 @@
 'use strict';
 
-module.exports = {
-	blur: blur,
-	click: click,
-	find: find,
-	focus: focus,
-	is: is,
-	reach: reach,
-	trigger: trigger
-};
+import { random } from './util';
 
-const util = require('./util');
-
-const random = util.random;
-
-function blur(node) {
+export function blur(node) {
 	if (node.blur) {
 		node.blur();
 	} else {
@@ -24,12 +12,12 @@ function blur(node) {
 	}
 }
 
-function click(node) {
+export function click(node) {
 	focus(node);
 	trigger(node, 'MouseEvent', 'click');
 }
 
-function find(regexp, selector) {
+export function find(regexp, selector) {
 	// TODO selector: query nodes, walk through them.
 	var walker = document.createTreeWalker(
 			document.body,
@@ -53,7 +41,7 @@ function find(regexp, selector) {
 	return found;
 }
 
-function innerText(node) {
+export function innerText(node) {
 	if (!node) {
 		return null;
 	}
@@ -78,7 +66,7 @@ function innerText(node) {
 	return node.textContent;
 }
 
-function focus(node) {
+export function focus(node) {
 	if (node.focus) {
 		node.focus();
 	} else {
@@ -91,7 +79,7 @@ function focus(node) {
 	}
 }
 
-function is(node, partially) {
+export function is(node, partially) {
 	const rect = node.getBoundingClientRect(),
 		width = window.innerWidth ||
 			document.documentElement.clientWidth,
@@ -106,7 +94,7 @@ function is(node, partially) {
 		(!!node.offsetParent || node === document.body);
 }
 
-function reach(node) {
+export function reach(node) {
 	// TODO randomize coordinates within bounding rect.
 	// NOTE shdows increase bounding rect and make click to miss the node.
 
@@ -125,7 +113,7 @@ function reach(node) {
 	return [parent, x, y];
 }
 
-function trigger(node, type, arg, bubbles, cancellable) {
+export function trigger(node, type, arg, bubbles, cancellable) {
 	const event = document.createEvent(type || 'Event');
 	event.initEvent(arg, bubbles !== false, cancellable !== false);
 	node.dispatchEvent(event);

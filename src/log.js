@@ -1,12 +1,10 @@
 'use strict';
 
-module.exports = {
-	init: init
-};
+export default log;
 
 let console;
 
-function init(logger) {
+function log(logger) {
 	const wrap = (method) => function() {
 		method &&
 			Function.prototype.apply.call(method, logger, arguments);

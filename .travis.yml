@@ -41,6 +41,7 @@ node_js:
   - 4.3
 
 addons:
+  firefox: "latest"
   sauce_connect:
     username: "tasty"
     no_ssl_bump_domains: all
@@ -51,14 +52,10 @@ cache:
   directories:
     - travis_phantomjs
 
-before_install:
-  # Upgrade PhantomJS to v2.1.1.
-  - "export PHANTOMJS_VERSION=2.1.1"
-  - "export PATH=$PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64/bin:$PATH"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then rm -rf $PWD/travis_phantomjs; mkdir -p $PWD/travis_phantomjs; fi"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then wget https://github.com/Medium/phantomjs/releases/download/v$PHANTOMJS_VERSION/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -O $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2; fi"
-  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then tar -xvf $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -C $PWD/travis_phantomjs; fi"
-  - "phantomjs --version"
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
 
 notifications:
   email: false

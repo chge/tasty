@@ -2,7 +2,7 @@
 
 const chai = require('chai'),
 	expect = chai.expect,
-	util = require('../../src/server/util');
+	util = require('../../lib/util');
 
 describe('util.resolve', function() {
 	it('resolves locally installed module', function() {

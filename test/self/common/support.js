@@ -46,8 +46,6 @@ module.exports = [
 		]
 	},
 	{
-		// NOTE this doesn't work in PhantomJS.
-		skip: tasty.config.headless,
 		name: 'client.go',
 		timeout: 30000,
 		specs: [

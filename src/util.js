@@ -1,30 +1,14 @@
 'use strict';
 
+import Promise from 'es6-promise';
+
 // NOTE user must inject include.url;
-
-module.exports = {
-	delay: delay,
-	escape: escape,
-	forEach: forEach,
-	format: format,
-	include: include,
-	isArray: isArray,
-	map: map,
-	random: random,
-	reason: reason,
-	session: session,
-	thenable: thenable
-};
-
-const Promise = global.Promise ||
-	require('./promise').Promise;
-
-// NOTE jQuery Core 1.12.4
-function include(src, callback) {
-	const script = document.createElement('script'),
-		head = document.head ||
+// LICENSE MIT jQuery Core 1.12.4
+export function include(src, callback) {
+	const head = document.head ||
 			document.getElementsByTagName('head')[0] ||
 				document.documentElement;
+	let script = document.createElement('script');
 	script.async = true;
 	script.src = include.url + src;
 	script.onload = script.onreadystatechange = function() {
@@ -39,7 +23,7 @@ function include(src, callback) {
 	head.insertBefore(script, head.firstChild);
 }
 
-function thenable(value) {
+export function thenable(value) {
 	return value instanceof Promise ?
 		value :
 		typeof value === 'function' ?
@@ -48,7 +32,7 @@ function thenable(value) {
 }
 
 // TODO store session in cookie?
-function session(value) {
+export function session(value) {
 	session.key = session.key || '__tasty';
 	if (arguments.length) {
 		if (value) {
@@ -61,11 +45,11 @@ function session(value) {
 	return sessionStorage.getItem(session.key);
 }
 
-function reason() {
+export function reason() {
 	return new Error([].join.call(arguments, ' '));
 }
 
-function format(value) {
+export function format(value) {
 	return value instanceof Error ?
 		{
 			name: value.name,
@@ -80,7 +64,7 @@ function format(value) {
 			value;
 }
 
-function escape(source, regexp) {
+export function escape(source, regexp) {
 	source = source.replace(/\./g, '\\.')
 		.replace(/\,/g, '\\,')
 		.replace(/\*/g, '\\*')
@@ -102,20 +86,20 @@ function escape(source, regexp) {
 			.replace(/\t/g, '\\t');
 }
 
-function delay(ms) {
+export function delay(ms) {
 	return () => thenable(
 		(resolve) => setTimeout(resolve, ms | 0)
 	);
 }
 
-function random(min, max) {
+export function random(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 // NOTE polyfills.
 
-// https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
-function forEach(array, callback, scope) {
+// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+export function forEach(array, callback, scope) {
 	var fn = Array.prototype.forEach || function polyfill(callback, scope) {
 		var T, k;
 		if (this == null) {
@@ -143,8 +127,8 @@ function forEach(array, callback, scope) {
 	return fn.call(array, callback, scope);
 }
 
-// https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
-function isArray(value) {
+// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
+export function isArray(value) {
 	var fn = Array.isArray || function polyfill(value) {
 		return Object.prototype.toString.call(value) === '[object Array]';
 	};
@@ -152,8 +136,8 @@ function isArray(value) {
 	return fn(value);
 }
 
-// https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/map
-function map(array, callback, scope) {
+// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/map
+export function map(array, callback, scope) {
 	var fn = Array.prototype.map || function polyfill(callback, scope) {
 		var T, A, k;
 		if (this == null) {

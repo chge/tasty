@@ -1,10 +1,12 @@
 'use strict';
 
-module.exports = tasty;
+// TODO exposable API?
+export default tasty;
 
-const log = require('./log'),
-	tool = require('./tool'),
-	util = require('./util');
+import io from 'socket.io-client';
+import log from './log';
+import tool from './tool';
+import * as util from './util';
 
 const include = util.include,
 	reason = util.reason,
@@ -36,7 +38,7 @@ function tasty(config) {
 
 	include.url = config.url;
 
-	tasty.console = tool.console = log.init(
+	tasty.console = tool.console = log(
 		config.hasOwnProperty('log') ?
 			config.log === true ?
 				window.console :
@@ -52,22 +54,8 @@ function connect() {
 	tasty.session() ||
 		tasty.console.log('tasty', 'server', url);
 
-	// TODO bundle socket.io client to leave global scope clean.
-	include('socket.io.js', () => {
-		thenable(
-			(resolve) => window.io ?
-				resolve(window.io) :
-				typeof define === 'function' && define.amd ?
-					require(['socket.io'], resolve) :
-					resolve(require('socket.io'))
-		).then(
-			(io) => {
-				const socket = io(url, {multiplex: false})
-					.on('connect', () => connected(socket));
-			},
-			(err) => {debugger;}
-		);
-	});
+	const socket = io(url, {multiplex: false})
+		.on('connect', () => connected(socket));
 }
 
 function connected(socket) {

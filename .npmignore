@@ -2,6 +2,7 @@
 coverage
 coverage_server
 node_modules
+slimer.log
 tmp
 *.info
 npm-debug.log

@@ -42,7 +42,7 @@ Don't use knowledge of your application's markup, assume you're helping a real p
 
 # Similar tools
 
-[Protractor](http://www.protractortest.org/) and [WebdriverIO](http://webdriver.io/) are [Selenium](https://github.com/SeleniumHQ/selenium)-based end-to-end test frameworks useful for intergration testing. Also take a look at [Appium](http://appium.io/) and [Selendroid](http://selendroid.io/).
+[Protractor](http://www.protractortest.org/) and [WebdriverIO](http://webdriver.io/) are [Selenium](https://github.com/SeleniumHQ/selenium)-based end-to-end test frameworks useful for intergration testing. Also take a look at [Appium](http://appium.io/), [CasperJS](http://casperjs.org/) and [Selendroid](http://selendroid.io/).
 
 [Karma](https://karma-runner.github.io/1.0/index.html) and [Testee](https://github.com/bitovi/testee) are great tools for cross-browser unit testing.
 
@@ -387,22 +387,15 @@ npm run prepublish
 
 # Testing
 
-Automated for [SauceLabs](https://saucelabs.com/) environment.
-
 ```shell
 npm test
 ```
 
-Main tests require `phantomjs` executable to be accessible in the command line.
-Make sure to clear PhantomJS persistent cache located in user home.
+Main tests use [SlimerJS](https://slimerjs.org/) which requires [Firefox](https://www.mozilla.org/firefox) to be installed.
 
-`AppData\Local\Ofi Labs\PhantomJS`
-
-`Library/Caches/Ofi Labs/PhantomJS`
-
-`.local/share/Ofi Labs/PhantomJS`
-
-Real-browser tests require `TRAVIS_JOB_NUMBER`, `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables, which are provided by [TravisCI](https://docs.travis-ci.com/user/sauce-connect) automatically.
+Real-browser support tests are automated for [SauceLabs](https://saucelabs.com/) environment
+and require `TRAVIS_JOB_NUMBER`, `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables,
+which are provided by [TravisCI](https://docs.travis-ci.com/user/sauce-connect) automatically.
 
 # Windows
 

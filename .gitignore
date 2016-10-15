@@ -3,6 +3,7 @@ coverage
 coverage_server
 dist
 node_modules
+slimer.log
 tmp
 *.info
 .travis.yml

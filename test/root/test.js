@@ -1,11 +1,7 @@
 'use strict';
 
-document.readyState === 'loading' ?
-	document.addEventListener('DOMContentLoaded', ready) :
-	ready();
-
-function ready() {
+window.onload = function() {
 	var input = document.getElementsByTagName('input')[0];
 	input.autoFocus ||
 		input.focus();
-}
+};
