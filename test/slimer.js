@@ -47,14 +47,14 @@ page.onConsoleMessage = function(message, line, source) {
 		slimer.exit(0);
 };
 
-page.onError = function (message, trace) {
+page.onError = function(message, trace) {
 	log('slimer', message);
 	trace.forEach(function(item) {
 		log('  ', item.file + ':' + item.line);
 	});
 };
 
-page.open(url, function (status) {
+page.open(url, function(status) {
 	log('slimer', status);
 	if (status !== 'success') {
 		return slimer.exit(1);

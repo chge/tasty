@@ -59,9 +59,10 @@ export function format(value) {
 					.replace(/\s*at Socket[\s\S]*/m, '') :
 				undefined
 		} :
-		value instanceof window.Node || value instanceof window.Element ?
-			value.outerHTML.replace(/>[\s\S]*$/m, '>') :
-			value;
+		window.Node && value instanceof window.Node ||
+			window.Element && value instanceof window.Element ?
+				value.outerHTML.replace(/>[\s\S]*$/m, '>') :
+				value;
 }
 
 export function escape(source, regexp) {
@@ -87,7 +88,7 @@ export function escape(source, regexp) {
 }
 
 export function delay(ms) {
-	return () => thenable(
+	return thenable(
 		(resolve) => setTimeout(resolve, ms | 0)
 	);
 }
@@ -100,31 +101,33 @@ export function random(min, max) {
 
 // LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
 export function forEach(array, callback, scope) {
-	var fn = Array.prototype.forEach || function polyfill(callback, scope) {
-		var T, k;
-		if (this == null) {
-			throw new TypeError('this is null or not defined');
-		}
-		var O = Object(this);
-		var len = O.length >>> 0;
-		if (typeof callback !== 'function') {
-				throw new TypeError(callback + ' is not a function');
-		}
-		if (arguments.length > 1) {
-			T = scope;
-		}
-		k = 0;
-		while (k < len) {
-			var kValue;
-			if (k in O) {
-				kValue = O[k];
-				callback.call(T, kValue, k, O);
-			}
-			k++;
-		}
-	};
+	if (Array.prototype.forEach) {
+		return Array.prototype.forEach.call(array, callback, scope);
+	}
 
-	return fn.call(array, callback, scope);
+	var T, k;
+	if (array == null) {
+		throw new TypeError('array is null or not defined');
+	}
+	var O = typeof array == 'string' ?
+		array :
+		Object(array);
+	var len = O.length >>> 0;
+	if (typeof callback !== 'function') {
+			throw new TypeError(callback + ' is not a function');
+	}
+	if (arguments.length > 1) {
+		T = scope;
+	}
+	k = 0;
+	while (k < len) {
+		var kValue;
+		if (typeof O == 'string' ? !!O[k] : k in O) {
+			kValue = O[k];
+			callback.call(T, kValue, k, O);
+		}
+		k++;
+	}
 }
 
 // LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
@@ -138,32 +141,35 @@ export function isArray(value) {
 
 // LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/map
 export function map(array, callback, scope) {
-	var fn = Array.prototype.map || function polyfill(callback, scope) {
-		var T, A, k;
-		if (this == null) {
-			throw new TypeError('this is null or not defined');
-		}
-		var O = Object(this);
-		var len = O.length >>> 0;
-		if (typeof callback !== 'function') {
-			throw new TypeError(callback + ' is not a function');
-		}
-		if (arguments.length > 1) {
-			T = scope;
-		}
-		A = new Array(len);
-		k = 0;
-		while (k < len) {
-			var kValue, mappedValue;
-			if (k in O) {
-				kValue = O[k];
-				mappedValue = callback.call(T, kValue, k, O);
-				A[k] = mappedValue;
-			}
-			k++;
-		}
-		return A;
-	};
+	if (Array.prototype.map) {
+		return Array.prototype.map.call(array, callback, scope);
+	}
 
-	return fn.call(array, callback, scope);
+	var T, A, k;
+	if (array == null) {
+		throw new TypeError('array is null or not defined');
+	}
+	var O = typeof array == 'string' ?
+		array :
+		Object(array);
+	var len = O.length >>> 0;
+	if (typeof callback !== 'function') {
+		throw new TypeError(callback + ' is not a function');
+	}
+	if (arguments.length > 1) {
+		T = scope;
+	}
+	A = new Array(len);
+	k = 0;
+	while (k < len) {
+		var kValue, mappedValue;
+		if (typeof O == 'string' ? !!O[k] : k in O) {
+			kValue = O[k];
+			mappedValue = callback.call(T, kValue, k, O);
+			A[k] = mappedValue;
+		}
+		k++;
+	}
+
+	return A;
 }

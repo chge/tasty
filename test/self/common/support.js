@@ -140,6 +140,7 @@ module.exports = [
 				body: () => {
 					client.navigate('/test.html');
 					input.type('The 5 Dollar Shake');
+					page.text('The 5 Dollar Shake');
 				}
 			},
 			{
@@ -149,7 +150,7 @@ module.exports = [
 				body: () => {
 					client.navigate('/other.html');
 					queue(
-						() => expect(queue.input.type('a1b2C3D4'))
+						() => expect(queue.input.type('The 5 Dollar Shake'))
 							.to.be.eventually.rejectedWith(Error)
 					);
 				}

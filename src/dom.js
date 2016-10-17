@@ -1,5 +1,6 @@
 'use strict';
 
+import * as polyfill from './treewalker';
 import { random } from './util';
 
 export function blur(node) {
@@ -19,20 +20,27 @@ export function click(node) {
 
 export function find(regexp, selector) {
 	// TODO selector: query nodes, walk through them.
-	var walker = document.createTreeWalker(
-			document.body,
-			NodeFilter.SHOW_TEXT,
-			null,
-			false
-		),
+	const body = document.body,
+		NodeFilter = document.NodeFilter ||
+			polyfill.NodeFilter,
+		filter = {
+			acceptNode: (node) => node.innerText || node.textContent || node.nodeValue || node.value ?
+				NodeFilter.FILTER_ACCEPT :
+				NodeFilter.FILTER_REJECT
+		},
 		precursor = new RegExp(regexp.source, 'i'),
-		found,
-		node;
+		what = NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+		walker = document.createTreeWalker ?
+			document.createTreeWalker(body, what, filter, false) :
+			polyfill.createTreeWalker(body, what, filter, false);
 
+	let found, node;
 	while (node = walker.nextNode()) {
-		if (precursor.test(node.textContent) &&
-			regexp.test(innerText(node.parentNode))
-		) {
+		let match = 'value' in node ?
+			regexp.test(innerText(node)) :
+			precursor.test(node.textContent || node.nodeValue) &&
+				regexp.test(innerText(node.parentNode));
+		if (match) {
 			found = node;
 			break;
 		}
@@ -50,20 +58,25 @@ export function innerText(node) {
 	}
 
 	// NOTE Node.textContent doesn't respect CSS text-transform, while HTMLElement.innerText does.
-	const style = window.getComputedStyle(node);
+	const style = window.getComputedStyle ?
+			window.getComputedStyle(node) :
+			node.currentStyle,
+		text = 'value' in node ?
+			node.value :
+			node.textContent || node.nodeValue;
 	switch (style.textTransform) {
 		case 'uppercase':
-			return node.textContent.toUpperCase();
+			return text.toUpperCase();
 		case 'lowercase':
-			return node.textContent.toLowerCase();
+			return text.toLowerCase();
 		case 'capitalize':
-			return node.textContent.replace(
+			return text.replace(
 				/\b./g,
 				(letter) => letter.toUpperCase()
 			);
 	}
 
-	return node.textContent;
+	return text;
 }
 
 export function focus(node) {
@@ -114,9 +127,16 @@ export function reach(node) {
 }
 
 export function trigger(node, type, arg, bubbles, cancellable) {
-	const event = document.createEvent(type || 'Event');
-	event.initEvent(arg, bubbles !== false, cancellable !== false);
-	node.dispatchEvent(event);
+	type = type || 'Event';
+	const event = document.createEvent ?
+		document.createEvent(type) :
+		document.createEventObject(type);
+	if (event.initEvent) {
+		event.initEvent(arg, bubbles !== false, cancellable !== false);
+		node.dispatchEvent(event);
+	} else {
+		node.fireEvent('on' + arg, event);
+	}
 
 	return event;
 }

@@ -17,30 +17,36 @@ function JasmineHelper(pattern) {
 			queue().then(done, done.fail);
 		}
 
-		suite.skip ?
-			xdescribe(suite.name, () => {}) :
-			describe(suite.name, function() {
-				suite.beforeEach &&
-					beforeEach(
-						(done) => run(suite.beforeEach, done)
-					);
-				suite.afterEach &&
-					afterEach(
-						(done) => run(suite.afterEach, done)
-					);
+		const suiteMethod = suite.skip ?
+			xdescribe :
+			suite.only ?
+				fdescribe :
+				describe;
+		suiteMethod(suite.name, function() {
+			suite.beforeEach &&
+				beforeEach(
+					(done) => run(suite.beforeEach, done)
+				);
+			suite.afterEach &&
+				afterEach(
+					(done) => run(suite.afterEach, done)
+				);
 
-				suite.specs.map(spec => {
-					spec.skip ?
-						xit(spec.name) :
-						it(
-							spec.name,
-							// TODO spec.time;
-							(done) => run(spec.body, done),
-							spec.timeout ||
-								suite.timeout
-						);
-				});
+			suite.specs.map(spec => {
+				const specMethod = spec.skip ?
+					xit :
+					spec.only ?
+						fit :
+						it;
+				specMethod(
+					spec.name,
+					// TODO spec.time;
+					(done) => run(spec.body, done),
+					spec.timeout ||
+						suite.timeout
+				);
 			});
+		});
 	});
 }
 
@@ -56,28 +62,34 @@ function MochaHelper(pattern) {
 			return queue();
 		}
 
-		suite.skip ?
-			describe.skip(suite.name, function() {}) :
-			describe(suite.name, function() {
-				suite.beforeEach &&
-					beforeEach(function() {
-						return run.call(this, suite.beforeEach, suite.timeout);
-					});
-				suite.afterEach &&
-					afterEach(function() {
-						return run.call(this, suite.afterEach, suite.timeout);
-					});
-				suite.timeout &&
-					this.timeout(suite.timeout);
+		const suiteMethod = suite.skip ?
+			describe.skip :
+			suite.only ?
+				describe.only :
+				describe;
+		suiteMethod(suite.name, function() {
+			suite.beforeEach &&
+				beforeEach(function() {
+					return run.call(this, suite.beforeEach, suite.timeout);
+				});
+			suite.afterEach &&
+				afterEach(function() {
+					return run.call(this, suite.afterEach, suite.timeout);
+				});
+			suite.timeout &&
+				this.timeout(suite.timeout);
 
-				suite.specs.map((spec) => {
-					spec.skip ?
-						it.skip(spec.name) :
-						it(spec.name, function() {
-							return run.call(this, spec.body, spec.timeout, spec.time);
-						});
+			suite.specs.map((spec) => {
+				const specMethod = spec.skip ?
+					it.skip :
+					spec.only ?
+						it.only :
+						it;
+				specMethod(spec.name, function() {
+					return run.call(this, spec.body, spec.timeout, spec.time);
 				});
 			});
+		});
 	});
 }
 
@@ -95,6 +107,7 @@ function QUnitHelper(pattern) {
 			);
 		}
 
+		// TODO suite.only;
 		QUnit.module(suite.name, {
 			beforeEach: suite.beforeEach ?
 				(assert) => run(suite.beforeEach, assert) :
@@ -105,6 +118,7 @@ function QUnitHelper(pattern) {
 		});
 
 		suite.specs.map((spec) => {
+			// TODO spec.only;
 			suite.skip || spec.skip ?
 				QUnit.skip(spec.name) :
 				QUnit.test(

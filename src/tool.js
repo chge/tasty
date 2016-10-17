@@ -11,6 +11,7 @@ import * as util from './util';
 
 const delay = util.delay,
 	escape = util.escape,
+	forEach = util.forEach,
 	format = util.format,
 	random = util.random,
 	reason = util.reason,
@@ -55,7 +56,7 @@ function hook(result, key, args) {
 		keys = util.isArray(keys) ?
 			keys :
 			[keys];
-		util.forEach(keys, (k) => {
+		forEach(keys, (k) => {
 			hook[k] = listener;
 		});
 
@@ -83,18 +84,18 @@ function hook(result, key, args) {
 
 // NOTE client.
 
-tool('client.breakpoint', function breakpoint() {
+tool('client.breakpoint', () => {
 	debugger;
 });
 
-tool('client.go', function go(value) {
+tool('client.go', (value) => {
 	return thenable(() => {
 		// NOTE never resolve.
 		window.history.go(value);
 	});
 });
 
-tool('client.location', function location(what) {
+tool('client.location', function(what) {
 	if (!arguments.length) {
 		return window.location.pathname;
 	}
@@ -113,34 +114,38 @@ tool('client.location', function location(what) {
 	}
 });
 
-tool('client.navigate', function navigate(url) {
+tool('client.navigate', (url) => {
 	// TODO allow to skip navigation if url already matches.
 	return thenable(() => {
 		// NOTE never resolve.
+		// TODO close socket first.
 		window.location = url;
 	});
 });
 
-tool('client.reload', function reload() {
+tool('client.reload', () => {
 	return thenable(() => {
 		// NOTE never resolve.
+		// TODO close socket first.
 		window.location.reload(true);
 	});
 });
 
-tool('client.reset', function reset(url) {
+tool('client.reset', (url) => {
 	const token = util.session(),
 		done = () => {
 			util.session(token);
 			if (typeof url === 'string') {
+				// TODO close socket first.
 				window.location = url;
 			} else {
 				url === false ||
+					// TODO close socket first.
 					window.location.reload(true);
 			}
 		};
 	// NOTE clear cookies.
-	util.forEach(
+	forEach(
 		document.cookie.split(';'),
 		(pair) => {
 			//document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
@@ -155,7 +160,7 @@ tool('client.reset', function reset(url) {
 	if (window.indexedDB && indexedDB.webkitGetDatabaseNames) {
 		let request = indexedDB.webkitGetDatabaseNames();
 		request.onsuccess = (event) => {
-			util.forEach(
+			forEach(
 				event.target.result,
 				(name) => {
 					chain = chain.then(() => thenable((resolve, reject) => {
@@ -175,12 +180,12 @@ tool('client.reset', function reset(url) {
 
 // NOTE page.
 
-tool('page.font', function font(family, selector) {
+tool('page.font', (family, selector) => {
 	// TODO window.getComputedStyle(selector).fontFamily, document.fonts.keys()
 	throw reason('not implemented yet, sorry');
 });
 
-tool('page.loaded', function loaded(src) {
+tool('page.loaded', (src) => {
 	if (!src) {
 		return document.readyState === 'complete';
 	}
@@ -209,9 +214,14 @@ tool('page.loaded', function loaded(src) {
 		case 'jpg':
 		case 'jpeg':
 		case 'png':
-			list = [].concat(
-				[].slice.call(document.getElementsByTagName('img'), 0),
-				[].slice.call(document.getElementsByTagName('link'), 0)
+			list = [];
+			forEach(
+				document.getElementsByTagName('img'),
+				(img) => list.push(img)
+			);
+			forEach(
+				document.getElementsByTagName('link'),
+				(img) => list.push(img)
 			);
 			// TODO picture, background-image, :before, :after, css states.
 			break;
@@ -219,6 +229,7 @@ tool('page.loaded', function loaded(src) {
 		default:
 			list = document.getElementsByTagName('*');
 	}
+
 	for (i = 0; i < list.length; i++) {
 		item = list[i];
 		if (item.src === url || item.href === url) {
@@ -230,7 +241,7 @@ tool('page.loaded', function loaded(src) {
 	throw reason('resource', src, 'not found');
 });
 
-tool('page.text', function text(what, selector, reachable) {
+tool('page.text', (what, selector, reachable) => {
 	what = what instanceof RegExp ?
 		what :
 		new RegExp(escape(what, true));
@@ -259,7 +270,7 @@ tool('page.text', function text(what, selector, reachable) {
 	}
 });
 
-tool('page.title', function title(what) {
+tool('page.title', (what) => {
 	what = what instanceof RegExp ?
 		what :
 		new RegExp(escape(what, true));
@@ -271,7 +282,7 @@ tool('page.title', function title(what) {
 
 // NOTE input.
 
-tool('input.click', function click(what, selector, reachable) {
+tool('input.click', (what, selector, reachable) => {
 	what = what instanceof RegExp ?
 		what :
 		new RegExp('^' + escape(what, true) + '$');
@@ -304,9 +315,9 @@ tool('input.click', function click(what, selector, reachable) {
 	dom.click(actual);
 });
 
-tool('input.paste', function paste(text) {
+tool('input.paste', (text) => {
 	const target = document.activeElement;
-	if (typeof target.value === 'undefined') {
+	if (!('value' in target)) {
 		throw reason('cannot type into active node', format(target));
 	}
 
@@ -318,20 +329,20 @@ tool('input.paste', function paste(text) {
 		value.substr(end, value.length);
 
 	dom.trigger(target, 'ClipboardEvent', 'paste', true, true);
-	typeof window.oninput === 'undefined' ?
-		dom.trigger(target, 'Event', 'change', true, false) :
-		dom.trigger(target, 'Event', 'input', true, false);
+	'oninput' in window ?
+		dom.trigger(target, 'Event', 'input', true, false) :
+		dom.trigger(target, 'Event', 'change', true, false);
 });
 
-tool('input.type', function type(text) {
+tool('input.type', (text) => {
 	const target = document.activeElement;
-	if (typeof target.value === 'undefined') {
+	if (!('value' in target)) {
 		throw reason('cannot type into active node', format(target));
 	}
 
 	return thenable((resolve) => {
 		let chain = thenable();
-		util.forEach(text, (char) => {
+		forEach(text, (char) => {
 			chain = chain
 				.then(
 					() => {
@@ -342,13 +353,13 @@ tool('input.type', function type(text) {
 							char +
 							value.substr(end, value.length);
 
-						typeof window.oninput === 'undefined' ?
-							dom.trigger(target, 'Event', 'change', true, false) :
-							dom.trigger(target, 'Event', 'input', true, false);
+						'oninput' in window ?
+							dom.trigger(target, 'Event', 'input', true, false) :
+							dom.trigger(target, 'Event', 'change', true, false);
 					}
 				)
 				.then(
-					delay(random(1, 100))
+					() => delay(random(1, 100))
 				);
 		});
 
