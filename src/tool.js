@@ -342,7 +342,7 @@ tool('input.type', (text) => {
 
 	return thenable((resolve) => {
 		let chain = thenable();
-		forEach(text, (char) => {
+		forEach(text.split(''), (char) => {
 			chain = chain
 				.then(
 					() => {

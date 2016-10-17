@@ -61,7 +61,9 @@ export function format(value) {
 		} :
 		window.Node && value instanceof window.Node ||
 			window.Element && value instanceof window.Element ?
-				value.outerHTML.replace(/>[\s\S]*$/m, '>') :
+				value.outerHTML ?
+					value.outerHTML.replace(/>[\s\S]*$/m, '>') :
+					'<' + value.nodeName.toLowerCase() + ' ...>' :
 				value;
 }
 
@@ -109,9 +111,7 @@ export function forEach(array, callback, scope) {
 	if (array == null) {
 		throw new TypeError('array is null or not defined');
 	}
-	var O = typeof array == 'string' ?
-		array :
-		Object(array);
+	var O = Object(array);
 	var len = O.length >>> 0;
 	if (typeof callback !== 'function') {
 			throw new TypeError(callback + ' is not a function');
@@ -122,7 +122,7 @@ export function forEach(array, callback, scope) {
 	k = 0;
 	while (k < len) {
 		var kValue;
-		if (typeof O == 'string' ? !!O[k] : k in O) {
+		if (k in O) {
 			kValue = O[k];
 			callback.call(T, kValue, k, O);
 		}
@@ -149,9 +149,7 @@ export function map(array, callback, scope) {
 	if (array == null) {
 		throw new TypeError('array is null or not defined');
 	}
-	var O = typeof array == 'string' ?
-		array :
-		Object(array);
+	var O = Object(array);
 	var len = O.length >>> 0;
 	if (typeof callback !== 'function') {
 		throw new TypeError(callback + ' is not a function');
@@ -163,7 +161,7 @@ export function map(array, callback, scope) {
 	k = 0;
 	while (k < len) {
 		var kValue, mappedValue;
-		if (typeof O == 'string' ? !!O[k] : k in O) {
+		if (k in O) {
 			kValue = O[k];
 			mappedValue = callback.call(T, kValue, k, O);
 			A[k] = mappedValue;

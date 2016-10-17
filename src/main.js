@@ -21,14 +21,17 @@ tasty.session = util.session;
 tasty.thenable = thenable;
 tasty.tool = tool;
 
-tasty.forEach(document.scripts, (script) => {
-	if (script.src.indexOf('/tasty.js') !== -1) {
-		const url = script.getAttribute('data-url') ||
-			script.src.split('tasty.js')[0];
-		url &&
-			tasty({url: url}).connect();
+tasty.forEach(
+	document.scripts || document.getElementsByTagName('script'),
+	(script) => {
+		if (script.src.indexOf('/tasty.js') !== -1) {
+			const url = script.getAttribute('data-url') ||
+				script.src.split('tasty.js')[0];
+			url &&
+				tasty({url: url}).connect();
+		}
 	}
-});
+);
 
 function tasty(config) {
 	config = typeof config === 'string' ?

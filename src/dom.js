@@ -23,16 +23,16 @@ export function find(regexp, selector) {
 	const body = document.body,
 		NodeFilter = document.NodeFilter ||
 			polyfill.NodeFilter,
-		filter = {
-			acceptNode: (node) => node.innerText || node.textContent || node.nodeValue || node.value ?
-				NodeFilter.FILTER_ACCEPT :
-				NodeFilter.FILTER_REJECT
-		},
+		filter = (node) => node.innerText || node.textContent || node.nodeValue || node.value ?
+			NodeFilter.FILTER_ACCEPT :
+			NodeFilter.FILTER_REJECT,
 		precursor = new RegExp(regexp.source, 'i'),
-		what = NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
-		walker = document.createTreeWalker ?
-			document.createTreeWalker(body, what, filter, false) :
-			polyfill.createTreeWalker(body, what, filter, false);
+		what = NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT;
+
+	filter.acceptNode = filter;
+	const walker = document.createTreeWalker ?
+		document.createTreeWalker(body, what, filter, false) :
+		polyfill.createTreeWalker(body, what, filter, false);
 
 	let found, node;
 	while (node = walker.nextNode()) {
