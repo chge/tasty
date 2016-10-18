@@ -242,9 +242,12 @@ tool('page.loaded', (src) => {
 });
 
 tool('page.text', (what, selector, reachable) => {
-	what = what instanceof RegExp ?
-		what :
-		new RegExp(escape(what, true));
+	// TODO validate args.
+	what = what ?
+		what instanceof RegExp ?
+			what :
+			new RegExp(escape(what, true)) :
+		null;
 	reachable = reachable !== false &&
 		selector !== false;
 
@@ -254,7 +257,9 @@ tool('page.text', (what, selector, reachable) => {
 			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
 		);
 	}
-	found = found.parentNode;
+	found = found.nodeType === 3 ?
+		found.parentNode :
+		found;
 	if (!dom.is(found, !reachable)) {
 		throw reason(
 			selector ? 'node ' + selector + ' with text' : 'text', what, 'is not fully visible'
@@ -271,6 +276,7 @@ tool('page.text', (what, selector, reachable) => {
 });
 
 tool('page.title', (what) => {
+	// TODO validate args.
 	what = what instanceof RegExp ?
 		what :
 		new RegExp(escape(what, true));
@@ -283,19 +289,27 @@ tool('page.title', (what) => {
 // NOTE input.
 
 tool('input.click', (what, selector, reachable) => {
-	what = what instanceof RegExp ?
-		what :
-		new RegExp('^' + escape(what, true) + '$');
+	// TODO validate args.
+	what = what ?
+		what instanceof RegExp ?
+			what :
+			selector === true ?
+				new RegExp('^' + escape(what, true) + '$') :
+				new RegExp(escape(what, true)) :
+		null;
 	reachable = reachable !== false &&
 		selector !== false;
 
-	let found = dom.find(what);
+	let found = dom.find(what, selector);
 	if (!found) {
 		throw reason(
 			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
 		);
 	}
-	found = found.parentNode;
+	found = found.nodeType === 3 ?
+		found.parentNode :
+		found;
+	// TODO traverse
 	if (found.disabled) {
 		throw reason(
 			'node', format(found), 'with text', what, 'is disabled'

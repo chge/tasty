@@ -107,7 +107,7 @@ module.exports = [
 		timeout: 30000,
 		specs: [
 			{
-				name: 'checks text',
+				name: 'checks static text',
 				time: 1000,
 				body: () => {
 					client.navigate('/test.html');
@@ -124,6 +124,35 @@ module.exports = [
 					client.navigate('/other.html');
 					queue(
 						() => expect(queue.page.text('Text'))
+							.to.be.eventually.rejectedWith(Error)
+					);
+				}
+			},
+			{
+				name: 'checks input value',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					page.text('Value');
+					page.text('42');
+				}
+			},
+			{
+				name: 'checks input placeholder',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					page.text('Placeholder');
+				}
+			},
+			{
+				skip: !global.chai,
+				name: 'skips password',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					queue(
+						() => expect(queue.page.text('Secret'))
 							.to.be.eventually.rejectedWith(Error)
 					);
 				}
@@ -150,9 +179,53 @@ module.exports = [
 				body: () => {
 					client.navigate('/other.html');
 					queue(
-						() => expect(queue.input.type('The 5 Dollar Shake'))
+						() => expect(queue.input.type('Error'))
 							.to.be.eventually.rejectedWith(Error)
 					);
+					client.navigate('/test.html');
+					input.click('Value');
+					queue(
+						() => expect(queue.input.type('Error'))
+							.to.be.eventually.rejectedWith(Error)
+					);
+				}
+			},
+			{
+				name: 'works for input with label',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					input.click('Label');
+					input.type('Vanilla Coke');
+				}
+			},
+			{
+				name: 'works for input with value',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					input.click('Value', 'input');
+					input.type('Burnt to a Crisp');
+					input.click('42');
+					input.type('Bloody as Hell');
+				}
+			},
+			{
+				name: 'works for input with placeholder',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					input.click('Placeholder');
+					input.type('The 5 Dollar Shake');
+				}
+			},
+			{
+				name: 'works for password input',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					input.click(null, '[type="password"]');
+					input.type('Secret');
 				}
 			}
 		]
