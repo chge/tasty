@@ -1,3 +1,3 @@
 'use strict';
 
-require('../../helper').Mocha(__dirname + '/../common/support.js');
+require('../../helper').Mocha(__dirname + '/../support/*.js');

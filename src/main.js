@@ -13,6 +13,7 @@ const include = util.include,
 	thenable = util.thenable;
 
 tasty.connect = connect;
+tasty.delay = util.delay;
 tasty.forEach = util.forEach;
 tasty.hook = tool.hook;
 tasty.isArray = util.isArray;

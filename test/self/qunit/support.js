@@ -1,3 +1,3 @@
 'use strict';
 
-require('../../helper').QUnit(__dirname + '/../common/support.js');
+require('../../helper').QUnit(__dirname + '/../support/*.js');

@@ -1,3 +1,3 @@
 'use strict';
 
-require('../../helper').Jasmine(__dirname + '/../common/support.js');
+require('../../helper').Jasmine(__dirname + '/../support/*.js');

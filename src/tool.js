@@ -51,11 +51,13 @@ function tool(name, handle, callback) {
 function hook(result, key, args) {
 	if (typeof key === 'function') {
 		let keys = result,
-			listener = key;
+			listener = key,
+			title = args;
 
 		keys = util.isArray(keys) ?
 			keys :
 			[keys];
+		listener.title = title;
 		forEach(keys, (k) => {
 			hook[k] = listener;
 		});
@@ -70,7 +72,7 @@ function hook(result, key, args) {
 
 			delete listener.skip;
 		} else {
-			tool.console.debug('tasty', 'hook', key, listener.name || '(anonymous)', listener.once ? 'once' : '');
+			tool.console.debug('tasty', 'hook', key, listener.title || '(anonymous)', listener.once ? 'once' : '');
 
 			result = listener.apply(this, arguments);
 			if (listener.once) {

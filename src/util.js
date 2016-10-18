@@ -89,9 +89,12 @@ export function escape(source, regexp) {
 			.replace(/\t/g, '\\t');
 }
 
-export function delay(ms) {
+export function delay(ms, result) {
 	return thenable(
-		(resolve) => setTimeout(resolve, ms | 0)
+		(resolve) => setTimeout(
+			() => {console.log('DELAYED', ms, result); resolve(result)},
+			ms | 0
+		)
 	);
 }
 

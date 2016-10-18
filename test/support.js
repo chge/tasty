@@ -193,14 +193,14 @@ function setup(caps) {
 		.usingServer(`http://${env.SAUCE_USERNAME}:${env.SAUCE_ACCESS_KEY}@localhost:4445/wd/hub`)
 		.withCapabilities(Object.assign(
 			{
+				build: version,
 				// NOTE seconds.
 				commandTimeout: 300,
 				idleTimeout: 300,
 				maxDuration: 300,
 				name: clientName(caps),
 				recordScreenshots: false,
-				'tunnel-identifier': env.TRAVIS_JOB_NUMBER,
-				build: version
+				'tunnel-identifier': env.TRAVIS_JOB_NUMBER
 			},
 			caps
 		))

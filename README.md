@@ -17,14 +17,14 @@ It respects [Content Security Policy](https://www.w3.org/TR/CSP/) and SSL/TLS.
 
 # How it works
 
-Tasty server controls Tasty clients to run your tests against your application.
+Tasty server controls Tasty clients to run your tests against your application: navigate, fill forms, perform checks.
 
 1. Add `tasty.js` module to your assembly or markup.
 2. Assemble and serve your application from staging server.
 3. Provide CSP directives for Tasty and use test certificates, if needed.
 4. Write tests for your preferred test framework using Tasty async tools.
 5. Run Tasty server. Open application in any of your clients.
-6. For every client Tasty will run your tests and return all output.
+6. For each client Tasty will run your tests and return all output.
 7. Edit tests, Tasty will re-run them automatically, if needed.
 
 # Is [Selenium](https://github.com/SeleniumHQ/selenium) server needed?
@@ -37,8 +37,8 @@ However, you can use Selenium-driven clients to run your tests using Tasty.
 
 The main purpose is to emulate real user experience. Interact with text and graphics, not with heartless HTML elements.
 
-Tasty provides you with only high-level tools to help treat your application as a black box, just like real user does.
-Don't use knowledge of your application's markup, assume you're helping a real person to achieve his/her goals.
+Tasty provides you only high-level tools to help treat your application as a black box, just like real user does.
+Don't use knowledge of your application's markup, assume you're helping a real person to achieve some goals.
 
 # Similar tools
 
@@ -59,9 +59,9 @@ Serve your application.
 	<body>
 		<form>
 			Welcome!
-			<input name="login" type="text" />
-			<input name="pass" type="password" />
-			<input type="submit" text="Login" />
+			<input placeholder="Username" type="text" />
+			<input placeholder="Password" type="password" />
+			<input text="Login" type="submit" />
 		</form>
 	</body>
 </html>
@@ -73,8 +73,10 @@ Write a test (this one uses [Mocha](https://mochajs.org/)).
 describe('login form', function() {
 	it('allows user to log in', function() {
 		page.text('Welcome!');
-		input.enter('login', 'test');
-		input.enter('pass', tasty.config.pass);
+		input.click('Username');
+		input.enter('test');
+		input.click('Password');
+		input.enter(tasty.config.pass);
 		input.click('Login');
 		client.location('/dashboard');
 
@@ -95,6 +97,8 @@ Open your application in your client. Tasty will run the test, print all output 
 
 Tasty server is a bridge between the clients and the test runner, it controls each client and runs tests written using Tasty tools.
 
+Use `--url` flag to configre server's own URL.
+
 # Client
 
 Tasty client is a small extendable UMD module that connects to the server and executes its commands.
@@ -105,7 +109,7 @@ Tasty supports any test frameworks that support asynchronous tests.
 
 There are built-in runners for [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/) and [QUnit](https://qunitjs.com/). Provide `--runner <name>` flag to use one of them. For other frameworks, use Tasty programmatically from your runner.
 
-[Chai](http://chaijs.com/), its [plugins](http://chaijs.com/plugins) and other helper libraries are supported by providing `--addon <name>,<name>...` flags.
+[Chai](http://chaijs.com/), its [plugins](http://chaijs.com/plugins) and other helper libraries are supported by providing `--addon <name>,<name>...` flag.
 For example, `--addon chai,chai-as-promised,chai-http` works fine.
 
 Use `--watch` flag to watch for changes or run on several clients. See `tasty --help` for more information.
@@ -113,11 +117,10 @@ Use `--watch` flag to watch for changes or run on several clients. See `tasty --
 # Static server
 
 You can run built-in static server on the same URL by passing `--static <path/to/root>` flag.
-The `--static` flag without path serves content from CWD.
 
 # Code coverage
 
-When serving application from own server, you should instrument JavaScript code for coverage by yourself.
+When serving application from its own server, you should instrument JavaScript code for coverage by yourself.
 Tasty's static server has built-in support for [Istanbul](https://gotwarlost.github.io/istanbul) and [NYC](https://istanbul.js.org/) (aka Istanbul 2) to automatically do it for you.
 
 # CSP
@@ -142,7 +145,9 @@ Check out a [great tool](https://report-uri.io/home/generate) for generating and
 
 # Browser support
 
-[![Sauce Test Status](https://saucelabs.com/browser-matrix/tasty.svg)](https://saucelabs.com/u/tasty)
+Big thanks to [Sauce Labs](https://saucelabs.com/).
+
+[![support](https://saucelabs.com/browser-matrix/tasty.svg)](https://saucelabs.com/u/tasty)
 
 # Tools
 
@@ -172,6 +177,75 @@ it('works', function(done) {
 	...
 	queue().then(done, done.fail);
 });
+```
+
+### Ready state
+
+For testing SPA (or rich MPA) you can provide a method for Tasty to ensure that client is ready for the next action.
+
+Note that built-in methods cannot be combined. Call `client.ready(...)` to register persistent method or use `page.ready(...)` for temporary methods.
+
+The simpliest way is to just wait after using some tools.
+
+```javascript
+client.ready('delay', 1000);
+```
+
+You may override the list of tools to wait after.
+
+```javascript
+client.ready('delay', 1000, [
+	'input.click'
+]);
+```
+
+You always can manually add a delay into queue.
+
+```javascript
+runner.delay(1000);
+```
+
+There could be enough to just check if DOM is ready...
+
+```javascript
+client.ready('document'); // 'DOMContentLoaded' aka 'interactive' readyState
+client.ready('window'); // 'load' aka 'complete' readyState
+```
+
+...and maybe wait a little bit.
+
+```javascript
+client.ready('document', 500);
+client.ready('window', 500);
+```
+
+Another way is to provide some application-specific code.
+
+```javascript
+client.ready(
+	'until',
+	// This function is executed on client, test will continue when it return true.
+	function() {
+		return !document.getElementsByClassName('progress').length;
+	},
+	[...]
+);
+```
+
+```javascript
+client.ready(
+	'exec',
+	// This function is executed on client, test will continue when promise resolve.
+	function(tasty) {
+		// tasty.thenable is a built-in Promise for non-supporting browsers.
+		return tasty.thenable(
+			function(resolve, reject) {
+				...
+			}
+		);
+	},
+	[...]
+);
 ```
 
 ### Data from client
@@ -235,67 +309,6 @@ it('remembers', function() {
 });
 ```
 
-### Ready state
-
-For testing SPA (or rich MPA) you can provide a method for Tasty to ensure that client is ready for the next action.
-
-Note that built-in methods cannot be combined. Call `client.ready(...)` to register persistent method and use `page.ready(...)` for temporary methods.
-
-The simpliest way is to just wait after using some tools.
-
-```javascript
-client.ready('delay', 1000);
-```
-
-You may override the list of tools to wait after.
-
-```javascript
-client.ready('delay', 1000, [
-	'input.click'
-]);
-```
-
-You always can manually add a delay into queue.
-
-```javascript
-runner.delay(1000);
-```
-
-There could be enough to just check if DOM is ready and wait a little bit.
-
-```javascript
-client.ready('document');
-```
-
-Another way is to provide some application-specific code.
-
-```javascript
-client.ready(
-	'until',
-	// This function is executed on client, test will continue when it return true.
-	function() {
-		return !document.getElementsByClassName('progress').length;
-	},
-	[...]
-);
-```
-
-```javascript
-client.ready(
-	'exec',
-	// This function is executed on client.
-	function(tasty) {
-		// tasty.thenable is a builtin Promise for non-supporting browsers.
-		return tasty.thenable(
-			function(resolve, reject) {
-				...
-			}
-		);
-	},
-	[...]
-);
-```
-
 ### Custom logic
 
 The `queue(...)` call with function allows you to add some custom logic into test, but you should use `queue.*` namespace for tools.
@@ -314,7 +327,7 @@ it('chooses', function() {
 });
 ```
 
-The `queue.namespace.tool` is the same as `namespace.tool`, but runs immediately. You should use `queue.*` tools only inside `queue(...)` call if you want to preserve execution order.
+The `queue.namespace.tool` is the same as `namespace.tool`, but runs immediately. You should use `queue.*` tools only inside `queue(...)` call if you don't want to break execution order.
 
 ```javascript
 it('searches', function() {
@@ -338,15 +351,16 @@ To be described.
 
 ```typescript
 page.font(family: string, selector?: string): void
-page.ready(method: string, value: number | function, filter?: string[]): void
 page.loaded(): boolean
 page.loaded(src?: string): void
+page.read(what?: string | RegExp, selector?: string): string
+page.ready(method: string, value: number | function, filter?: string[]): void
 page.text(what?: string | RegExp, selector?: string): void
 page.title(what?: string | RegExp): string
-client.ready(method: string, value: number | function, filter?: string[]): void
 client.location(): string
 client.location(what?: string | RegExp): void
 client.navigate(url: string): void
+client.ready(method: string, value: number | function, filter?: string[]): void
 client.reload(): void
 input.click(what?: string | RegExp, selector?: string, reachable = true): void
 input.paste(text: string): void
@@ -365,7 +379,7 @@ On staging or other near-production environment, Tasty can't pass (re)CAPTCHA or
 
 ### Permanent secrets
 
-Store passwords in CIS and pass credentials into command line.
+Store passwords in CIS and pass credentials into command line. All arguments will be available in `tasty.config` object.
 
 ### One-off secrets
 
@@ -373,7 +387,9 @@ Get two-factor nonces from backdoor or use paid services to mock real mobile pho
 
 ### (re)CAPTCHA
 
-Use [reCAPTCHA testing key](https://developers.google.com/recaptcha/docs/faq) or get answers from backdoor.
+Use [reCAPTCHA testing key](https://developers.google.com/recaptcha/docs/faq).
+
+For other implementations, get answers from backdoor.
 
 ### SSL/TLS
 
@@ -395,7 +411,7 @@ Main tests use [SlimerJS](https://slimerjs.org/) which requires [Firefox](https:
 
 Real-browser support tests are automated for [SauceLabs](https://saucelabs.com/) environment
 and require `TRAVIS_JOB_NUMBER`, `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables,
-which are provided by [TravisCI](https://docs.travis-ci.com/user/sauce-connect) automatically.
+which are kindly provided by [TravisCI](https://docs.travis-ci.com/user/sauce-connect).
 
 # Windows
 
