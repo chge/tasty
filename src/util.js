@@ -92,7 +92,7 @@ export function escape(source, regexp) {
 export function delay(ms, result) {
 	return thenable(
 		(resolve) => setTimeout(
-			() => {console.log('DELAYED', ms, result); resolve(result)},
+			() => resolve(result),
 			ms | 0
 		)
 	);

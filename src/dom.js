@@ -31,12 +31,10 @@ export function find(regexp, selector) {
 }
 
 function findAllBySelector(selector) {
-	// TODO Sizzle.
 	return document.querySelectorAll(selector);
 }
 
 function findBySelector(selector) {
-	// TODO Sizzle.
 	return document.querySelector(selector);
 }
 
@@ -130,7 +128,14 @@ export function focus(node) {
 	if (active !== node) {
 		blur(active);
 	}
-
+	if (!node) {
+		return;
+	}
+	if (node.htmlFor) {
+		return focus(
+			document.getElementById(node.htmlFor)
+		);
+	}
 	if (node.focus) {
 		node.focus();
 	} else {
