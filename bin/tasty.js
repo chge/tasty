@@ -5,12 +5,13 @@
 process.title = 'Tasty';
 
 const config = require('minimist')(process.argv.slice(2), {
+	'--': true,
 	alias: {
-		a: 'addon', b: 'bail', c: 'coverage', e: 'exclude', x: 'exclude', f: 'format', h: 'help', i: 'include',
+		a: 'addon', b: 'bail', c: 'coverage', e: 'exclude', x: 'exclude', f: 'format', h: 'help',
 		p: 'reporter', q: 'quiet', r: 'runner', s: 'static', u: 'url', v: 'version', w: 'watch'
 	},
 	boolean: ['bail', 'help', 'version', 'verbose', 'quiet', 'watch'],
-	string: ['addon', 'cert', 'coverage', 'exclude', 'format', 'include', 'key', 'passphrase', 'reporter', 'runner', 'server', 'slow', 'static']
+	string: ['addon', 'cert', 'coverage', 'exclude', 'format', 'key', 'passphrase', 'reporter', 'runner', 'server', 'slow', 'static']
 });
 
 const Tasty = require('../lib/main');
@@ -23,7 +24,7 @@ if (config.version) {
 	process.exit(0);
 } else if (config.help) {
 	console.log(
-`Usage: tasty [options]
+`Usage: tasty [options] [include] -- [exclude]
 
   --addon <name>,<name>  Module(s) to use as additional tools.
   -b, --bail             Fail fast, stop test runner on first fail.
@@ -31,9 +32,7 @@ if (config.version) {
   -c, --coverage <name>  Module to use as coverage instrumenter.
                          Built-ins: istanbul, nyc.
   -f, --format <name>    Report format for coverage reporter.
-  -e,x, --exclude <glob> Exclude test files.
   -h, --help             Print this help and exit.
-  -i, --include <glob>   Include test files.
   --key <path>           Certificate key for Tasty server.
   --passphrase <string>  Certificate key passphrase for Tasty server.
   -p, --reporter <name>  Module to use as test reporter.
@@ -55,6 +54,10 @@ if (config.version) {
 } else {
 	const tasty = new Tasty(
 		Object.assign(config, {
+			include: config._,
+			exclude: process.argv.indexOf('--') === -1 ?
+				null :
+				config['--'],
 			url: config['url'] || true
 		})
 	);

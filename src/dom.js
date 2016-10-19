@@ -66,7 +66,7 @@ function findByTextInBody(regexp) {
 
 	filter.acceptNode = filter;
 	const walker = document.createTreeWalker ?
-		document.createTreeWalker(body, what, filter) :
+		document.createTreeWalker(body, what, filter, false) :
 		polyfill.createTreeWalker(body, what, filter);
 
 	let found, node;

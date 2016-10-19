@@ -23,7 +23,7 @@ describe('slimer', function() {
 		tasty = new Tasty({
 			coverage: 'istanbul',
 			format: 'lcovonly',
-			include: 'test/self/jasmine/common.js',
+			include: 'test/self/jasmine/*.js',
 			reporter: 'jasmine-spec-reporter',
 			runner: 'jasmine',
 			static: 'test/root'
@@ -43,7 +43,7 @@ describe('slimer', function() {
 			addon: 'chai,chai-as-promised',
 			coverage: 'istanbul',
 			format: 'lcovonly',
-			include: 'test/self/mocha/common.js',
+			include: 'test/self/mocha/*.js',
 			static: 'test/root'
 		});
 
@@ -60,7 +60,7 @@ describe('slimer', function() {
 		tasty = new Tasty({
 			coverage: 'istanbul',
 			format: 'lcovonly',
-			include: 'test/self/qunit/common.js',
+			include: 'test/self/qunit/*.js',
 			runner: 'qunit',
 			static: 'test/root'
 		});
