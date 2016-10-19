@@ -4,6 +4,8 @@ const chai = require('chai'),
 	expect = chai.expect,
 	Tasty = require('../..');
 
+chai.use(require('chai-spies'));
+
 describe('tasty', function() {
 	it('exports default API', function() {
 		const tasty = new Tasty();
@@ -34,8 +36,8 @@ describe('tasty', function() {
 
 	it('supports logging', function() {
 		const tasty = new Tasty({
-			log: {
-				log: () => {}
+			console: {
+				console: () => {}
 			}
 		});
 
@@ -65,6 +67,81 @@ describe('tasty', function() {
 			.then(
 				() => tasty.stop()
 			);
+	});
+
+	it('emits listening event', function() {
+		const spy1 = chai.spy(),
+			spy2 = chai.spy(),
+			tasty = new Tasty();
+		tasty.on('listening', spy1);
+		tasty.once('listening', spy2);
+
+		return tasty.start()
+			.then(() => {
+				expect(spy1).to.have.been.called.with(tasty.config.url.href)
+				expect(spy2).to.have.been.called.with(tasty.config.url.href)
+			})
+			.then(
+				() => tasty.stop()
+			);
+	});
+
+	it('emits close event', function() {
+		const spy1 = chai.spy(),
+			spy2 = chai.spy(),
+			tasty = new Tasty();
+		tasty.on('listening', spy1);
+		tasty.once('listening', spy1);
+		tasty.off('listening', spy1);
+		tasty.on('close', spy2);
+		tasty.once('close', spy2);
+		tasty.off('close', spy2);
+
+		return tasty.start()
+			.then(
+				() => tasty.stop()
+			)
+			.then(() => {
+				expect(spy1).to.not.have.been.called
+				expect(spy2).to.not.have.been.called
+			});
+	});
+
+	it('removes listeners', function() {
+		const spy1 = chai.spy(),
+			spy2 = chai.spy(),
+			tasty = new Tasty();
+		tasty.on('close', spy1);
+		tasty.once('close', spy2);
+
+		return tasty.start()
+			.then(
+				() => tasty.stop()
+			)
+			.then(() => {
+				expect(spy1).to.have.been.called
+				expect(spy2).to.have.been.called
+			});
+	});
+
+	it('warns on invald exclude config', function() {
+		const spy = chai.spy();
+		new Tasty({
+			exclude: [],
+			console: {warn: spy}
+		});
+		expect(spy).to.have.been.called.with('invalid exclude pattern');
+		expect(spy).to.have.been.called.with('no test files specified');
+	});
+
+	it('warns on invald include config', function() {
+		const spy = chai.spy();
+		new Tasty({
+			include: [''],
+			console: {warn: spy}
+		});
+		expect(spy).to.not.have.been.called.with('invalid exclude pattern');
+		expect(spy).to.have.been.called.with('no test files found');
 	});
 
 	it('throws without URL', function() {

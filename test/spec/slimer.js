@@ -7,14 +7,13 @@ const child = require('child_process'),
 const URL = 'http://localhost:8765/test.html';
 
 describe('slimer', function() {
-	this.timeout(20000);
+	this.timeout(30000);
 
 	let tasty, slimer;
-	afterEach((done) => {
-		slimer.once('close', done);
-		tasty.stop().then(
-			() => slimer.kill()
-		);
+	afterEach(() => {
+		slimer.kill();
+
+		return tasty.stop();
 	});
 
 	it('passes Jasmine suite', function(done) {

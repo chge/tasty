@@ -80,6 +80,16 @@ module.exports = [
 					client.navigate('/async.html');
 					page.text('Async');
 				}
+			},
+			{
+				skip: !global.chai,
+				name: 'fails on unknown method',
+				body: () => {
+					queue(
+						() => expect(queue.client.ready('unknown'))
+							.to.be.eventually.rejectedWith(Error)
+					);
+				}
 			}
 		]
 	},
@@ -164,6 +174,16 @@ module.exports = [
 					client.navigate('/async.html');
 					page.ready('window', 500);
 					page.text('Async');
+				}
+			},
+			{
+				skip: !global.chai,
+				name: 'fails on unknown method',
+				body: () => {
+					queue(
+						() => expect(queue.page.ready('unknown'))
+							.to.be.eventually.rejectedWith(Error)
+					);
 				}
 			}
 		]
