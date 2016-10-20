@@ -7,11 +7,11 @@ process.title = 'Tasty';
 const config = require('minimist')(process.argv.slice(2), {
 	'--': true,
 	alias: {
-		a: 'addon', b: 'bail', c: 'coverage', e: 'exclude', x: 'exclude', f: 'format', h: 'help',
-		p: 'reporter', q: 'quiet', r: 'runner', s: 'static', u: 'url', v: 'version', w: 'watch'
+		a: 'addon', b: 'bail', c: 'coverage', C: 'format', h: 'help',
+		R: 'reporter', q: 'quiet', r: 'runner', s: 'static', u: 'url', v: 'version', w: 'watch'
 	},
 	boolean: ['bail', 'help', 'version', 'verbose', 'quiet', 'watch'],
-	string: ['addon', 'cert', 'coverage', 'exclude', 'format', 'key', 'passphrase', 'reporter', 'runner', 'server', 'slow', 'static']
+	string: ['addon', 'cert', 'coverage', 'format', 'key', 'passphrase', 'reporter', 'runner', 'server', 'slow', 'static']
 });
 
 const Tasty = require('../lib/main');
@@ -31,11 +31,11 @@ if (config.version) {
   --cert <path>          Certificate for Tasty server.
   -c, --coverage <name>  Module to use as coverage instrumenter.
                          Built-ins: istanbul, nyc.
-  -f, --format <name>    Report format for coverage reporter.
+  -C, --format <name>    Report format for coverage reporter.
   -h, --help             Print this help and exit.
   --key <path>           Certificate key for Tasty server.
   --passphrase <string>  Certificate key passphrase for Tasty server.
-  -p, --reporter <name>  Module to use as test reporter.
+  -R, --reporter <name>  Module to use as test reporter.
   -q, --quiet            Don't print Tasty-specific output.
   -r, --runner <name>    Module to use as test runner.
                          Built-ins: mocha, jasmine, qunit.

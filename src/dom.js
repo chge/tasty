@@ -160,6 +160,12 @@ export function is(node, partially) {
 		(!!node.offsetParent || node === document.body);
 }
 
+export function on(node, event, handler, capture) {
+	node.addEventListener ?
+		node.addEventListener(event, handler, capture === true) :
+		node.attachEvent('on' + event, handler);
+}
+
 export function reach(node) {
 	// TODO randomize coordinates within bounding rect.
 	// NOTE shdows increase bounding rect and make click to miss the node.

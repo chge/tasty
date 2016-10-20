@@ -6,6 +6,7 @@ export default tasty;
 import io from 'socket.io-client';
 import log from './log';
 import tool from './tool';
+import * as dom from './dom';
 import * as util from './util';
 
 const include = util.include,
@@ -21,6 +22,12 @@ tasty.map = util.map;
 tasty.session = util.session;
 tasty.thenable = thenable;
 tasty.tool = tool;
+
+dom.on(window, 'unload', () => {
+	// TODO configurable key.
+	window.__coverage__ &&
+		sessionStorage.setItem('__coverage__', JSON.stringify(window.__coverage__));
+});
 
 tasty.forEach(
 	document.scripts || document.getElementsByTagName('script'),
@@ -123,6 +130,11 @@ function connected(socket) {
 		if (token) {
 			tasty.session(token);
 			tasty.console.debug('tasty', 'registered', token);
+
+			// TODO configurable key.
+			const coverage = sessionStorage.getItem('__coverage__');
+			coverage &&
+				socket.emit('coverage', JSON.parse(coverage), () => sessionStorage.removeItem('__coverage__'));
 		} else {
 			tasty.session(null);
 			tasty.console.error('tasty', 'not registered');
