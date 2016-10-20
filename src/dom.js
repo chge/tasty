@@ -1,6 +1,7 @@
 'use strict';
 
-import * as polyfill from './treewalker';
+import * as polyfill from 'tasty-treewalker';
+
 import { random } from './util';
 
 export function blur(node) {
