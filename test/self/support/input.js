@@ -2,6 +2,60 @@
 
 module.exports = [
 	{
+		name: 'input.click',
+		timeout: 30000,
+		specs: [
+			{
+				name: 'clicks on button',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					input.click('Button');
+					page.text('Pressed');
+				}
+			},
+			{
+				skip: !global.chai,
+				name: 'fails without target',
+				time: 1000,
+				body: () => {
+					client.navigate('/other.html');
+					queue(
+						() => expect(queue.input.click('Nothing'))
+							.to.be.eventually.rejectedWith(Error)
+					);
+				}
+			}
+		]
+	},
+	{
+		name: 'input.hover',
+		timeout: 30000,
+		specs: [
+			{
+				name: 'hovers link',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					input.hover('Link');
+					page.text('Hovered');
+				}
+			},
+			{
+				skip: !global.chai,
+				name: 'fails without target',
+				time: 1000,
+				body: () => {
+					client.navigate('/other.html');
+					queue(
+						() => expect(queue.input.hover('Nothing'))
+							.to.be.eventually.rejectedWith(Error)
+					);
+				}
+			}
+		]
+	},
+	{
 		name: 'input.type',
 		timeout: 30000,
 		specs: [

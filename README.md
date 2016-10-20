@@ -31,7 +31,7 @@ Tasty server controls Tasty clients to run your tests against your application: 
 
 No.
 
-However, you can use Selenium-driven clients to run your tests using Tasty.
+However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven clients to run your tests using Tasty.
 
 # Why Tasty?
 
@@ -74,9 +74,9 @@ describe('login form', function() {
 	it('allows user to log in', function() {
 		page.text('Welcome!');
 		input.click('Username');
-		input.enter('test');
+		input.type('test');
 		input.click('Password');
-		input.enter(tasty.config.pass);
+		input.type(tasty.config.pass);
 		input.click('Login');
 		client.location('/dashboard');
 
@@ -363,6 +363,7 @@ client.navigate(url: string): void
 client.ready(method: string, value: number | function, filter?: string[]): void
 client.reload(): void
 input.click(what?: string | RegExp, selector?: string, reachable = true): void
+input.hover(what?: string | RegExp, selector?: string, reachable = true): void
 input.paste(text: string): void
 input.type(text: string): void
 runner.get(key: string): any
@@ -387,9 +388,22 @@ Get two-factor nonces from backdoor or use paid services to mock real mobile pho
 
 ### (re)CAPTCHA
 
-Use [reCAPTCHA testing key](https://developers.google.com/recaptcha/docs/faq).
+Use [reCAPTCHA testing `sitekey` and `secret`](https://developers.google.com/recaptcha/docs/faq) for testing environment.
 
-For other implementations, get answers from backdoor.
+Instead of trying to click on iframed content, simply fake reCAPTCHA response with some suitable string, e.g.
+```javascript
+client.exec(function() {
+	document.querySelector('[name="g-recaptcha-response"]').value = '03AHJ_VutInmeHvq_Dqflmj8Y8VkQEXOG27FYzYZJhGqBxeVjdAZ_LRKhcQmmfelvKmTOFCFU8UJEOPxuNeW5UpPopeAXgcpELTUYhByKBEBuPsv2GhOmhlTmWSbSSRNl9oWCfZLHP0vuRXLUVZXBqGJHCiPBn2rSJSmOAluAYWcfFPt-CswrHsiOdeCS1dxCRbshLNrmQ_J7ZykXQpUIA4FvYqa1AQ9ZPBDGiiU6zGWNojWuKV1j-rWvuhwkhisZJvrhVqdQGVZ5PTWQHrK48SPkFVXmW8l-eV1pS2o4x9-iEIbIIVQm83X3CuR3pJ9a_JKuznOm9xIUo4Zvq3FB7xkjEdNhDynJvL0PecrDVC7HeoyqH5tF6KpPzk6Yu7h8xpygHISPOGl2asCccYadJjrGPkwI9pbuNK-KwL0GeUOBnqEZm--xg4RKHtw8QQfRJDohfGofaeX1SVR6tea0_vvANTKpS2wlGTnu3LudcgXdwo9vBHQdG5aHnIJmOCXBL0opXCec3kx9LOqQ-2mZ41ZMSnOhsGeFfiaubdNAF0WuVEPsgQefNOpKXHeIpAOmFQV8ned5xYaiKZqmLTS4JKW8IRJeTi9UCcULcPFeWUYVhVaL5HzgNErs3RxZzaYzE35CSnvngDM2Dap56EpRiTsxfcr-sZFDdDRKtiPYaKhkGT_rzjUJTKJQrcc3xvoCtdxgZ0yvFbvuIIBP99a1Tr0n0POKO4WgRGdC__UPdgeoFxoOwfxWA-oK1D7_zhoWFwvvQ2Vqm2Xy-9ehzzP1Hd7Vlbcdc1i0VNRHLxbBPEg5R9jlPrufmOFMu_SveMpM77iCtfiFeBm5Z9kyHUT8WrqvquX57tTTB6fU0t21x1qhhlw7ykwUWac9AL8LmtBwOKEHb4q5ykjPAQkvuy4ub02fgyiWKRyAvMg';
+});
+```
+
+For testing `sitekey` and `secret`, reCAPTCHA server should accept the same `g-recaptcha-response` unlimited number of times.
+
+If example above doesn't work (e.g. response format is changed), get new fake `g-recaptcha-response` string:
+* manually click on testing reCAPTCHA,
+* inspect XHR response or `value` property of `<textarea name="g-recaptcha-response" />` on the page.
+
+For other CAPTCHA implementations, get answers from backdoor.
 
 ### SSL/TLS
 

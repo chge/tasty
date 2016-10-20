@@ -119,6 +119,7 @@ function connected(socket) {
 	});
 
 	socket.emit('register', tasty.session(), (token) => {
+		// TODO get config from server.
 		if (token) {
 			tasty.session(token);
 			tasty.console.debug('tasty', 'registered', token);

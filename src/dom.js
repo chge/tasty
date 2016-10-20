@@ -31,10 +31,12 @@ export function find(regexp, selector) {
 }
 
 function findAllBySelector(selector) {
+	// TODO Sizzle.
 	return document.querySelectorAll(selector);
 }
 
 function findBySelector(selector) {
+	// TODO Sizzle.
 	return document.querySelector(selector);
 }
 
@@ -54,7 +56,7 @@ function findByTextInList(regexp, list) {
 
 function findByTextInBody(regexp) {
 	const body = document.body,
-		NodeFilter = document.NodeFilter ||
+		NodeFilter = window.NodeFilter ||
 			polyfill.NodeFilter,
 		filter = (node) => node.innerText || node.textContent || node.nodeValue ||
 			node.value || node.placeholder ?
@@ -76,6 +78,11 @@ function findByTextInBody(regexp) {
 	}
 
 	return found;
+}
+
+export function hover(node) {
+	trigger(node, 'MouseEvent', 'mouseover');
+	trigger(node, 'MouseEvent', 'mouseenter');
 }
 
 function matchText(regexp, node) {
@@ -106,7 +113,7 @@ function innerText(node) {
 		text = 'value' in node ?
 			node.type === 'password' ?
 				node.placeholder :
-				node.value || node.placeholder :
+				node.value || node.placeholder || node.textContent || node.nodeValue :
 			node.textContent || node.nodeValue;
 	switch (style.textTransform) {
 		case 'uppercase':
@@ -128,14 +135,7 @@ export function focus(node) {
 	if (active !== node) {
 		blur(active);
 	}
-	if (!node) {
-		return;
-	}
-	if (node.htmlFor) {
-		return focus(
-			document.getElementById(node.htmlFor)
-		);
-	}
+
 	if (node.focus) {
 		node.focus();
 	} else {

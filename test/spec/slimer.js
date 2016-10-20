@@ -35,14 +35,14 @@ describe('slimer', function() {
 		tasty.once('end', (id, error) => done(error));
 	});
 
-	it('passes Mocha suite', function(done) {
+	it('passes QUnit suite', function(done) {
 		this.slow(10000);
 
 		tasty = new Tasty({
-			addon: 'chai,chai-as-promised',
 			coverage: 'istanbul',
 			format: 'lcovonly',
-			include: 'test/self/mocha/*.js',
+			include: 'test/self/qunit/*.js',
+			runner: 'qunit',
 			static: 'test/root'
 		});
 
@@ -53,14 +53,15 @@ describe('slimer', function() {
 		tasty.once('end', (id, error) => done(error));
 	});
 
-	it('passes QUnit suite', function(done) {
+	// NOTE this one produces maximum client coverage.
+	it('passes Mocha suite', function(done) {
 		this.slow(10000);
 
 		tasty = new Tasty({
+			addon: 'chai,chai-as-promised',
 			coverage: 'istanbul',
 			format: 'lcovonly',
-			include: 'test/self/qunit/*.js',
-			runner: 'qunit',
+			include: 'test/self/mocha/*.js',
 			static: 'test/root'
 		});
 

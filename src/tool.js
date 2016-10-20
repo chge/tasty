@@ -331,6 +331,47 @@ tool('input.click', (what, selector, reachable) => {
 	dom.click(actual);
 });
 
+tool('input.hover', (what, selector, reachable) => {
+	// TODO validate args.
+	what = what ?
+		what instanceof RegExp ?
+			what :
+			selector === true ?
+				new RegExp('^' + escape(what, true) + '$') :
+				new RegExp(escape(what, true)) :
+		null;
+	reachable = reachable !== false &&
+		selector !== false;
+
+	let found = dom.find(what, selector);
+	if (!found) {
+		throw reason(
+			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
+		);
+	}
+	found = found.nodeType === 3 ?
+		found.parentNode :
+		found;
+	// TODO traverse
+	if (found.disabled) {
+		throw reason(
+			'node', format(found), 'with text', what, 'is disabled'
+		);
+	}
+	if (!dom.is(found, !reachable)) {
+		throw reason(
+			selector ? 'node ' + selector + ' with text' : 'text', what, 'is not fully visible'
+		);
+	}
+	const [actual, x, y] = dom.reach(found);
+	if (reachable && actual !== found) {
+		throw reason(
+			'node', format(found), 'with text', what, 'is covered by node', format(actual)
+		);
+	}
+	dom.hover(actual);
+});
+
 tool('input.paste', (text) => {
 	const target = document.activeElement;
 	if (!('value' in target)) {

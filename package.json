@@ -1,7 +1,7 @@
 {
   "name": "tasty",
   "title": "Tasty",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "description": "Integration testing helper for web",
   "main": "lib/main.js",
   "preferGlobal": true,
@@ -38,11 +38,11 @@
     "slimerjs": "^0.906.2"
   },
   "scripts": {
-    "prepublish": "node node_modules/rollup/bin/rollup --config rollup.js",
-    "pretest": "node node_modules/rollup/bin/rollup --config rollup.js --coverage",
+    "prepublish": "node node_modules/rollup/bin/rollup -c",
+    "pretest": "node node_modules/rollup/bin/rollup -c --coverage",
     "test": "npm run test:coverage && npm run test:support",
     "test:coverage": "node node_modules/nyc/bin/nyc --reporter lcovonly --report-dir coverage_server --temp-directory coverage_server node_modules/mocha/bin/mocha --colors --reporter list --ui bdd test/spec/*.js",
-    "test:support": "node node_modules/rollup/bin/rollup --config rollup.js && node node_modules/mocha/bin/mocha --colors --reporter list --ui bdd test/support.js || echo support tests fail",
+    "test:support": "node node_modules/rollup/bin/rollup -c && node node_modules/mocha/bin/mocha --colors --reporter list --ui bdd test/support.js",
     "test:windows": "node node_modules/mocha/bin/mocha --colors --reporter list --ui bdd test/spec/**/!(slimer).js",
     "posttest": "node test/report **/*.info coverage.info && node node_modules/coveralls/bin/coveralls < coverage.info"
   },
