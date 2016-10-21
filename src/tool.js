@@ -245,36 +245,18 @@ tool('page.loaded', (src) => {
 
 tool('page.text', (what, selector, reachable) => {
 	// TODO validate args.
-	what = what ?
-		what instanceof RegExp ?
-			what :
-			new RegExp(escape(what, true)) :
-		null;
-	reachable = reachable !== false &&
-		selector !== false;
-
-	let found = dom.find(what, selector);
-	if (!found) {
-		throw reason(
-			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
-		);
-	}
-	found = found.nodeType === 3 ?
-		found.parentNode :
-		found;
-	if (!dom.is(found, !reachable)) {
-		throw reason(
-			selector ? 'node ' + selector + ' with text' : 'text', what, 'is not fully visible'
-		);
-	}
-	if (reachable) {
-		const [actual] = dom.reach(found);
-		if (actual !== found) {
-			throw reason(
-				'node', format(found), 'with text', what, 'is covered by node', format(actual)
-			);
-		}
-	}
+	findNode(
+		what ?
+			what instanceof RegExp ?
+				what :
+				selector === true ?
+					new RegExp('^' + escape(what, true) + '$') :
+					new RegExp(escape(what, true)) :
+			null,
+		selector,
+		reachable,
+		false
+	)
 });
 
 tool('page.title', (what) => {
@@ -292,84 +274,53 @@ tool('page.title', (what) => {
 
 tool('input.click', (what, selector, reachable) => {
 	// TODO validate args.
-	what = what ?
-		what instanceof RegExp ?
-			what :
-			selector === true ?
-				new RegExp('^' + escape(what, true) + '$') :
-				new RegExp(escape(what, true)) :
-		null;
-	reachable = reachable !== false &&
-		selector !== false;
+	dom.click(
+		findNode(
+			what ?
+				what instanceof RegExp ?
+					what :
+					selector === true ?
+						new RegExp('^' + escape(what, true) + '$') :
+						new RegExp(escape(what, true)) :
+				null,
+			selector,
+			reachable
+		)
+	);
+});
 
-	let found = dom.find(what, selector);
-	if (!found) {
-		throw reason(
-			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
-		);
-	}
-	found = found.nodeType === 3 ?
-		found.parentNode :
-		found;
-	// TODO traverse
-	if (found.disabled) {
-		throw reason(
-			'node', format(found), 'with text', what, 'is disabled'
-		);
-	}
-	if (!dom.is(found, !reachable)) {
-		throw reason(
-			selector ? 'node ' + selector + ' with text' : 'text', what, 'is not fully visible'
-		);
-	}
-	const [actual, x, y] = dom.reach(found);
-	if (reachable && actual !== found) {
-		throw reason(
-			'node', format(found), 'with text', what, 'is covered by node', format(actual)
-		);
-	}
-	dom.click(actual);
+tool('input.dblclick', (what, selector, reachable) => {
+	// TODO validate args.
+	dom.dblclick(
+		findNode(
+			what ?
+				what instanceof RegExp ?
+					what :
+					selector === true ?
+						new RegExp('^' + escape(what, true) + '$') :
+						new RegExp(escape(what, true)) :
+				null,
+			selector,
+			reachable
+		)
+	);
 });
 
 tool('input.hover', (what, selector, reachable) => {
 	// TODO validate args.
-	what = what ?
-		what instanceof RegExp ?
-			what :
-			selector === true ?
-				new RegExp('^' + escape(what, true) + '$') :
-				new RegExp(escape(what, true)) :
-		null;
-	reachable = reachable !== false &&
-		selector !== false;
-
-	let found = dom.find(what, selector);
-	if (!found) {
-		throw reason(
-			selector ? 'node ' + selector + ' with text' : 'text', what, 'not found'
-		);
-	}
-	found = found.nodeType === 3 ?
-		found.parentNode :
-		found;
-	// TODO traverse
-	if (found.disabled) {
-		throw reason(
-			'node', format(found), 'with text', what, 'is disabled'
-		);
-	}
-	if (!dom.is(found, !reachable)) {
-		throw reason(
-			selector ? 'node ' + selector + ' with text' : 'text', what, 'is not fully visible'
-		);
-	}
-	const [actual, x, y] = dom.reach(found);
-	if (reachable && actual !== found) {
-		throw reason(
-			'node', format(found), 'with text', what, 'is covered by node', format(actual)
-		);
-	}
-	dom.hover(actual);
+	dom.hover(
+		findNode(
+			what ?
+				what instanceof RegExp ?
+					what :
+					selector === true ?
+						new RegExp('^' + escape(what, true) + '$') :
+						new RegExp(escape(what, true)) :
+				null,
+			selector,
+			reachable
+		)
+	);
 });
 
 tool('input.paste', (text) => {
@@ -423,3 +374,38 @@ tool('input.type', (text) => {
 		resolve(chain);
 	});
 });
+
+function findNode(regexp, selector, reachable, enabled) {
+	reachable = reachable !== false &&
+		selector !== false;
+	enabled = enabled !== false;
+
+	let found = dom.find(regexp, selector);
+	if (!found) {
+		throw reason(
+			selector ? 'node ' + selector + ' with text' : 'text', regexp, 'not found'
+		);
+	}
+	if (!dom.visible(found, !reachable)) {
+		throw reason(
+			selector ? 'node ' + selector + ' with text' : 'text', regexp, 'is not fully visible'
+		);
+	}
+	if (enabled && !dom.enabled(found)) {
+		throw reason(
+			'node', format(found), 'with text', regexp, 'is disabled'
+		);
+	}
+	if (reachable) {
+		const [actual] = dom.reach(found);
+		if (actual !== found) {
+			throw reason(
+				'node', format(found), 'with text', regexp, 'is covered by node', format(actual)
+			);
+		}
+
+		return actual;
+	}
+
+	return found;
+}

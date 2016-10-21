@@ -1,4 +1,13 @@
 engines:
+  brakeman:
+    enabled: true
+  csslint:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - javascript
   eslint:
     enabled: true
     checks:
@@ -6,3 +15,10 @@ engines:
         enabled: false
       TODO:
         enabled: false
+  rubocop:
+    enabled: true
+ratings:
+  paths:
+  - "**.js"
+exclude_paths:
+- dist/**/*

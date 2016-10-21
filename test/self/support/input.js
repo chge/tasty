@@ -16,6 +16,28 @@ module.exports = [
 			},
 			{
 				skip: !global.chai,
+				name: 'fails on disabled button',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					queue(
+						() => expect(queue.input.click('Disabled'))
+							.to.be.eventually.rejectedWith(Error)
+					);
+				}
+			},
+			{
+				name: 'clicks on link',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					input.click('Other');
+					runner.delay(500);
+					client.location('/other.html');
+				}
+			},
+			{
+				skip: !global.chai,
 				name: 'fails without target',
 				time: 1000,
 				body: () => {
@@ -24,6 +46,21 @@ module.exports = [
 						() => expect(queue.input.click('Nothing'))
 							.to.be.eventually.rejectedWith(Error)
 					);
+				}
+			}
+		]
+	},
+	{
+		name: 'input.dblclick',
+		timeout: 30000,
+		specs: [
+			{
+				name: 'double-clicks on text',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					input.dblclick('Double');
+					page.text('Triple');
 				}
 			}
 		]

@@ -15,8 +15,17 @@ export function blur(node) {
 }
 
 export function click(node) {
+	hover(node);
 	focus(node);
-	trigger(node, 'MouseEvent', 'click');
+	node.click ?
+		node.click() :
+		trigger(node, 'MouseEvent', 'click');
+}
+
+export function dblclick(node) {
+	hover(node);
+	focus(node);
+	trigger(node, 'MouseEvent', 'dblclick');
 }
 
 export function find(regexp, selector) {
@@ -24,11 +33,15 @@ export function find(regexp, selector) {
 		findAllBySelector(selector) :
 		[];
 
-	return regexp ?
+	const node = regexp ?
 		selector ?
 			findByTextInList(regexp, list) :
 			findByTextInBody(regexp) :
 		list[0];
+
+	return node && node.nodeType === 3 ?
+		node.parentNode :
+		node;
 }
 
 function findAllBySelector(selector) {
@@ -81,24 +94,6 @@ function findByTextInBody(regexp) {
 	return found;
 }
 
-export function hover(node) {
-	trigger(node, 'MouseEvent', 'mouseover');
-	trigger(node, 'MouseEvent', 'mouseenter');
-}
-
-function matchText(regexp, node) {
-	return 'value' in node ?
-		regexp.test(
-			innerText(node)
-		) :
-		new RegExp(regexp.source, 'i').test(
-			node.textContent || node.nodeValue
-		) &&
-			regexp.test(
-				innerText(node.parentNode)
-			);
-}
-
 function innerText(node) {
 	if (!node) {
 		return null;
@@ -131,6 +126,33 @@ function innerText(node) {
 	return text;
 }
 
+function matchText(regexp, node) {
+	return 'value' in node ?
+		regexp.test(
+			innerText(node)
+		) :
+		new RegExp(regexp.source, 'i').test(
+			node.textContent || node.nodeValue
+		) &&
+			regexp.test(
+				innerText(node.parentNode)
+			);
+}
+
+export function enabled(node) {
+	while (node) {
+		if (node.disabled) {
+			return false;
+		}
+		if (node === document.body) {
+			return true;
+		}
+		node = node.parentNode;
+	}
+
+	return !!node;
+}
+
 export function focus(node) {
 	const active = document.activeElement;
 	if (active !== node) {
@@ -145,7 +167,12 @@ export function focus(node) {
 	}
 }
 
-export function is(node, partially) {
+export function hover(node) {
+	trigger(node, 'MouseEvent', 'mouseover');
+	trigger(node, 'MouseEvent', 'mouseenter');
+}
+
+export function visible(node, partially) {
 	const rect = node.getBoundingClientRect(),
 		width = window.innerWidth ||
 			document.documentElement.clientWidth,

@@ -62,7 +62,7 @@ export function format(value) {
 		window.Node && value instanceof window.Node ||
 			window.Element && value instanceof window.Element ?
 				value.outerHTML ?
-					value.outerHTML.replace(/>[\s\S]*$/m, '>') :
+					value.outerHTML.replace(/>[\s\S]*$/m, '>').replace(/\n/g, '') :
 					'<' + value.nodeName.toLowerCase() + ' ...>' :
 				value;
 }

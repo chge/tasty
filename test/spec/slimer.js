@@ -6,7 +6,7 @@ const child = require('child_process'),
 
 const URL = 'http://localhost:8765/test.html';
 
-describe('slimer', function() {
+describe('SlimerJS', function() {
 	this.timeout(30000);
 
 	let tasty, slimer;
