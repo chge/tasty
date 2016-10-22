@@ -212,17 +212,45 @@ export function reach(node) {
 	return [parent, x, y];
 }
 
-export function trigger(node, type, arg, bubbles, cancellable) {
+export function trigger(node, type, arg, init) {
 	type = type || 'Event';
-	const event = document.createEvent ?
-		document.createEvent(type) :
-		document.createEventObject(type);
-	if (event.initEvent) {
-		event.initEvent(arg, bubbles !== false, cancellable !== false);
-		node.dispatchEvent(event);
-	} else {
-		node.fireEvent('on' + arg, event);
+	init = init || {};
+	let event;
+	if (window[type]) {
+		try {
+			event = new window[type](arg, init);
+		} catch (thrown) {
+			// TODO log.
+		}
 	}
+	if (!event) {
+		const bubbles = init.bubbles !== false,
+			cancellable = init.cancellable !== false;
+		switch (type) {
+			case 'MouseEvent':
+				event = createEvent('MouseEvents');
+				// TODO pass other values from init object.
+				event.initMouseEvent ?
+					event.initMouseEvent(arg, bubbles, cancellable, window, 1) :
+					event.initEvent &&
+						event.initEvent(arg, bubbles, cancellable, window, 1);
+				break;
+			default:
+				event = createEvent('HTMLEvents');
+				// TODO pass other values from init object.
+				event.initEvent &&
+					event.initEvent(arg, bubbles, cancellable, window);
+		}
+	}
+	node.dispatchEvent ?
+		node.dispatchEvent(event) :
+		node.fireEvent('on' + arg, event);
 
 	return event;
+}
+
+function createEvent(type) {
+	return document.createEvent ?
+		document.createEvent(type) :
+		document.createEventObject(type);
 }

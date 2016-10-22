@@ -67,11 +67,11 @@ const CAPS = [
 	{platformName: IOS, platformVersion: '8.2', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '8.1', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
 	// NOTE Selenium.
-	{browserName: CHROME, version: 'beta', platform: OSX11},
-	{browserName: CHROME, version: 'beta', platform: WINDOWS10},
-	{browserName: CHROME, version: 'beta', platform: WINDOWS81},
-	{browserName: CHROME, version: 'beta', platform: WINDOWS8},
-	{browserName: CHROME, version: 'beta', platform: WINDOWS7},
+	{browserName: CHROME, version: '54.0', platform: OSX11},
+	{browserName: CHROME, version: '54.0', platform: WINDOWS10},
+	{browserName: CHROME, version: '54.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '54.0', platform: WINDOWS8},
+	{browserName: CHROME, version: '54.0', platform: WINDOWS7},
 	{browserName: CHROME, version: '53.0', platform: OSX11},
 	{browserName: CHROME, version: '53.0', platform: WINDOWS10},
 	{browserName: CHROME, version: '53.0', platform: WINDOWS81},
@@ -139,7 +139,7 @@ describe(clientName(shift + index * 3), function() {
 		tasty = new Tasty({
 			include: 'test/self/jasmine/support.js',
 			runner: 'jasmine',
-			reporter: 'jasmine-spec-reporter',
+			runnerReporter: 'jasmine-spec-reporter',
 			static: 'test/root'
 		});
 		driver = setup(clientCaps(shift + index * 3));

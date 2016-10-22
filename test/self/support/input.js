@@ -62,6 +62,18 @@ module.exports = [
 					input.dblclick('Double');
 					page.text('Triple');
 				}
+			},
+			{
+				skip: !global.chai,
+				name: 'fails without target',
+				time: 1000,
+				body: () => {
+					client.navigate('/other.html');
+					queue(
+						() => expect(queue.input.dblclick('Nothing'))
+							.to.be.eventually.rejectedWith(Error)
+					);
+				}
 			}
 		]
 	},
@@ -86,6 +98,42 @@ module.exports = [
 					client.navigate('/other.html');
 					queue(
 						() => expect(queue.input.hover('Nothing'))
+							.to.be.eventually.rejectedWith(Error)
+					);
+				}
+			}
+		]
+	},
+	{
+		name: 'input.paste',
+		timeout: 30000,
+		specs: [
+			{
+				name: 'pastes into active input after clear',
+				time: 1000,
+				body: () => {
+					const text = 'Zed\'s dead, baby';
+					client.navigate('/test.html');
+					input.click('42');
+					input.clear();
+					input.paste(text);
+					page.text(text, true);
+				}
+			},
+			{
+				skip: !global.chai,
+				name: 'fails without active input',
+				time: 1000,
+				body: () => {
+					client.navigate('/other.html');
+					queue(
+						() => expect(queue.input.paste('Error'))
+							.to.be.eventually.rejectedWith(Error)
+					);
+					client.navigate('/test.html');
+					input.click('Value');
+					queue(
+						() => expect(queue.input.paste('Error'))
 							.to.be.eventually.rejectedWith(Error)
 					);
 				}

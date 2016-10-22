@@ -21,10 +21,10 @@ describe('SlimerJS', function() {
 
 		tasty = new Tasty({
 			coverage: 'istanbul',
-			format: 'lcovonly',
+			coverageReporter: 'lcovonly',
 			include: 'test/self/jasmine/*.js',
-			reporter: 'jasmine-spec-reporter',
 			runner: 'jasmine',
+			runnerReporter: 'jasmine-spec-reporter',
 			static: 'test/root'
 		});
 
@@ -40,7 +40,7 @@ describe('SlimerJS', function() {
 
 		tasty = new Tasty({
 			coverage: 'istanbul',
-			format: 'lcovonly',
+			coverageReporter: 'lcovonly',
 			include: 'test/self/qunit/*.js',
 			runner: 'qunit',
 			static: 'test/root'
@@ -59,8 +59,8 @@ describe('SlimerJS', function() {
 
 		tasty = new Tasty({
 			addon: 'chai,chai-as-promised',
-			coverage: 'istanbul',
-			format: 'lcovonly',
+			coverage: 'nyc',
+			coverageReporter: 'lcovonly',
 			include: 'test/self/mocha/*.js',
 			static: 'test/root'
 		});

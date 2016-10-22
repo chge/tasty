@@ -145,9 +145,9 @@ Check out a [great tool](https://report-uri.io/home/generate) for generating and
 
 # Browser support
 
-Big thanks to [Sauce Labs](https://saucelabs.com/).
+[![sauce labs](https://saucelabs.com/buildstatus/tasty)](https://saucelabs.com/u/tasty)
 
-[![support](https://saucelabs.com/browser-matrix/tasty.svg)](https://saucelabs.com/u/tasty)
+[![browser support](https://saucelabs.com/browser-matrix/tasty.svg)](https://saucelabs.com/u/tasty)
 
 # Tools
 

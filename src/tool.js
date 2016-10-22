@@ -253,7 +253,9 @@ tool('page.text', (what, selector, reachable) => {
 					new RegExp('^' + escape(what, true) + '$') :
 					new RegExp(escape(what, true)) :
 			null,
-		selector,
+		selector === true ?
+			null :
+			selector,
 		reachable,
 		false
 	)
@@ -271,6 +273,47 @@ tool('page.title', (what) => {
 });
 
 // NOTE input.
+
+tool('input.clear', (count) => {
+	const target = document.activeElement;
+	if (!('value' in target)) {
+		throw reason('cannot clear active node', format(target));
+	}
+	if (target.disabled) {
+		throw reason('cannot clear disabled node', format(target));
+	}
+	if (target.readOnly) {
+		throw reason('cannot clear read-only node', format(target));
+	}
+
+	return thenable((resolve) => {
+		let chain = thenable(),
+			length = count === true ? 1 : (count | 0) || target.value.length,
+			i;
+		for (i = 0; i < length; i++) {
+			chain = chain
+				.then(
+					() => i && delay(random(1, 100))
+				)
+				.then(
+					() => {
+						// TODO support selection?
+						if (count === true) {
+							target.value = '';
+						} else {
+							target.value = target.value.substr(0, target.value.length - 1);
+						}
+
+						'oninput' in window ?
+							dom.trigger(target, 'Event', 'input', true, false) :
+							dom.trigger(target, 'Event', 'change', true, false);
+					}
+				);
+		}
+
+		resolve(chain);
+	});
+});
 
 tool('input.click', (what, selector, reachable) => {
 	// TODO validate args.
@@ -326,7 +369,13 @@ tool('input.hover', (what, selector, reachable) => {
 tool('input.paste', (text) => {
 	const target = document.activeElement;
 	if (!('value' in target)) {
-		throw reason('cannot type into active node', format(target));
+		throw reason('cannot paste into active node', format(target));
+	}
+	if (target.disabled) {
+		throw reason('cannot paste into disabled node', format(target));
+	}
+	if (target.readOnly) {
+		throw reason('cannot paste into read-only node', format(target));
 	}
 
 	const value = target.value,
@@ -347,11 +396,20 @@ tool('input.type', (text) => {
 	if (!('value' in target)) {
 		throw reason('cannot type into active node', format(target));
 	}
+	if (target.disabled) {
+		throw reason('cannot type into disabled node', format(target));
+	}
+	if (target.readOnly) {
+		throw reason('cannot type into read-only node', format(target));
+	}
 
 	return thenable((resolve) => {
 		let chain = thenable();
-		forEach(text.split(''), (char) => {
+		forEach(text.split(''), (char, i) => {
 			chain = chain
+				.then(
+					() => i && delay(random(1, 100))
+				)
 				.then(
 					() => {
 						const value = target.value,
@@ -365,9 +423,6 @@ tool('input.type', (text) => {
 							dom.trigger(target, 'Event', 'input', true, false) :
 							dom.trigger(target, 'Event', 'change', true, false);
 					}
-				)
-				.then(
-					() => delay(random(1, 100))
 				);
 		});
 

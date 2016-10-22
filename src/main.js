@@ -115,7 +115,6 @@ function connected(socket) {
 		tasty.console.debug('tasty', 'coverage', key);
 
 		callback([null, window[key]]);
-		tasty.console.debug('tasty', 'coverage', key);
 	});
 
 	socket.on('end', (data, callback) => {
