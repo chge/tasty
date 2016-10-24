@@ -14,6 +14,10 @@ const plugins = [
 	// WORKAROUND: https://github.com/rollup/rollup/pull/1057
 	{
 		transformBundle: (code) => code.replace(/(\(Object\.freeze \|\| Object\)\({\s+)default:/g, "$1'default':")
+	},
+	// WORKAROUND: rollup-plugin-commonjs makes conditional require() useless for https://github.com/socketio/engine.io-parser/pull/58
+	{
+		transformBundle: (code) => code.replace('var lookup = new Uint8Array(256);', "var lookup = typeof Uint8Array === 'undefined' ? [] : new Uint8Array(256);")
 	}
 ];
 

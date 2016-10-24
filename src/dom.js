@@ -230,10 +230,8 @@ export function trigger(node, type, arg, init) {
 			case 'MouseEvent':
 				event = createEvent('MouseEvents');
 				// TODO pass other values from init object.
-				event.initMouseEvent ?
-					event.initMouseEvent(arg, bubbles, cancellable, window, 1) :
-					event.initEvent &&
-						event.initEvent(arg, bubbles, cancellable, window, 1);
+				event.initEvent &&
+					event.initEvent(arg, bubbles, cancellable, window, 1);
 				break;
 			default:
 				event = createEvent('HTMLEvents');

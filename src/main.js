@@ -3,13 +3,15 @@
 // TODO exposable API?
 export default tasty;
 
-import io from 'socket.io-client';
+import eio from 'engine.io-client';
+
 import log from './log';
 import tool from './tool';
 import * as dom from './dom';
 import * as util from './util';
 
 const include = util.include,
+	parseJson = util.parseJson,
 	reason = util.reason,
 	thenable = util.thenable;
 
@@ -19,14 +21,15 @@ tasty.forEach = util.forEach;
 tasty.hook = tool.hook;
 tasty.isArray = util.isArray;
 tasty.map = util.map;
-tasty.session = util.session;
+tasty.id = util.session;
 tasty.thenable = thenable;
 tasty.tool = tool;
 
 dom.on(window, 'unload', () => {
 	// TODO configurable key.
-	window.__coverage__ &&
-		sessionStorage.setItem('__coverage__', JSON.stringify(window.__coverage__));
+	const key = '__coverage__';
+	key in window &&
+		sessionStorage.setItem(key, JSON.stringify(window[key]));
 });
 
 tasty.forEach(
@@ -61,83 +64,100 @@ function tasty(config) {
 }
 
 function connect() {
-	const url = tasty.config.url;
-	tasty.session() ||
+	const id = tasty.id(),
+		url = tasty.config.url;
+	id ||
 		tasty.console.log('tasty', 'server', url);
 
-	const socket = io(url, {multiplex: false})
-		.on('connect', () => connected(socket));
+	// TODO disable erroneous WebSocket implementations.
+	const socket = new eio({
+		path: '/',
+		query: {
+			id: id || undefined
+		}
+	}).on('open', () => onOpen(socket, !!id));
 }
 
-function connected(socket) {
-	let reconnect = !!tasty.session();
-	tasty.console.log('tasty', reconnect ? 'reconnected' : 'connected');
+function onOpen(socket, reconnect) {
+	tasty.id(socket.id);
 
-	socket.on('tool', (data, callback) => {
-		const name = data[0],
-			args = data.slice(1);
+	tasty.console.log('tasty', reconnect ? 'reconnected' : 'connected', tasty.id());
 
-		const respond = (result) => {
-			if (result instanceof Error) {
-				tasty.console.error('tasty', result);
-				result = [util.format(result)];
-			} else {
-				result = [null, result];
-			}
-			reconnect = false;
-
-			callback(result);
-		};
-
-		thenable(
-			reconnect ?
-				tool.hook(null, 'after.reconnect', null) :
-				null
-		)
-			.then(() => tool(name, args))
-			.then(respond, respond);
-	});
-
-	socket.on('message', (text, callback) => {
-		tasty.console.log('tasty', text);
-
-		callback([]);
-	});
-
-	socket.on('exec', (key, callback) => {
-		tasty.console.debug('tasty', 'exec', include.url + key);
-
-		include(key, () => callback([]));
-	});
-
-	socket.on('coverage', (key, callback) => {
-		key = key || '__coverage__';
-		tasty.console.debug('tasty', 'coverage', key);
-
-		callback([null, window[key]]);
-	});
-
-	socket.on('end', (data, callback) => {
-		tasty.console.info('tasty', 'end');
-		tasty.session(null);
-		callback([]);
-		socket.close();
-	});
-
-	socket.emit('register', tasty.session(), (token) => {
-		// TODO get config from server.
-		if (token) {
-			tasty.session(token);
-			tasty.console.debug('tasty', 'registered', token);
-
-			// TODO configurable key.
-			const coverage = sessionStorage.getItem('__coverage__');
-			coverage &&
-				socket.emit('coverage', JSON.parse(coverage), () => sessionStorage.removeItem('__coverage__'));
+	socket.on('message', (raw) => {
+		const message = parseJson(raw);
+		if (message instanceof Error) {
+			tasty.console.warn('tasty', message);
 		} else {
-			tasty.session(null);
-			tasty.console.error('tasty', 'not registered');
-			socket.close();
+			const mid = message[0],
+				type = message[1],
+				data = message[2];
+
+			let promise = thenable(
+				reconnect ?
+					tool.hook(null, 'after.reconnect', null) :
+					null
+			)
+			.then(
+				() => onMessage(socket, type, data)
+			)
+			['catch'](
+				(error) => error
+			)
+			.then((result) => {
+				if (result instanceof Error) {
+					tasty.console.error('tasty', result);
+					result = [0, util.format(result)];
+				} else {
+					result = [result];
+				}
+
+				socket.send(JSON.stringify([mid, 0, result]));
+
+				if (type === 'tool') {
+					reconnect = false;
+				}
+			});
 		}
 	});
+
+	// TODO configurable key.
+	const key = '__coverage__',
+		coverage = sessionStorage.getItem(key);
+	coverage &&
+		socket.send(
+			JSON.stringify([0, 'coverage', JSON.parse(coverage)]),
+			() => sessionStorage.removeItem(key)
+		);
+}
+
+function onMessage(socket, type, data) {
+	switch (type) {
+		case 'coverage' :
+			data = data || '__coverage__';
+			tasty.console.debug('tasty', 'coverage', data);
+
+			return thenable(window[data]);
+		case 'end' :
+			tasty.console.info('tasty', 'end');
+			tasty.id(null);
+
+			return thenable();
+		case 'exec' :
+			tasty.console.debug('tasty', 'exec', include.url + data);
+
+			return include(data);
+		case 'message' :
+			tasty.console.log('tasty', data);
+
+			return thenable();
+		case 'tool' :
+			const name = data[0],
+				args = data.slice(1);
+
+			return tool(name, args);
+		default:
+			return thenable(
+				reason('unknown message', name)
+			);
+	}
 }

@@ -2,69 +2,13 @@
 
 import Promise from 'es6-promise';
 
-// NOTE user must inject include.url;
-// LICENSE MIT jQuery Core 1.12.4
-export function include(src, callback) {
-	const head = document.head ||
-			document.getElementsByTagName('head')[0] ||
-				document.documentElement;
-	let script = document.createElement('script');
-	script.async = true;
-	script.src = include.url + src;
-	script.onload = script.onreadystatechange = function() {
-		if (!script.readyState || /loaded|complete/.test(script.readyState)) {
-			script.onload = script.onreadystatechange = null;
-			script.parentNode &&
-				script.parentNode.removeChild(script);
-			script = null;
-			callback();
-		}
-	};
-	head.insertBefore(script, head.firstChild);
-}
-
-export function thenable(value) {
-	return value instanceof Promise ?
-		value :
-		typeof value === 'function' ?
-			new Promise(value) :
-			Promise.resolve(value);
-}
-
-// TODO store session in cookie?
-export function session(value) {
-	session.key = session.key || '__tasty';
-	if (arguments.length) {
-		if (value) {
-			sessionStorage.setItem(session.key, value);
-		} else {
-			sessionStorage.removeItem(session.key);
-		}
-	}
-
-	return sessionStorage.getItem(session.key);
-}
-
-export function reason() {
-	return new Error([].join.call(arguments, ' '));
-}
-
-export function format(value) {
-	return value instanceof Error ?
-		{
-			name: value.name,
-			message: value.message,
-			stack: value.stack ?
-				value.stack
-					.replace(/\s*at Socket[\s\S]*/m, '') :
-				undefined
-		} :
-		window.Node && value instanceof window.Node ||
-			window.Element && value instanceof window.Element ?
-				value.outerHTML ?
-					value.outerHTML.replace(/>[\s\S]*$/m, '>').replace(/\n/g, '') :
-					'<' + value.nodeName.toLowerCase() + ' ...>' :
-				value;
+export function delay(ms, result) {
+	return thenable(
+		(resolve) => setTimeout(
+			() => resolve(result),
+			ms | 0
+		)
+	);
 }
 
 export function escape(source, regexp) {
@@ -89,17 +33,84 @@ export function escape(source, regexp) {
 			.replace(/\t/g, '\\t');
 }
 
-export function delay(ms, result) {
-	return thenable(
-		(resolve) => setTimeout(
-			() => resolve(result),
-			ms | 0
-		)
-	);
+export function format(value) {
+	return value instanceof Error ?
+		{
+			name: value.name,
+			message: value.message,
+			stack: value.stack ?
+				value.stack
+					.replace(/\s*at Socket[\s\S]*/m, '') :
+				undefined
+		} :
+		window.Node && value instanceof window.Node ||
+			window.Element && value instanceof window.Element ?
+				value.outerHTML ?
+					value.outerHTML.replace(/>[\s\S]*$/m, '>').replace(/\n/g, '') :
+					'<' + value.nodeName.toLowerCase() + ' ...>' :
+				value;
+}
+
+// NOTE user must inject include.url;
+export function include(src) {
+	return thenable((resolve, reject) => {
+		// LICENSE MIT jQuery Core 1.12.4
+		const head = document.head ||
+				document.getElementsByTagName('head')[0] ||
+					document.documentElement;
+		let script = document.createElement('script');
+		script.async = true;
+		script.src = include.url + src;
+		script.onload = script.onreadystatechange = function() {
+			if (!script.readyState || /loaded|complete/.test(script.readyState)) {
+				script.onload = script.onreadystatechange = null;
+				script.parentNode &&
+					script.parentNode.removeChild(script);
+				script = null;
+				resolve();
+			}
+		};
+		script.onerror = reject;
+		head.insertBefore(script, head.firstChild);
+	});
+}
+
+export function parseJson(raw) {
+	try {
+		return JSON.parse(raw.toString());
+	} catch (thrown) {
+		return thrown;
+	}
 }
 
 export function random(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+export function reason() {
+	return new Error([].join.call(arguments, ' '));
+}
+
+// TODO store session in cookie?
+export function session(value) {
+	session.key = session.key || '__tasty';
+	if (arguments.length) {
+		if (value) {
+			sessionStorage.setItem(session.key, value);
+		} else {
+			sessionStorage.removeItem(session.key);
+		}
+	}
+
+	return sessionStorage.getItem(session.key);
+}
+
+export function thenable(value) {
+	return value instanceof Promise ?
+		value :
+		typeof value === 'function' ?
+			new Promise(value) :
+			Promise.resolve(value);
 }
 
 // NOTE polyfills.

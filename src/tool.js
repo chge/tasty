@@ -31,18 +31,21 @@ function tool(name, handle, callback) {
 		};
 	}
 
-	if (!tool[name]) {
-		throw reason('no such tool', name);
-	}
 	const space = name.split('.')[0],
 		args = handle;
 
-	tool.console.debug('tasty', 'tool', name, handle);
+	tool.console.debug('tasty', 'tool', name, args);
 
 	return hook(name, 'before.tool', args)
 		.then((result) => hook(result, 'before.' + space, args))
 		.then((result) => hook(result, 'before.' + name, args))
-		.then(() => tool[name](...args))
+		.then(() => {
+			if (tool[name]) {
+				return tool[name](...args);
+			} else {
+				throw reason('no such tool', name);
+			}
+		})
 		.then((result) => hook(result, 'after.' + name, args))
 		.then((result) => hook(result, 'after.' + space, args))
 		.then((result) => hook(result, 'after.tool', name, args));
@@ -79,7 +82,7 @@ function hook(result, key, args) {
 				delete hook[key];
 			}
 		}
-	};
+	}
 
 	return thenable(result);
 }

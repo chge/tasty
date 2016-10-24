@@ -5,6 +5,8 @@ export default log;
 let console;
 
 function log(logger) {
+	logger = logger || {};
+
 	const wrap = (method) => function() {
 		method &&
 			Function.prototype.apply.call(method, logger, arguments);
