@@ -11,6 +11,25 @@ export function delay(ms, result) {
 	);
 }
 
+export function deserialize(value) {
+	if (isArray(value)) {
+		return map(
+			value,
+			(arg) => deserialize(arg)
+		);
+	}
+	if (!value || !value.t) {
+		return value;
+	}
+
+	switch (value.t) {
+		case 're':
+			return new RegExp(value.v[0], value.v[1] || '');
+		default:
+			return value.v;
+	}
+}
+
 export function escape(source, regexp) {
 	source = source.replace(/\./g, '\\.')
 		.replace(/\,/g, '\\,')

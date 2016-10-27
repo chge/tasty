@@ -10,6 +10,7 @@ import * as dom from './dom';
 import * as util from './util';
 
 const delay = util.delay,
+	deserialize = util.deserialize,
 	escape = util.escape,
 	forEach = util.forEach,
 	format = util.format,
@@ -32,7 +33,7 @@ function tool(name, handle, callback) {
 	}
 
 	const space = name.split('.')[0],
-		args = handle;
+		args = deserialize(handle);
 
 	tool.console.debug('tasty', 'tool', name, args);
 
@@ -181,98 +182,6 @@ tool('client.reset', (url) => {
 	}
 	chain.then(done, done);
 	// TODO other.
-});
-
-// NOTE page.
-
-tool('page.font', (family, selector) => {
-	// TODO window.getComputedStyle(selector).fontFamily, document.fonts.keys()
-	throw reason('not implemented yet, sorry');
-});
-
-tool('page.loaded', (src) => {
-	if (!src) {
-		return document.readyState === 'complete';
-	}
-
-	let type = src.toLowerCase().split('.'),
-		origin = location.origin ||
-			location.protocol + '//' + location.host,
-		url = origin + src,
-		list, item, found, i;
-	switch (type ? type[type.length - 1] : null) {
-		case 'appcache':
-			list = [];
-			if (document.documentElement.getAttribute('manifest') === src) {
-				return format(document.documentElement);
-			}
-			break;
-		case 'css':
-			list = document.getElementsByTagName('link');
-			break;
-		case 'js':
-			list = document.getElementsByTagName('script');
-			break;
-		case 'bmp':
-		case 'gif':
-		case 'ico':
-		case 'jpg':
-		case 'jpeg':
-		case 'png':
-			list = [];
-			forEach(
-				document.getElementsByTagName('img'),
-				(img) => list.push(img)
-			);
-			forEach(
-				document.getElementsByTagName('link'),
-				(img) => list.push(img)
-			);
-			// TODO picture, background-image, :before, :after, css states.
-			break;
-		// TODO more.
-		default:
-			list = document.getElementsByTagName('*');
-	}
-
-	for (i = 0; i < list.length; i++) {
-		item = list[i];
-		if (item.src === url || item.href === url) {
-			// TODO try to check if loaded.
-			return format(item);
-		}
-	}
-
-	throw reason('resource', src, 'not found');
-});
-
-tool('page.text', (what, selector, reachable) => {
-	// TODO validate args.
-	findNode(
-		what ?
-			what instanceof RegExp ?
-				what :
-				selector === true ?
-					new RegExp('^' + escape(what, true) + '$') :
-					new RegExp(escape(what, true)) :
-			null,
-		selector === true ?
-			null :
-			selector,
-		reachable,
-		false
-	)
-});
-
-tool('page.title', (what) => {
-	// TODO validate args.
-	what = what instanceof RegExp ?
-		what :
-		new RegExp(escape(what, true));
-
-	if (!what.test(document.title)) {
-		throw reason('title', document.title, 'is not', what.source);
-	}
 });
 
 // NOTE input.
@@ -431,6 +340,98 @@ tool('input.type', (text) => {
 
 		resolve(chain);
 	});
+});
+
+// NOTE page.
+
+tool('page.font', (family, selector) => {
+	// TODO window.getComputedStyle(selector).fontFamily, document.fonts.keys()
+	throw reason('not implemented yet, sorry');
+});
+
+tool('page.loaded', (src) => {
+	if (!src) {
+		return document.readyState === 'complete';
+	}
+
+	let type = src.toLowerCase().split('.'),
+		origin = location.origin ||
+			location.protocol + '//' + location.host,
+		url = origin + src,
+		list, item, found, i;
+	switch (type ? type[type.length - 1] : null) {
+		case 'appcache':
+			list = [];
+			if (document.documentElement.getAttribute('manifest') === src) {
+				return format(document.documentElement);
+			}
+			break;
+		case 'css':
+			list = document.getElementsByTagName('link');
+			break;
+		case 'js':
+			list = document.getElementsByTagName('script');
+			break;
+		case 'bmp':
+		case 'gif':
+		case 'ico':
+		case 'jpg':
+		case 'jpeg':
+		case 'png':
+			list = [];
+			forEach(
+				document.getElementsByTagName('img'),
+				(img) => list.push(img)
+			);
+			forEach(
+				document.getElementsByTagName('link'),
+				(img) => list.push(img)
+			);
+			// TODO picture, background-image, :before, :after, css states.
+			break;
+		// TODO more.
+		default:
+			list = document.getElementsByTagName('*');
+	}
+
+	for (i = 0; i < list.length; i++) {
+		item = list[i];
+		if (item.src === url || item.href === url) {
+			// TODO try to check if loaded.
+			return format(item);
+		}
+	}
+
+	throw reason('resource', src, 'not found');
+});
+
+tool('page.text', (what, selector, reachable) => {
+	// TODO validate args.
+	findNode(
+		what ?
+			what instanceof RegExp ?
+				what :
+				selector === true ?
+					new RegExp('^' + escape(what, true) + '$') :
+					new RegExp(escape(what, true)) :
+			null,
+		selector === true ?
+			null :
+			selector,
+		reachable,
+		false
+	)
+});
+
+tool('page.title', (what) => {
+	// TODO validate args.
+	what = what instanceof RegExp ?
+		what :
+		new RegExp(escape(what, true));
+
+	if (!what.test(document.title)) {
+		throw reason('title', document.title, 'is not', what.source);
+	}
 });
 
 function findNode(regexp, selector, reachable, enabled) {

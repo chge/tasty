@@ -93,6 +93,25 @@ module.exports = [
 							.to.be.eventually.rejectedWith(Error)
 					);
 				}
+			},
+			{
+				name: 'works strict flag',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					page.text('Value', true);
+					page.text('42', true);
+				}
+			},
+			{
+				name: 'works with regexp',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					page.text(/Value/);
+					page.text(/^value$/i);
+					page.text(/\d\d/);
+				}
 			}
 		]
 	}

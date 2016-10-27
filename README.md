@@ -362,7 +362,9 @@ client.location(what?: string | RegExp): void
 client.navigate(url: string): void
 client.ready(method: string, value: number | function, filter?: string[]): void
 client.reload(): void
+input.clear(count?: number | boolean): void
 input.click(what?: string | RegExp, selector?: string, reachable = true): void
+input.dblclick(what?: string | RegExp, selector?: string, reachable = true): void
 input.hover(what?: string | RegExp, selector?: string, reachable = true): void
 input.paste(text: string): void
 input.type(text: string): void

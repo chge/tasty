@@ -80,7 +80,6 @@ function connect() {
 	id ?
 		tasty.console.debug('tasty', 'server', config.url) :
 		tasty.console.info('tasty', 'server', config.url);
-tasty.console.log('tasty', config);
 
 	// TODO disable erroneous WebSocket implementations.
 	const socket = new eio(config.origin, {
