@@ -12,6 +12,8 @@ export function blur(node) {
 		trigger(node, 'FocusEvent', 'blur', {bubbles: false, cancellable: false});
 		trigger(node, 'FocusEvent', 'focusout', {cancellable: false});
 	}
+
+	return node;
 }
 
 export function click(node) {
@@ -20,12 +22,16 @@ export function click(node) {
 	node.click ?
 		node.click() :
 		trigger(node, 'MouseEvent', 'click');
+
+	return node;
 }
 
 export function dblclick(node) {
 	hover(node);
 	focus(node);
 	trigger(node, 'MouseEvent', 'dblclick');
+
+	return node;
 }
 
 export function find(regexp, selector) {
@@ -45,12 +51,10 @@ export function find(regexp, selector) {
 }
 
 function findAllBySelector(selector) {
-	// TODO Sizzle.
 	return document.querySelectorAll(selector);
 }
 
 function findBySelector(selector) {
-	// TODO Sizzle.
 	return document.querySelector(selector);
 }
 
@@ -59,7 +63,7 @@ function findByTextInList(regexp, list) {
 	let i, found, node;
 	for (i = 0; i < list.length; i++) {
 		node = list[i];
-		if (matchText(regexp, node) || findByTextInContext(regexp, node)) {
+		if (matchText(regexp, node)) {
 			found = node;
 			break;
 		}
@@ -164,11 +168,15 @@ export function focus(node) {
 		trigger(node, 'FocusEvent', 'focus', {bubbles: false, cancellable: false});
 		trigger(node, 'FocusEvent', 'focusin', {cancellable: false});
 	}
+
+	return node;
 }
 
 export function hover(node) {
 	trigger(node, 'MouseEvent', 'mouseover');
 	trigger(node, 'MouseEvent', 'mouseenter');
+
+	return node;
 }
 
 export function visible(node, partially) {
@@ -190,6 +198,8 @@ export function on(node, event, handler, capture) {
 	node.addEventListener ?
 		node.addEventListener(event, handler, capture === true) :
 		node.attachEvent('on' + event, handler);
+
+	return node;
 }
 
 export function reach(node) {

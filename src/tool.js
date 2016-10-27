@@ -35,7 +35,7 @@ function tool(name, handle, callback) {
 	const space = name.split('.')[0],
 		args = deserialize(handle);
 
-	tool.console.debug('tasty', 'tool', name, args);
+	tool.console.log('tasty', 'tool', name, args);
 
 	return hook(name, 'before.tool', args)
 		.then((result) => hook(result, 'before.' + space, args))
@@ -197,6 +197,7 @@ tool('input.clear', (count) => {
 	if (target.readOnly) {
 		throw reason('cannot clear read-only node', format(target));
 	}
+	tool.console.debug('tasty', target);
 
 	return thenable((resolve) => {
 		let chain = thenable(),
@@ -229,51 +230,60 @@ tool('input.clear', (count) => {
 
 tool('input.click', (what, selector, reachable) => {
 	// TODO validate args.
-	dom.click(
-		findNode(
-			what ?
-				what instanceof RegExp ?
-					what :
-					selector === true ?
-						new RegExp('^' + escape(what, true) + '$') :
-						new RegExp(escape(what, true)) :
-				null,
-			selector,
-			reachable
+	tool.console.debug(
+		'tasty',
+		dom.click(
+			findNode(
+				what ?
+					what instanceof RegExp ?
+						what :
+						selector === true ?
+							new RegExp('^' + escape(what, true) + '$') :
+							new RegExp(escape(what, true)) :
+					null,
+				selector,
+				reachable
+			)
 		)
 	);
 });
 
 tool('input.dblclick', (what, selector, reachable) => {
 	// TODO validate args.
-	dom.dblclick(
-		findNode(
-			what ?
-				what instanceof RegExp ?
-					what :
-					selector === true ?
-						new RegExp('^' + escape(what, true) + '$') :
-						new RegExp(escape(what, true)) :
-				null,
-			selector,
-			reachable
+	tool.console.debug(
+		'tasty',
+		dom.dblclick(
+			findNode(
+				what ?
+					what instanceof RegExp ?
+						what :
+						selector === true ?
+							new RegExp('^' + escape(what, true) + '$') :
+							new RegExp(escape(what, true)) :
+					null,
+				selector,
+				reachable
+			)
 		)
 	);
 });
 
 tool('input.hover', (what, selector, reachable) => {
 	// TODO validate args.
-	dom.hover(
-		findNode(
-			what ?
-				what instanceof RegExp ?
-					what :
-					selector === true ?
-						new RegExp('^' + escape(what, true) + '$') :
-						new RegExp(escape(what, true)) :
-				null,
-			selector,
-			reachable
+	tool.console.debug(
+		'tasty',
+		dom.hover(
+			findNode(
+				what ?
+					what instanceof RegExp ?
+						what :
+						selector === true ?
+							new RegExp('^' + escape(what, true) + '$') :
+							new RegExp(escape(what, true)) :
+					null,
+				selector,
+				reachable
+			)
 		)
 	);
 });
@@ -289,6 +299,7 @@ tool('input.paste', (text) => {
 	if (target.readOnly) {
 		throw reason('cannot paste into read-only node', format(target));
 	}
+	tool.console.debug('tasty', target);
 
 	const value = target.value,
 		start = target.selectionStart || value.length,
@@ -314,6 +325,7 @@ tool('input.type', (text) => {
 	if (target.readOnly) {
 		throw reason('cannot type into read-only node', format(target));
 	}
+	tool.console.debug('tasty', target);
 
 	return thenable((resolve) => {
 		let chain = thenable();
@@ -398,6 +410,8 @@ tool('page.loaded', (src) => {
 		item = list[i];
 		if (item.src === url || item.href === url) {
 			// TODO try to check if loaded.
+			tool.console.debug('tasty', item);
+
 			return format(item);
 		}
 	}
@@ -407,20 +421,23 @@ tool('page.loaded', (src) => {
 
 tool('page.text', (what, selector, reachable) => {
 	// TODO validate args.
-	findNode(
-		what ?
-			what instanceof RegExp ?
-				what :
-				selector === true ?
-					new RegExp('^' + escape(what, true) + '$') :
-					new RegExp(escape(what, true)) :
-			null,
-		selector === true ?
-			null :
-			selector,
-		reachable,
-		false
-	)
+	tool.console.debug(
+		'tasty',
+		findNode(
+			what ?
+				what instanceof RegExp ?
+					what :
+					selector === true ?
+						new RegExp('^' + escape(what, true) + '$') :
+						new RegExp(escape(what, true)) :
+				null,
+			selector === true ?
+				null :
+				selector,
+			reachable,
+			false
+		)
+	);
 });
 
 tool('page.title', (what) => {

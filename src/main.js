@@ -148,7 +148,7 @@ function onMessage(socket, type, data) {
 	switch (type) {
 		case 'coverage' :
 			data = data || '__coverage__';
-			tasty.console.debug('tasty', 'coverage', data);
+			tasty.console.log('tasty', 'coverage', data);
 
 			return thenable(window[data]);
 		case 'end' :
@@ -157,11 +157,11 @@ function onMessage(socket, type, data) {
 
 			return thenable();
 		case 'exec' :
-			tasty.console.debug('tasty', 'exec', include.url + data);
+			tasty.console.log('tasty', 'exec', include.url + data);
 
 			return include(data);
 		case 'message' :
-			tasty.console.log('tasty', data);
+			tasty.console.info('tasty', data);
 
 			return thenable();
 		case 'tool' :
