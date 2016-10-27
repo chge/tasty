@@ -37,7 +37,7 @@ However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven c
 
 The main purpose is to emulate real user experience. Interact with text and graphics, not with heartless HTML elements.
 
-Tasty provides you only high-level tools to help treat your application as a black box, just like real user does.
+Tasty gives you only high-level tools to help treat your application as a black box, just like real user does.
 Don't use knowledge of your application's markup, assume you're helping a real person to achieve some goals.
 
 # Similar tools
@@ -57,7 +57,7 @@ Serve your application.
 		<script src="//localhost:8765/tasty.js"></script>
 	</head>
 	<body>
-		<form>
+		<form action="/dashboard">
 			Welcome!
 			<input placeholder="Username" type="text" />
 			<input placeholder="Password" type="password" />
@@ -88,7 +88,7 @@ describe('login form', function() {
 Run Tasty server.
 
 ```shell
-tasty --runner mocha --include test.js --pass secret
+tasty --runner mocha --pass secret test.js
 ```
 
 Open your application in your client. Tasty will run the test, print all output and exit.

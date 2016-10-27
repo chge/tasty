@@ -9,8 +9,8 @@ export function blur(node) {
 		node.blur();
 	} else {
 		// TODO change event if needed.
-		trigger(node, 'FocusEvent', 'blur', false, false);
-		trigger(node, 'FocusEvent', 'focusout', true, false);
+		trigger(node, 'FocusEvent', 'blur', {bubbles: false, cancellable: false});
+		trigger(node, 'FocusEvent', 'focusout', {cancellable: false});
 	}
 }
 
@@ -162,8 +162,8 @@ export function focus(node) {
 	if (node.focus) {
 		node.focus();
 	} else {
-		trigger(node, 'FocusEvent', 'focus', false, false);
-		trigger(node, 'FocusEvent', 'focusin', true, false);
+		trigger(node, 'FocusEvent', 'focus', {bubbles: false, cancellable: false});
+		trigger(node, 'FocusEvent', 'focusin', {cancellable: false});
 	}
 }
 
@@ -215,6 +215,7 @@ export function reach(node) {
 export function trigger(node, type, arg, init) {
 	type = type || 'Event';
 	init = init || {};
+
 	let event;
 	if (window[type]) {
 		try {
@@ -223,6 +224,7 @@ export function trigger(node, type, arg, init) {
 			// TODO log.
 		}
 	}
+
 	if (!event) {
 		const bubbles = init.bubbles !== false,
 			cancellable = init.cancellable !== false;
@@ -230,8 +232,13 @@ export function trigger(node, type, arg, init) {
 			case 'MouseEvent':
 				event = createEvent('MouseEvents');
 				// TODO pass other values from init object.
-				event.initEvent &&
-					event.initEvent(arg, bubbles, cancellable, window, 1);
+				if (event.initEvent) {
+					arg === 'click' ?
+						event.initEvent(arg, bubbles, cancellable, window, 1) :
+						arg === 'dblclick' ?
+							event.initEvent(arg, bubbles, cancellable, window, 2) :
+							event.initEvent(arg, bubbles, cancellable, window);
+				}
 				break;
 			default:
 				event = createEvent('HTMLEvents');
@@ -240,6 +247,7 @@ export function trigger(node, type, arg, init) {
 					event.initEvent(arg, bubbles, cancellable, window);
 		}
 	}
+
 	node.dispatchEvent ?
 		node.dispatchEvent(event) :
 		node.fireEvent('on' + arg, event);

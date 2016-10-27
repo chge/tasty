@@ -67,6 +67,8 @@ const CAPS = [
 	{platformName: IOS, platformVersion: '8.2', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '8.1', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
 	// NOTE Selenium.
+	{browserName: CHROME, version: 'dev', platform: WINDOWS10},
+	{browserName: CHROME, version: 'beta', platform: OSX11},
 	{browserName: CHROME, version: '54.0', platform: OSX11},
 	{browserName: CHROME, version: '54.0', platform: WINDOWS10},
 	{browserName: CHROME, version: '54.0', platform: WINDOWS81},
@@ -89,6 +91,7 @@ const CAPS = [
 	{browserName: CHROME, version: '26.0', platform: WINDOWSXP},
 	{browserName: EDGE, version: '14', platform: WINDOWS10},
 	{browserName: EDGE, version: '13', platform: WINDOWS10},
+	{browserName: FIREFOX, version: 'dev', platform: WINDOWS10},
 	{browserName: FIREFOX, version: 'beta', platform: OSX11},
 	{browserName: FIREFOX, version: 'beta', platform: WINDOWS10},
 	{browserName: FIREFOX, version: 'beta', platform: WINDOWS81},

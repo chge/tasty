@@ -149,7 +149,7 @@ describe('tasty', function() {
 			new Tasty({
 				url: false
 			});
-		}).to.throw(Error);
+		}).to.throw(TypeError);
 	});
 
 	it('throws on unknown coverage toolchain', function() {
@@ -157,7 +157,7 @@ describe('tasty', function() {
 			new Tasty({
 				coverage: 'big-kahuna-coverage'
 			});
-		}).to.throw(Error);
+		}).to.throw(TypeError);
 	});
 
 	it('throws on unknown runner toolchain', function() {
@@ -165,7 +165,7 @@ describe('tasty', function() {
 			new Tasty({
 				coverage: 'runner-royale'
 			});
-		}).to.throw(Error);
+		}).to.throw(TypeError);
 	});
 
 	it('throws on wrong runner configration', function() {
@@ -174,13 +174,13 @@ describe('tasty', function() {
 				bail: true,
 				runner: 'jasmine'
 			});
-		}).to.throw(Error);
+		}).to.throw(TypeError);
 
 		expect(() => {
 			new Tasty({
 				bail: true,
 				runner: 'qunit'
 			});
-		}).to.throw(Error);
+		}).to.throw(TypeError);
 	});
 });

@@ -1,7 +1,7 @@
 {
   "name": "tasty",
   "title": "Tasty",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Integration testing helper for web",
   "main": "lib/main.js",
   "preferGlobal": true,

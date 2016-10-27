@@ -58,7 +58,7 @@ describe('SlimerJS', function() {
 		this.slow(10000);
 
 		tasty = new Tasty({
-			addon: 'chai,chai-as-promised',
+			addon: 'chai,chai-as-promised,chai-spies',
 			coverage: 'istanbul',
 			coverageReporter: 'lcovonly',
 			include: 'test/self/mocha/*.js',

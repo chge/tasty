@@ -17,7 +17,7 @@ module.exports = [
 				name: 'require scope',
 				skip: !global.chai,
 				body: () => {
-					expect(() => tasty.globals()).to.throw(Error);
+					expect(() => tasty.globals()).to.throw(TypeError);
 				}
 			},
 			{

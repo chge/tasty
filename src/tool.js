@@ -308,8 +308,8 @@ tool('input.clear', (count) => {
 						}
 
 						'oninput' in window ?
-							dom.trigger(target, 'Event', 'input', true, false) :
-							dom.trigger(target, 'Event', 'change', true, false);
+							dom.trigger(target, 'Event', 'input', {cancellable: false}) :
+							dom.trigger(target, 'Event', 'change', {cancellable: false});
 					}
 				);
 		}
@@ -388,10 +388,10 @@ tool('input.paste', (text) => {
 		text +
 		value.substr(end, value.length);
 
-	dom.trigger(target, 'ClipboardEvent', 'paste', true, true);
+	dom.trigger(target, 'ClipboardEvent', 'paste');
 	'oninput' in window ?
-		dom.trigger(target, 'Event', 'input', true, false) :
-		dom.trigger(target, 'Event', 'change', true, false);
+		dom.trigger(target, 'Event', 'input', {cancellable: false}) :
+		dom.trigger(target, 'Event', 'change', {cancellable: false});
 });
 
 tool('input.type', (text) => {
@@ -423,8 +423,8 @@ tool('input.type', (text) => {
 							value.substr(end, value.length);
 
 						'oninput' in window ?
-							dom.trigger(target, 'Event', 'input', true, false) :
-							dom.trigger(target, 'Event', 'change', true, false);
+							dom.trigger(target, 'Event', 'input', {cancellable: false}) :
+							dom.trigger(target, 'Event', 'change', {cancellable: false});
 					}
 				);
 		});
