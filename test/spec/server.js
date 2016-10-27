@@ -6,7 +6,7 @@ const chai = require('chai'),
 
 const URL1 = 'http://localhost:8765',
 	URL2 = 'http://localhost:9876',
-	URL3 = 'https://localhost:8765';
+	URL3 = URL1.replace('http:', 'https:');
 
 chai.use(require('chai-as-promised'));
 chai.use(require('chai-http'));

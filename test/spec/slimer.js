@@ -1,19 +1,44 @@
 'use strict';
 
 const child = require('child_process'),
+	fs = require('fs'),
+	http = require('http'),
 	slimerjs = require('slimerjs'),
 	Tasty = require('../..');
 
-const URL = 'http://localhost:8765/test.html';
+const URL = 'http://localhost:8765',
+	URL1 = URL + '/test.html',
+	URL2 = 'http://localhost:9876/path/path.html';
 
 describe('SlimerJS', function() {
 	this.timeout(30000);
 
-	let tasty, slimer;
+	let tasty, server, slimer;
 	afterEach(() => {
-		slimer.kill();
+		server &&
+			server.close();
+		slimer &&
+			slimer.kill();
 
-		return tasty.stop();
+		return tasty &&
+			tasty.stop();
+	});
+
+	it('works with custom path', function(done) {
+		this.slow(10000);
+
+		server = http.createServer(
+			(request, response) => fs.createReadStream(__dirname + '/../root/path.html').pipe(response)
+		).listen(9876);
+		tasty = new Tasty({
+			url: URL + '/path'
+		});
+
+		tasty.start()
+			.then(() => {
+				slimer = run(URL2);
+			});
+		tasty.once('end', (id, error) => done(error));
 	});
 
 	it('passes Jasmine suite', function(done) {
@@ -30,7 +55,7 @@ describe('SlimerJS', function() {
 
 		tasty.start()
 			.then(() => {
-				slimer = run();
+				slimer = run(URL1);
 			});
 		tasty.once('end', (id, error) => done(error));
 	});
@@ -48,7 +73,7 @@ describe('SlimerJS', function() {
 
 		tasty.start()
 			.then(() => {
-				slimer = run();
+				slimer = run(URL1);
 			});
 		tasty.once('end', (id, error) => done(error));
 	});
@@ -67,18 +92,18 @@ describe('SlimerJS', function() {
 
 		tasty.start()
 			.then(() => {
-				slimer = run();
+				slimer = run(URL1);
 			});
 		tasty.once('end', (id, error) => done(error));
 	});
 });
 
-function run() {
+function run(url) {
 	return child.execFile(
 		slimerjs.path,
 		[
 			'test/slimer.js',
-			URL,
+			url,
 			'–error-log-file=slimer.log'
 		],
 		(error) => {

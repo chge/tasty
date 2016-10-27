@@ -82,10 +82,9 @@ if (config.version) {
 			tasty.log &&
 				tasty.log.log('exit', code);
 
-			tasty.stop();
-			// NOTE sometimes server ignores callback when running from CLI.
-			// TODO .then();
-			process.exit(code)
+			tasty.stop().then(
+				() => process.exit(code)
+			);
 		}
 	})
 	.start();

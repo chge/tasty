@@ -39,15 +39,26 @@ tasty.forEach(
 			const url = script.getAttribute('data-url') ||
 				script.src.split('tasty.js')[0];
 			url &&
-				tasty({url: url}).connect();
+				tasty(url).connect();
 		}
 	}
 );
 
 function tasty(config) {
-	config = typeof config === 'string' ?
-		{url: config} :
-		config || {};
+	config = config ?
+		typeof config === 'string' ?
+			{url: config} :
+			config :
+		{};
+
+	// WORKAROUND: built-in URL parser.
+	const link = document.createElement('a');
+	link.href = config.url || '';
+	config.path = link.pathname,
+	config.origin = link.origin ||
+		link.protocol + '//' + link.host;
+	config.url = link.href;
+
 	tasty.config = config;
 
 	include.url = config.url;
@@ -64,17 +75,21 @@ function tasty(config) {
 }
 
 function connect() {
-	const id = tasty.id(),
-		url = tasty.config.url;
-	id ||
-		tasty.console.log('tasty', 'server', url);
+	const config = tasty.config,
+		id = config.id || tasty.id();
+	id ?
+		tasty.console.debug('tasty', 'server', config.url) :
+		tasty.console.info('tasty', 'server', config.url);
+tasty.console.log('tasty', config);
 
 	// TODO disable erroneous WebSocket implementations.
-	const socket = new eio({
-		path: '/',
-		query: {
-			id: id || undefined
-		}
+	const socket = new eio(config.origin, {
+		path: config.path,
+		query: id ?
+			{
+				id: id
+			} :
+			null
 	}).on('open', () => onOpen(socket, !!id));
 }
 
