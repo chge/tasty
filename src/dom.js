@@ -60,7 +60,8 @@ function findBySelector(selector) {
 
 function findByTextInList(regexp, list) {
 	// TODO util.find();
-	let i, found, node;
+	let found = null,
+		i, node;
 	for (i = 0; i < list.length; i++) {
 		node = list[i];
 		if (matchText(regexp, node)) {
@@ -75,8 +76,9 @@ function findByTextInList(regexp, list) {
 function findByTextInContext(regexp, context) {
 	const NodeFilter = window.NodeFilter ||
 			polyfill.NodeFilter,
-		filter = (node) => node.innerText || node.textContent || node.nodeValue ||
-			node.value || node.placeholder ?
+		// TODO filter out visibility: hidden;
+		filter = (node) => (node.nodeType === 3 || node.offsetParent) &&
+			(node.innerText || node.textContent || node.nodeValue || node.value || node.placeholder) ?
 				NodeFilter.FILTER_ACCEPT :
 				NodeFilter.FILTER_REJECT,
 		what = NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT;
@@ -86,7 +88,8 @@ function findByTextInContext(regexp, context) {
 		document.createTreeWalker(context, what, filter, false) :
 		polyfill.createTreeWalker(context, what, filter);
 
-	let found, node;
+	let found = null,
+		node;
 	while (node = walker.nextNode()) {
 		if (matchText(regexp, node)) {
 			found = node;

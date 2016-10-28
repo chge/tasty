@@ -54,6 +54,16 @@ module.exports = [
 				}
 			},
 			{
+				name: 'checks text fragment',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					page.text('est');
+					client.navigate('/other.html');
+					page.text('ther');
+				}
+			},
+			{
 				skip: !global.chai,
 				name: 'fails on missing text',
 				time: 1000,
@@ -63,6 +73,23 @@ module.exports = [
 						() => expect(queue.page.text('Text'))
 							.to.be.eventually.rejectedWith(Error)
 					);
+				}
+			},
+			{
+				name: 'skips not displayed text',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					page.text('None');
+				}
+			},
+			{
+				skip: true,
+				name: 'skips hidden text',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					page.text('Hidden');
 				}
 			},
 			{
@@ -95,7 +122,7 @@ module.exports = [
 				}
 			},
 			{
-				name: 'works strict flag',
+				name: 'works with strict flag',
 				time: 1000,
 				body: () => {
 					client.navigate('/test.html');

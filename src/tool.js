@@ -464,7 +464,7 @@ function findNode(regexp, selector, reachable, enabled) {
 	}
 	if (!dom.visible(found, !reachable)) {
 		throw reason(
-			selector ? 'node ' + selector + ' with text' : 'text', regexp, 'is not fully visible'
+			'node', format(found), 'with text', regexp, 'is not fully visible'
 		);
 	}
 	if (enabled && !dom.enabled(found)) {
@@ -475,9 +475,13 @@ function findNode(regexp, selector, reachable, enabled) {
 	if (reachable) {
 		const [actual] = dom.reach(found);
 		if (actual !== found) {
-			throw reason(
-				'node', format(found), 'with text', regexp, 'is covered by node', format(actual)
-			);
+			throw found.offsetParent === actual ?
+				reason(
+					'node', format(found), 'with text', regexp, 'is hidden'
+				) :
+				reason(
+					'node', format(found), 'with text', regexp, 'is blocked by node', format(actual)
+				);
 		}
 
 		return actual;
