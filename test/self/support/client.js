@@ -2,6 +2,59 @@
 
 module.exports = [
 	{
+		name: 'client.after',
+		timeout: 30000,
+		afterEach: () => {
+			client.reset(false);
+		},
+		specs: [
+			{
+				name: 'executes function after tool',
+				time: 1000,
+				body: () => {
+					client.navigate('/other.html');
+					// NOTE currently reconnect flag is being reset after first tool.
+					page.text('Other');
+					client.after(
+						function(text) {
+							debugger;
+							document.body.innerHTML.indexOf(text) === -1 ||
+								tasty.fail('client.after', 'reconnect');
+						},
+						['Other'],
+						['reconnect']
+					);
+					client.navigate('/test.html');
+				}
+			}
+		]
+	},
+	{
+		name: 'client.before',
+		timeout: 30000,
+		afterEach: () => {
+			client.reset(false);
+		},
+		specs: [
+			{
+				name: 'executes function before tool',
+				time: 1000,
+				body: () => {
+					client.navigate('/other.html');
+					client.before(
+						function(text) {
+							document.body.innerHTML.indexOf(text) === -1 &&
+								tasty.fail('client.before', 'client.navigate');
+						},
+						['Other'],
+						['client.navigate']
+					);
+					client.navigate('/test.html');
+				}
+			}
+		]
+	},
+	{
 		name: 'client.navigate',
 		timeout: 30000,
 		specs: [

@@ -14,6 +14,7 @@ const delay = util.delay,
 	escape = util.escape,
 	forEach = util.forEach,
 	format = util.format,
+	highlight = dom.highlight,
 	random = util.random,
 	reason = util.reason,
 	thenable = util.thenable;
@@ -189,15 +190,16 @@ tool('client.reset', (url) => {
 tool('input.clear', (count) => {
 	const target = document.activeElement;
 	if (!('value' in target)) {
-		throw reason('cannot clear active node', format(target));
+		throw reason('cannot clear active node', target);
 	}
 	if (target.disabled) {
-		throw reason('cannot clear disabled node', format(target));
+		throw reason('cannot clear disabled node', target);
 	}
 	if (target.readOnly) {
-		throw reason('cannot clear read-only node', format(target));
+		throw reason('cannot clear read-only node', target);
 	}
-	tool.console.debug('tasty', target);
+	tool.console.debug('tasty', 'target', target);
+	highlight(target);
 
 	return thenable((resolve) => {
 		let chain = thenable(),
@@ -230,60 +232,51 @@ tool('input.clear', (count) => {
 
 tool('input.click', (what, selector, reachable) => {
 	// TODO validate args.
-	tool.console.debug(
-		'tasty',
-		dom.click(
-			findNode(
-				what ?
-					what instanceof RegExp ?
-						what :
-						selector === true ?
-							new RegExp('^' + escape(what, true) + '$') :
-							new RegExp(escape(what, true)) :
-					null,
-				selector,
-				reachable
-			)
+	dom.click(
+		findNode(
+			what ?
+				what instanceof RegExp ?
+					what :
+					selector === true ?
+						new RegExp('^' + escape(what, true) + '$') :
+						new RegExp(escape(what, true)) :
+				null,
+			selector,
+			reachable
 		)
 	);
 });
 
 tool('input.dblclick', (what, selector, reachable) => {
 	// TODO validate args.
-	tool.console.debug(
-		'tasty',
-		dom.dblclick(
-			findNode(
-				what ?
-					what instanceof RegExp ?
-						what :
-						selector === true ?
-							new RegExp('^' + escape(what, true) + '$') :
-							new RegExp(escape(what, true)) :
-					null,
-				selector,
-				reachable
-			)
+	dom.dblclick(
+		findNode(
+			what ?
+				what instanceof RegExp ?
+					what :
+					selector === true ?
+						new RegExp('^' + escape(what, true) + '$') :
+						new RegExp(escape(what, true)) :
+				null,
+			selector,
+			reachable
 		)
 	);
 });
 
 tool('input.hover', (what, selector, reachable) => {
 	// TODO validate args.
-	tool.console.debug(
-		'tasty',
-		dom.hover(
-			findNode(
-				what ?
-					what instanceof RegExp ?
-						what :
-						selector === true ?
-							new RegExp('^' + escape(what, true) + '$') :
-							new RegExp(escape(what, true)) :
-					null,
-				selector,
-				reachable
-			)
+	dom.hover(
+		findNode(
+			what ?
+				what instanceof RegExp ?
+					what :
+					selector === true ?
+						new RegExp('^' + escape(what, true) + '$') :
+						new RegExp(escape(what, true)) :
+				null,
+			selector,
+			reachable
 		)
 	);
 });
@@ -291,15 +284,16 @@ tool('input.hover', (what, selector, reachable) => {
 tool('input.paste', (text) => {
 	const target = document.activeElement;
 	if (!('value' in target)) {
-		throw reason('cannot paste into active node', format(target));
+		throw reason('cannot paste into active node', target);
 	}
 	if (target.disabled) {
-		throw reason('cannot paste into disabled node', format(target));
+		throw reason('cannot paste into disabled node', target);
 	}
 	if (target.readOnly) {
-		throw reason('cannot paste into read-only node', format(target));
+		throw reason('cannot paste into read-only node', target);
 	}
 	tool.console.debug('tasty', target);
+	highlight(target);
 
 	const value = target.value,
 		start = target.selectionStart || value.length,
@@ -317,15 +311,16 @@ tool('input.paste', (text) => {
 tool('input.type', (text) => {
 	const target = document.activeElement;
 	if (!('value' in target)) {
-		throw reason('cannot type into active node', format(target));
+		throw reason('cannot type into active node', target);
 	}
 	if (target.disabled) {
-		throw reason('cannot type into disabled node', format(target));
+		throw reason('cannot type into disabled node', target);
 	}
 	if (target.readOnly) {
-		throw reason('cannot type into read-only node', format(target));
+		throw reason('cannot type into read-only node', target);
 	}
 	tool.console.debug('tasty', target);
+	highlight(target);
 
 	return thenable((resolve) => {
 		let chain = thenable();
@@ -411,6 +406,7 @@ tool('page.loaded', (src) => {
 		if (item.src === url || item.href === url) {
 			// TODO try to check if loaded.
 			tool.console.debug('tasty', item);
+			highlight(item);
 
 			return format(item);
 		}
@@ -421,22 +417,19 @@ tool('page.loaded', (src) => {
 
 tool('page.text', (what, selector, reachable) => {
 	// TODO validate args.
-	tool.console.debug(
-		'tasty',
-		findNode(
-			what ?
-				what instanceof RegExp ?
-					what :
-					selector === true ?
-						new RegExp('^' + escape(what, true) + '$') :
-						new RegExp(escape(what, true)) :
-				null,
-			selector === true ?
-				null :
-				selector,
-			reachable,
-			false
-		)
+	findNode(
+		what ?
+			what instanceof RegExp ?
+				what :
+				selector === true ?
+					new RegExp('^' + escape(what, true) + '$') :
+					new RegExp(escape(what, true)) :
+			null,
+		selector === true ?
+			null :
+			selector,
+		reachable,
+		false
 	);
 });
 
@@ -464,12 +457,12 @@ function findNode(regexp, selector, reachable, enabled) {
 	}
 	if (!dom.visible(found, !reachable)) {
 		throw reason(
-			'node', format(found), 'with text', regexp, 'is not fully visible'
+			'node', found, 'with text', regexp, 'is not fully visible'
 		);
 	}
 	if (enabled && !dom.enabled(found)) {
 		throw reason(
-			'node', format(found), 'with text', regexp, 'is disabled'
+			'node', found, 'with text', regexp, 'is disabled'
 		);
 	}
 	if (reachable) {
@@ -477,15 +470,18 @@ function findNode(regexp, selector, reachable, enabled) {
 		if (actual !== found) {
 			throw found.offsetParent === actual ?
 				reason(
-					'node', format(found), 'with text', regexp, 'is hidden'
+					'node', found, 'with text', regexp, 'is hidden'
 				) :
 				reason(
-					'node', format(found), 'with text', regexp, 'is blocked by node', format(actual)
+					'node', found, 'with text', regexp, 'is blocked by node', actual
 				);
 		}
 
-		return actual;
+		found = actual;
 	}
+
+	tool.console.debug('tasty', 'found', found);
+	highlight(found);
 
 	return found;
 }

@@ -1,5 +1,7 @@
 'use strict';
 
+// NOTE user must inject format.console;
+
 import Promise from 'es6-promise';
 
 export function delay(ms, result) {
@@ -62,12 +64,13 @@ export function format(value) {
 					.replace(/\s*at Socket[\s\S]*/m, '') :
 				undefined
 		} :
-		window.Node && value instanceof window.Node ||
-			window.Element && value instanceof window.Element ?
+		value && value.nodeType ?
+			value.nodeType === 3 ?
+				'#text' :
 				value.outerHTML ?
 					value.outerHTML.replace(/>[\s\S]*$/m, '>').replace(/\n/g, '') :
-					'<' + value.nodeName.toLowerCase() + ' ...>' :
-				value;
+					'<' + value.nodeName + ' ...>' :
+			value;
 }
 
 // NOTE user must inject include.url;
@@ -106,8 +109,13 @@ export function random(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export function reason() {
-	return new Error([].join.call(arguments, ' '));
+export function reason(...args) {
+	reason.console.warn('tasty', ...args);
+
+	return new Error(
+		map(args, format)
+			.join(' ')
+	);
 }
 
 // TODO store session in cookie?

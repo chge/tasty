@@ -7,9 +7,11 @@ let console;
 function log(logger) {
 	logger = logger || {};
 
-	const wrap = (method) => function() {
+	const wrap = (method) => (...args) => {
 		method &&
-			Function.prototype.apply.call(method, logger, arguments);
+			Function.prototype.apply.call(method, logger, args);
+
+		return !!method;
 	};
 
 	console = {

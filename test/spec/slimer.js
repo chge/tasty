@@ -11,7 +11,7 @@ const URL = 'http://localhost:8765',
 	URL2 = 'http://localhost:9876/path/path.html';
 
 describe('SlimerJS', function() {
-	this.timeout(30000);
+	this.timeout(60000);
 
 	let tasty, server, slimer;
 	afterEach(() => {
@@ -42,7 +42,7 @@ describe('SlimerJS', function() {
 	});
 
 	it('passes Jasmine suite', function(done) {
-		this.slow(10000);
+		this.slow(20000);
 
 		tasty = new Tasty({
 			coverage: 'istanbul',
@@ -61,7 +61,7 @@ describe('SlimerJS', function() {
 	});
 
 	it('passes QUnit suite', function(done) {
-		this.slow(10000);
+		this.slow(20000);
 
 		tasty = new Tasty({
 			coverage: 'istanbul',
@@ -80,7 +80,7 @@ describe('SlimerJS', function() {
 
 	// NOTE this one produces maximum client coverage.
 	it('passes Mocha suite', function(done) {
-		this.slow(10000);
+		this.slow(20000);
 
 		tasty = new Tasty({
 			addon: 'chai,chai-as-promised,chai-spies',

@@ -17,11 +17,15 @@ const include = util.include,
 
 tasty.connect = connect;
 tasty.delay = util.delay;
+tasty.fail = fail;
+tasty.find = dom.find;
 tasty.forEach = util.forEach;
+tasty.format = util.format;
 tasty.hook = tool.hook;
+tasty.id = util.session;
 tasty.isArray = util.isArray;
 tasty.map = util.map;
-tasty.id = util.session;
+tasty.parseJson = parseJson;
 tasty.thenable = thenable;
 tasty.tool = tool;
 
@@ -52,18 +56,19 @@ function tasty(config) {
 		{};
 
 	// WORKAROUND: built-in URL parser.
-	const link = document.createElement('a');
+	let link = document.createElement('a');
 	link.href = config.url || '';
 	config.path = link.pathname,
 	config.origin = link.origin ||
 		link.protocol + '//' + link.host;
 	config.url = link.href;
+	link = null;
 
 	tasty.config = config;
 
 	include.url = config.url;
 
-	tasty.console = tool.console = log(
+	reason.console = tasty.console = tool.console = log(
 		config.hasOwnProperty('log') ?
 			config.log === true ?
 				window.console :
@@ -83,13 +88,19 @@ function connect() {
 
 	// TODO disable erroneous WebSocket implementations.
 	const socket = new eio(config.origin, {
-		path: config.path,
+		path: config.path || '/',
 		query: id ?
 			{
 				id: id
 			} :
 			null
-	}).on('open', () => onOpen(socket, !!id));
+	})
+		.on('open', () => onOpen(socket, !!id))
+		.on('close', reason);
+}
+
+function fail(...args) {
+	throw reason(...args);
 }
 
 function onOpen(socket, reconnect) {
@@ -154,6 +165,7 @@ function onMessage(socket, type, data) {
 		case 'end' :
 			tasty.console.info('tasty', 'end');
 			tasty.id(null);
+			socket.removeListener('close', reason);
 
 			return thenable();
 		case 'exec' :

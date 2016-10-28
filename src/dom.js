@@ -77,7 +77,7 @@ function findByTextInContext(regexp, context) {
 	const NodeFilter = window.NodeFilter ||
 			polyfill.NodeFilter,
 		// TODO filter out visibility: hidden;
-		filter = (node) => (node.nodeType === 3 || node.offsetParent) &&
+		filter = (node) => (node.nodeType === 3 || node.offsetParent && node.offsetWidth) &&
 			(node.innerText || node.textContent || node.nodeValue || node.value || node.placeholder) ?
 				NodeFilter.FILTER_ACCEPT :
 				NodeFilter.FILTER_REJECT,
@@ -193,7 +193,7 @@ export function visible(node, partially) {
 			rect.left >= 0 && rect.top >= 0 && rect.right <= width && rect.bottom <= height;
 
 	// TODO more reliable.
-	return viewport &&
+	return viewport && node.offsetWidth &&
 		(!!node.offsetParent || node === document.body);
 }
 
@@ -222,6 +222,41 @@ export function reach(node) {
 	}
 
 	return [parent, x, y];
+}
+
+// LICENSE CC BY-SA 3.0 http://stackoverflow.com/a/987376
+export function highlight(node) {
+	// TODO highlight;
+
+	node = node.nodeType === 1 ?
+		node :
+		node.parentNode;
+
+	try {
+		if (document.body.createTextRange) {
+			const range = document.body.createTextRange();
+			range.moveToElementText(node);
+			if (range.execCommand) {
+				return range.execCommand('hiliteColor', false, '#ff4f00');
+			} else {
+				range.select();
+
+				return document.execCommand('hiliteColor', false, '#ff4f00');
+			}
+		} else if (window.getSelection) {
+			const selection = window.getSelection(),
+				range = document.createRange();
+			range.selectNodeContents(node);
+			selection.removeAllRanges();
+			selection.addRange(range);
+
+			return document.execCommand('hiliteColor', false, '#ff4f00');
+		}
+	} catch (thrown) {
+		// TODO log?
+	}
+
+	return false;
 }
 
 export function trigger(node, type, arg, init) {
