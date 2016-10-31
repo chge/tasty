@@ -41,8 +41,8 @@ export function find(regexp, selector, strict) {
 
 	const node = regexp ?
 		selector ?
-			findByTextInList(regexp, list) :
-			findByTextInContext(regexp, document.body) :
+			findByTextInList(regexp, list, strict) :
+			findByTextInContext(regexp, document.body, strict) :
 		list[0];
 
 	return node && node.nodeType === 3 ?
@@ -58,13 +58,13 @@ function findBySelector(selector) {
 	return document.querySelector(selector);
 }
 
-function findByTextInList(regexp, list) {
+function findByTextInList(regexp, list, strict) {
 	// TODO util.find();
 	let found = null,
 		i, node;
 	for (i = 0; i < list.length; i++) {
 		node = list[i];
-		if (matchText(regexp, node)) {
+		if (matchText(regexp, node, strict)) {
 			found = node;
 			break;
 		}
@@ -73,7 +73,7 @@ function findByTextInList(regexp, list) {
 	return found;
 }
 
-function findByTextInContext(regexp, context) {
+function findByTextInContext(regexp, context, strict) {
 	const NodeFilter = window.NodeFilter ||
 			polyfill.NodeFilter,
 		// TODO filter out visibility: hidden;
@@ -91,7 +91,7 @@ function findByTextInContext(regexp, context) {
 	let found = null,
 		node;
 	while (node = walker.nextNode()) {
-		if (matchText(regexp, node)) {
+		if (matchText(regexp, node, strict)) {
 			found = node;
 			break;
 		}
@@ -100,12 +100,19 @@ function findByTextInContext(regexp, context) {
 	return found;
 }
 
-function innerText(node) {
+function innerText(node, strict) {
 	if (!node) {
 		return null;
 	}
 	if (node.innerText) {
-		return node.innerText;
+		return strict ?
+			node.innerText :
+			trim(node.innerText);
+	}
+	if (node.nodeType === 3) {
+		return strict ?
+			node.textContent || node.nodeValue :
+			trim(node.textContent || node.nodeValue);
 	}
 
 	// NOTE Node.textContent doesn't respect CSS text-transform, while HTMLElement.innerText does.
@@ -132,17 +139,10 @@ function innerText(node) {
 	return text;
 }
 
-function matchText(regexp, node) {
-	return 'value' in node ?
-		regexp.test(
-			innerText(node)
-		) :
-		new RegExp(regexp.source, 'i').test(
-			node.textContent || node.nodeValue
-		) &&
-			regexp.test(
-				innerText(node.parentNode)
-			);
+function matchText(regexp, node, strict) {
+	return regexp.test(
+		innerText(node, strict)
+	);
 }
 
 export function enabled(node) {
@@ -256,6 +256,8 @@ export function highlight(node) {
 export function trigger(node, type, arg, init) {
 	type = type || 'Event';
 	init = init || {};
+	init.bubbles = init.bubbles !== false,
+	init.cancellable = init.cancellable !== false;
 
 	let event;
 	if (window[type]) {
@@ -267,8 +269,8 @@ export function trigger(node, type, arg, init) {
 	}
 
 	if (!event) {
-		const bubbles = init.bubbles !== false,
-			cancellable = init.cancellable !== false;
+		const bubbles = init.bubbles,
+			cancellable = init.cancellable;
 		switch (type) {
 			case 'MouseEvent':
 				event = createEvent('MouseEvents');
@@ -300,4 +302,15 @@ function createEvent(type) {
 	return document.createEvent ?
 		document.createEvent(type) :
 		document.createEventObject(type);
+}
+
+// LICENSE Copyright Steven Levithan http://blog.stevenlevithan.com/archives/faster-trim-javascript
+function trim(str) {
+	var	str = str.replace(/^\s\s*/, ''),
+		ws = /\s/,
+		i = str.length;
+
+	while (ws.test(str.charAt(--i)));
+
+	return str.slice(0, i + 1);
 }

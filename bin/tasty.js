@@ -12,7 +12,7 @@ const config = require('minimist')(process.argv.slice(2), {
 		q: 'quiet', r: 'runner', R: 'runner-reporter', s: 'static',
 		u: 'url', v: 'version', w: 'watch'
 	},
-	boolean: ['bail', 'help', 'version', 'verbose', 'quiet', 'watch'],
+	boolean: ['bail', 'colors', 'help', 'version', 'verbose', 'quiet', 'watch'],
 	string: ['addon', 'cert', 'coverage', 'coverage-output', 'coverage-reporter', 'key', 'passphrase', 'runner', 'runner-output', 'runner-reporter', 'slow', 'static', 'url']
 });
 
@@ -31,6 +31,7 @@ if (config.version) {
   --addon <name>,<name>  Module(s) to use as additional tools.
   -b, --bail             Fail fast, stop test runner on first fail.
   --cert <path>          Certificate for Tasty server.
+  --colors               Enable colored output, if supported by runner.
   -c, --coverage <name>  Module to use as coverage instrumenter.
                          Built-ins: istanbul, nyc.
   -O, --coverage-output <path>

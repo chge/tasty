@@ -358,9 +358,9 @@ client.navigate(url: string): void
 client.ready(method: string, value: number | function, filter?: string[]): void
 client.reload(): void
 input.clear(count?: number | boolean): void
-input.click(what?: string | RegExp, selector?: string, reachable = true): void
-input.dblclick(what?: string | RegExp, selector?: string, reachable = true): void
-input.hover(what?: string | RegExp, selector?: string, reachable = true): void
+input.click(what?: string | RegExp, selector?: string, strict?: boolean): void
+input.dblclick(what?: string | RegExp, selector?: string, strict?: boolean): void
+input.hover(what?: string | RegExp, selector?: string, strict?: boolean): void
 input.paste(text: string): void
 input.type(text: string): void
 page.font(family: string, selector?: string): void
@@ -368,7 +368,7 @@ page.loaded(): boolean
 page.loaded(src?: string): void
 page.read(what?: string | RegExp, selector?: string): string
 page.ready(method: string, value: number | function, filter?: string[]): void
-page.text(what?: string | RegExp, selector?: string): void
+page.text(what?: string | RegExp, selector?: string, strict?: boolean): void
 page.title(what?: string | RegExp): string
 runner.get(key: string): any
 runner.pop(): any

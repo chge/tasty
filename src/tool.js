@@ -230,54 +230,24 @@ tool('input.clear', (count) => {
 	});
 });
 
-tool('input.click', (what, selector, reachable) => {
+tool('input.click', (what, selector, strict) => {
 	// TODO validate args.
 	dom.click(
-		findNode(
-			what ?
-				what instanceof RegExp ?
-					what :
-					selector === true ?
-						new RegExp('^' + escape(what, true) + '$') :
-						new RegExp(escape(what, true)) :
-				null,
-			selector,
-			reachable
-		)
+		findNode(what, selector, strict)
 	);
 });
 
-tool('input.dblclick', (what, selector, reachable) => {
+tool('input.dblclick', (what, selector, strict) => {
 	// TODO validate args.
 	dom.dblclick(
-		findNode(
-			what ?
-				what instanceof RegExp ?
-					what :
-					selector === true ?
-						new RegExp('^' + escape(what, true) + '$') :
-						new RegExp(escape(what, true)) :
-				null,
-			selector,
-			reachable
-		)
+		findNode(what, selector, strict)
 	);
 });
 
-tool('input.hover', (what, selector, reachable) => {
+tool('input.hover', (what, selector, strict) => {
 	// TODO validate args.
 	dom.hover(
-		findNode(
-			what ?
-				what instanceof RegExp ?
-					what :
-					selector === true ?
-						new RegExp('^' + escape(what, true) + '$') :
-						new RegExp(escape(what, true)) :
-				null,
-			selector,
-			reachable
-		)
+		findNode(what, selector, strict)
 	);
 });
 
@@ -415,22 +385,14 @@ tool('page.loaded', (src) => {
 	throw reason('resource', src, 'not found');
 });
 
-tool('page.text', (what, selector, reachable) => {
-	// TODO validate args.
-	findNode(
-		what ?
-			what instanceof RegExp ?
-				what :
-				selector === true ?
-					new RegExp('^' + escape(what, true) + '$') :
-					new RegExp(escape(what, true)) :
-			null,
-		selector === true ?
-			null :
-			selector,
-		reachable,
-		false
-	);
+tool('page.text', (what, selector, strict) => {
+	// TODO validate all args.
+	if (typeof strict === 'undefined' && typeof selector !== 'string') {
+		strict = selector;
+		selector = null;
+	}
+
+	findNode(what, selector, strict === true, false);
 });
 
 tool('page.title', (what) => {
@@ -444,18 +406,27 @@ tool('page.title', (what) => {
 	}
 });
 
-function findNode(regexp, selector, reachable, enabled) {
-	reachable = reachable !== false &&
-		selector !== false;
+function findNode(regexp, selector, strict, enabled) {
+	if (typeof strict === 'undefined' && typeof selector !== 'string') {
+		strict = selector;
+		selector = null;
+	}
+	regexp = regexp ?
+		regexp instanceof RegExp ?
+			regexp :
+			strict === false ?
+				new RegExp(escape(regexp, true)) :
+				new RegExp('^' + escape(regexp, true) + '$') :
+		null;
 	enabled = enabled !== false;
 
-	let found = dom.find(regexp, selector);
+	const found = dom.find(regexp, selector, strict);
 	if (!found) {
 		throw reason(
 			selector ? 'node ' + selector + ' with text' : 'text', regexp, 'not found'
 		);
 	}
-	if (!dom.visible(found, !reachable)) {
+	if (!dom.visible(found, strict === true)) {
 		throw reason(
 			'node', found, 'with text', regexp, 'is not fully visible'
 		);
@@ -465,24 +436,21 @@ function findNode(regexp, selector, reachable, enabled) {
 			'node', found, 'with text', regexp, 'is disabled'
 		);
 	}
-	if (reachable) {
-		const [actual] = dom.reach(found);
-		if (actual !== found) {
-			throw found.offsetParent === actual ?
-				reason(
-					'node', found, 'with text', regexp, 'is hidden'
-				) :
-				reason(
-					'node', found, 'with text', regexp, 'is blocked by node', actual
-				);
-		}
 
-		found = actual;
+	const [actual] = dom.reach(found);
+	if (strict === true && actual !== found) {
+		throw found.offsetParent === actual ?
+			reason(
+				'node', found, 'with text', regexp, 'is hidden'
+			) :
+			reason(
+				'node', found, 'with text', regexp, 'is blocked by node', actual
+			);
 	}
 
-	tool.console.debug('tasty', 'found', found);
-	found === document.body ||
-		highlight(found);
+	tool.console.debug('tasty', 'found', actual);
+	actual === document.body ||
+		highlight(actual);
 
-	return found;
+	return actual;
 }

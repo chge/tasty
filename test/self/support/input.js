@@ -131,8 +131,8 @@ module.exports = [
 							.to.be.eventually.rejectedWith(Error)
 					);
 					client.navigate('/test.html');
+					runner.delay(100); // WORKAROUND
 					input.click('Value');
-					input.click('Value'); // WORKAROUND
 					queue(
 						() => expect(queue.input.paste('Error'))
 							.to.be.eventually.rejectedWith(Error)
@@ -165,6 +165,7 @@ module.exports = [
 							.to.be.eventually.rejectedWith(Error)
 					);
 					client.navigate('/test.html');
+					runner.delay(100); // WORKAROUND
 					input.click('Value');
 					queue(
 						() => expect(queue.input.type('Error'))
