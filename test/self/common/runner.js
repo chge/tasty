@@ -3,7 +3,7 @@
 module.exports = [
 	{
 		name: 'runner.until',
-		timeout: 30000,
+		timeout: 10000,
 		specs: [
 			{
 				name: 'blocks execution',
@@ -24,8 +24,17 @@ module.exports = [
 				}
 			},
 			{
+				name: 'supports custom timeout',
+				time: 500 + 100,
+				body: () => {
+					client.navigate('/async.html');
+					runner.until(page.text, ['Async'], null, 1000);
+					page.text('Async');
+				}
+			},
+			{
 				skip: !global.chai,
-				name: 'throws on invalid input',
+				name: 'fails on invalid input',
 				body: () => {
 					queue(
 						() => expect(queue.runner.until(null))
@@ -37,7 +46,7 @@ module.exports = [
 	},
 	{
 		name: 'runner.while',
-		timeout: 30000,
+		timeout: 10000,
 		specs: [
 			{
 				name: 'blocks execution',
@@ -54,6 +63,15 @@ module.exports = [
 				body: () => {
 					client.navigate('/async.html');
 					runner.while(page.text, ['Test'], 250);
+					page.text('Async');
+				}
+			},
+			{
+				name: 'supports custom timeout',
+				time: 500 + 100,
+				body: () => {
+					client.navigate('/async.html');
+					runner.while(page.text, ['Test'], null, 1000);
 					page.text('Async');
 				}
 			},

@@ -34,7 +34,7 @@ export function dblclick(node) {
 	return node;
 }
 
-export function find(regexp, selector) {
+export function find(regexp, selector, strict) {
 	const list = selector ?
 		findAllBySelector(selector) :
 		[];
@@ -226,12 +226,6 @@ export function reach(node) {
 
 // LICENSE CC BY-SA 3.0 http://stackoverflow.com/a/987376
 export function highlight(node) {
-	// TODO highlight;
-
-	node = node.nodeType === 1 ?
-		node :
-		node.parentNode;
-
 	try {
 		if (document.body.createTextRange) {
 			const range = document.body.createTextRange();

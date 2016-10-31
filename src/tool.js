@@ -292,7 +292,7 @@ tool('input.paste', (text) => {
 	if (target.readOnly) {
 		throw reason('cannot paste into read-only node', target);
 	}
-	tool.console.debug('tasty', target);
+	tool.console.debug('tasty', 'target', target);
 	highlight(target);
 
 	const value = target.value,
@@ -319,7 +319,7 @@ tool('input.type', (text) => {
 	if (target.readOnly) {
 		throw reason('cannot type into read-only node', target);
 	}
-	tool.console.debug('tasty', target);
+	tool.console.debug('tasty', 'target', target);
 	highlight(target);
 
 	return thenable((resolve) => {
@@ -405,7 +405,7 @@ tool('page.loaded', (src) => {
 		item = list[i];
 		if (item.src === url || item.href === url) {
 			// TODO try to check if loaded.
-			tool.console.debug('tasty', item);
+			tool.console.debug('tasty', 'found', item);
 			highlight(item);
 
 			return format(item);
@@ -481,7 +481,8 @@ function findNode(regexp, selector, reachable, enabled) {
 	}
 
 	tool.console.debug('tasty', 'found', found);
-	highlight(found);
+	found === document.body ||
+		highlight(found);
 
 	return found;
 }

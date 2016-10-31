@@ -132,6 +132,7 @@ module.exports = [
 					);
 					client.navigate('/test.html');
 					input.click('Value');
+					input.click('Value'); // WORKAROUND
 					queue(
 						() => expect(queue.input.paste('Error'))
 							.to.be.eventually.rejectedWith(Error)

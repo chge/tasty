@@ -93,7 +93,10 @@ function connect() {
 			{
 				id: id
 			} :
-			null
+			null,
+		transports: window.WebSocket || window.MozWebSocket ?
+			['websocket'] :
+			['polling']
 	})
 		.on('open', () => onOpen(socket, !!id))
 		.on('close', reason);
@@ -166,6 +169,7 @@ function onMessage(socket, type, data) {
 			tasty.console.info('tasty', 'end');
 			tasty.id(null);
 			socket.removeListener('close', reason);
+			socket.close();
 
 			return thenable();
 		case 'exec' :

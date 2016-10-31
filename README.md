@@ -350,13 +350,8 @@ it('searches', function() {
 To be described.
 
 ```typescript
-page.font(family: string, selector?: string): void
-page.loaded(): boolean
-page.loaded(src?: string): void
-page.read(what?: string | RegExp, selector?: string): string
-page.ready(method: string, value: number | function, filter?: string[]): void
-page.text(what?: string | RegExp, selector?: string): void
-page.title(what?: string | RegExp): string
+client.after(fn: function, args: any[], filter?: string[], persistent?: boolean): void
+client.before(fn: function, args: any[], filter?: string[], persistent?: boolean): void
 client.location(): string
 client.location(what?: string | RegExp): void
 client.navigate(url: string): void
@@ -368,12 +363,19 @@ input.dblclick(what?: string | RegExp, selector?: string, reachable = true): voi
 input.hover(what?: string | RegExp, selector?: string, reachable = true): void
 input.paste(text: string): void
 input.type(text: string): void
+page.font(family: string, selector?: string): void
+page.loaded(): boolean
+page.loaded(src?: string): void
+page.read(what?: string | RegExp, selector?: string): string
+page.ready(method: string, value: number | function, filter?: string[]): void
+page.text(what?: string | RegExp, selector?: string): void
+page.title(what?: string | RegExp): string
 runner.get(key: string): any
 runner.pop(): any
 runner.push(value: any): void
 runner.set(key: string, value: any): void
-runner.until(tool: function, ...args: any[]): void
-runner.while(tool: function, ...args: any[]): void
+runner.until(fn: function, args: any[], delay, timeout): void
+runner.while(fn: function, args: any[], delay, timeout): void
 ```
 
 # Security recommendations
