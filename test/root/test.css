@@ -1,7 +1,21 @@
-.none {
-	display: none;
+.after.before {
+	text-transform: capitalize;
+}
+
+.after:after {
+	content: 'after after';
+	text-transform: capitalize;
+}
+
+.before:before {
+	content: 'before before';
+	text-transform: capitalize;
 }
 
 .hidden {
 	visibility: hidden;
+}
+
+.none {
+	display: none;
 }

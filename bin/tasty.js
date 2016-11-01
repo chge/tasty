@@ -26,7 +26,7 @@ if (config.version) {
 	process.exit(0);
 } else if (config.help) {
 	console.log(
-`Usage: tasty [options] [include] [-- exclude]
+`Usage: tasty [include] [options] [-- exclude]
 
   --addon <name>,<name>  Module(s) to use as additional tools.
   -b, --bail             Fail fast, stop test runner on first fail.

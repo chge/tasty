@@ -1,21 +1,26 @@
 'use strict';
 
 window.onload = function() {
-	var input = document.getElementsByTagName('input')[0];
+	var input = document.querySelector('input');
 	input.autoFocus ||
 		input.focus();
 
-	var button = document.getElementsByTagName('button')[0];
+	var button = document.querySelector('button');
 	button.onclick = function() {
 		button.innerHTML = 'Pressed';
 	};
 
-	var span = document.getElementsByTagName('span')[0];
-	span.ondblclick = function() {
-		span.innerHTML = 'Triple';
+	var double = document.querySelector('span');
+	double.ondblclick = function() {
+		double.innerHTML = 'Triple';
 	};
 
-	var link = document.getElementsByTagName('a')[0];
+	var deep = document.querySelector('div span');
+	deep.onclick = function() {
+		deep.innerHTML = 'Purple';
+	};
+
+	var link = document.querySelector('a');
 	link.onmouseover = function() {
 		link.innerHTML = 'Hovered';
 	};

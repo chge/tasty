@@ -17,8 +17,13 @@ const include = util.include,
 
 tasty.connect = connect;
 tasty.delay = util.delay;
+tasty.dom = dom;
 tasty.fail = fail;
 tasty.find = dom.find;
+tasty.flaws = {
+	pseudo: !!window.attachEvent, // TODO better.
+	selector: !document.querySelector
+};
 tasty.forEach = util.forEach;
 tasty.format = util.format;
 tasty.hook = tool.hook;
@@ -86,20 +91,28 @@ function connect() {
 		tasty.console.debug('tasty', 'server', config.url) :
 		tasty.console.info('tasty', 'server', config.url);
 
-	// TODO disable erroneous WebSocket implementations.
+	const flaws = util.flaws(tasty.flaws),
+		query = {};
+	if (id) {
+		query.id = id;
+	}
+	if (flaws) {
+		tasty.console.warn('tasty', 'client', 'flaws', flaws);
+		query.flaws = flaws;
+	}
+
 	const socket = new eio(config.origin, {
 		path: config.path || '/',
-		query: id ?
-			{
-				id: id
-			} :
-			null,
+		query: query,
+		// TODO skip erroneous WebSocket implementations.
 		transports: window.WebSocket || window.MozWebSocket ?
 			['websocket'] :
 			['polling']
 	})
+		// TODO reconnect on error.
+		.on('close', reason)
+		.on('error', reason)
 		.on('open', () => onOpen(socket, !!id))
-		.on('close', reason);
 }
 
 function fail(...args) {

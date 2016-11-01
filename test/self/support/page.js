@@ -84,7 +84,6 @@ module.exports = [
 				}
 			},
 			{
-				skip: true,
 				name: 'skips hidden text',
 				time: 1000,
 				body: () => {
@@ -110,6 +109,18 @@ module.exports = [
 				}
 			},
 			{
+				skip: tasty.flaws.pseudo,
+				name: 'checks pseudo-elements',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					page.text('Before Before');
+					page.text('inner Inner');
+					page.text('after After');
+					page.text('Before Beforeinner Innerafter After');
+				}
+			},
+			{
 				skip: !global.chai,
 				name: 'skips password',
 				time: 1000,
@@ -128,6 +139,7 @@ module.exports = [
 					client.navigate('/test.html');
 					page.text('Value', true);
 					page.text('42', true);
+					page.text('inner Inner', true);
 				}
 			},
 			{

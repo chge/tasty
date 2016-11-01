@@ -2,12 +2,24 @@
 
 export default log;
 
+import { forEach } from './util';
+
 let console;
 
 function log(logger) {
 	logger = logger || {};
 
 	const wrap = (method) => (...args) => {
+		// WORKAROUND: IE8 doesn't log spaces between arguments.
+		if (window.attachEvent) {
+			const fixed = [];
+			forEach(
+				args,
+				(arg) => fixed.push(arg, ' ')
+			);
+			args = fixed;
+		}
+
 		method &&
 			Function.prototype.apply.call(method, logger, args);
 

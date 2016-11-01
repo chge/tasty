@@ -1,9 +1,5 @@
 'use strict';
 
 setTimeout(function() {
-	var body = document.body;
-	body.removeChild(body.firstChild);
-	body.appendChild(
-		document.createTextNode('Async')
-	);
+	document.body.innerHTML = 'Async';
 }, 500);

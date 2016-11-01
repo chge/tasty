@@ -27,6 +27,15 @@ module.exports = [
 				}
 			},
 			{
+				name: 'clicks on deepest child',
+				time: 1000,
+				body: () => {
+					client.navigate('/test.html');
+					input.click('Deep');
+					page.text('Purple');
+				}
+			},
+			{
 				name: 'clicks on link',
 				time: 1000,
 				body: () => {

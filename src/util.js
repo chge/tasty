@@ -68,9 +68,20 @@ export function format(value) {
 			value.nodeType === 3 ?
 				'#text' :
 				value.outerHTML ?
-					value.outerHTML.replace(/>[\s\S]*$/m, '>').replace(/\n/g, '') :
-					'<' + value.nodeName + ' ...>' :
+					value.outerHTML.replace(/>[\s\S]*$/m, ' />').replace(/\n/g, '') :
+					'<' + value.nodeName + ' ... />' :
 			value;
+}
+
+export function flaws(object) {
+	const array = [];
+	for (let key in object) {
+		object.hasOwnProperty(key) &&
+			object[key] &&
+				array.push(key);
+	}
+
+	return array.toString();
 }
 
 // NOTE user must inject include.url;
@@ -142,20 +153,73 @@ export function thenable(value) {
 
 // NOTE polyfills.
 
+// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
+export function filter(array, callback, scope) {
+	if (Array.prototype.filter) {
+		return Array.prototype.filter.call(array, callback, scope);
+	}
+
+	if (array === void 0 || array === null) {
+		throw new TypeError('array is null or not defined');
+	}
+	var t = Object(array);
+	var len = t.length >>> 0;
+	if (typeof callback !== 'function') {
+		throw new TypeError(callback + ' is not a function');
+	}
+	var res = [];
+	for (var i = 0; i < len; i++) {
+		if (i in t) {
+			var val = t[i];
+
+			if (callback.call(scope, val, i, t)) {
+				res.push(val);
+			}
+		}
+	}
+
+	return res;
+}
+
+// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/find
+export function find(array, predicate, scope) {
+	if (Array.prototype.find) {
+		return Array.prototype.find.call(array, predicate, scope);
+	}
+
+	if (array === void 0 || array == null) {
+		throw new TypeError('array is null or not defined');
+	}
+	if (typeof predicate !== 'function') {
+		throw new TypeError(predicate + ' is not a function');
+	}
+	var list = Object(array);
+	var length = list.length >>> 0;
+	var value;
+	for (var i = 0; i < length; i++) {
+		value = list[i];
+		if (predicate.call(scope, value, i, list)) {
+			return value;
+		}
+	}
+
+	return undefined;
+}
+
 // LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
 export function forEach(array, callback, scope) {
 	if (Array.prototype.forEach) {
 		return Array.prototype.forEach.call(array, callback, scope);
 	}
 
-	var T, k;
-	if (array == null) {
+	if (array === void 0 || array == null) {
 		throw new TypeError('array is null or not defined');
 	}
+	var T, k;
 	var O = Object(array);
 	var len = O.length >>> 0;
 	if (typeof callback !== 'function') {
-			throw new TypeError(callback + ' is not a function');
+		throw new TypeError(callback + ' is not a function');
 	}
 	if (arguments.length > 1) {
 		T = scope;
@@ -173,11 +237,11 @@ export function forEach(array, callback, scope) {
 
 // LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
 export function isArray(value) {
-	var fn = Array.isArray || function polyfill(value) {
-		return Object.prototype.toString.call(value) === '[object Array]';
+	if (Array.isArray) {
+		return Array.isArray(value);
 	};
 
-	return fn(value);
+	return Object.prototype.toString.call(value) === '[object Array]';
 }
 
 // LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/map
@@ -186,10 +250,10 @@ export function map(array, callback, scope) {
 		return Array.prototype.map.call(array, callback, scope);
 	}
 
-	var T, A, k;
-	if (array == null) {
+	if (array === void 0 || array == null) {
 		throw new TypeError('array is null or not defined');
 	}
+	var T, A, k;
 	var O = Object(array);
 	var len = O.length >>> 0;
 	if (typeof callback !== 'function') {
@@ -211,4 +275,37 @@ export function map(array, callback, scope) {
 	}
 
 	return A;
+}
+
+// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+export function reduce(array, callback, memo) {
+	if (Array.prototype.reduce) {
+		return Array.prototype.reduce.call(array, callback, memo);
+	}
+
+	if (array === void 0 || array == null) {
+		throw new TypeError('array is null or not defined');
+	}
+	if (typeof callback !== 'function') {
+		throw new TypeError(callback + ' is not a function');
+	}
+	var t = Object(array), len = t.length >>> 0, k = 0, value;
+	if (arguments.length >= 3) {
+		value = arguments[2];
+	} else {
+		while (k < len && ! (k in t)) {
+			k++;
+		}
+		if (k >= len) {
+			throw new TypeError('reduce of empty array with no initial value');
+		}
+		value = t[k++];
+	}
+	for (; k < len; k++) {
+		if (k in t) {
+			value = callback(value, t[k], k, t);
+		}
+	}
+
+	return value;
 }

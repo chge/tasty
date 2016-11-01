@@ -88,7 +88,7 @@ describe('login form', function() {
 Run Tasty server.
 
 ```shell
-tasty --runner mocha --pass secret test.js
+tasty test.js --runner mocha --pass secret
 ```
 
 Open your application in your client. Tasty will run the test, print all output and exit.
@@ -432,5 +432,7 @@ and require `TRAVIS_JOB_NUMBER`, `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environ
 which are kindly provided by [TravisCI](https://docs.travis-ci.com/user/sauce-connect).
 
 # Windows
+
+[![windows](https://ci.appveyor.com/api/projects/status/github/chge/tasty?branch=master&svg=true)](https://ci.appveyor.com/project/chge/tasty)
 
 Everything works fine, yay!

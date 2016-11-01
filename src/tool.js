@@ -420,7 +420,9 @@ function findNode(regexp, selector, strict, enabled) {
 		null;
 	enabled = enabled !== false;
 
-	const found = dom.find(regexp, selector, strict);
+	const found = dom.element(
+		dom.find(regexp, selector, strict)
+	);
 	if (!found) {
 		throw reason(
 			selector ? 'node ' + selector + ' with text' : 'text', regexp, 'not found'
@@ -439,12 +441,12 @@ function findNode(regexp, selector, strict, enabled) {
 
 	const [actual] = dom.reach(found);
 	if (strict === true && actual !== found) {
-		throw found.offsetParent === actual ?
-			reason(
-				'node', found, 'with text', regexp, 'is hidden'
-			) :
+		throw dom.visible(found) ?
 			reason(
 				'node', found, 'with text', regexp, 'is blocked by node', actual
+			) :
+			reason(
+				'node', found, 'with text', regexp, 'is hidden'
 			);
 	}
 
