@@ -215,7 +215,7 @@ function setup(caps) {
 function run(tasty, driver) {
 	return tasty.start()
 		.then(
-			() => driver.get('http://localhost:8765/test.html')
+			() => driver.get('http://127.0.0.1:8765/test.html')
 		)
 		.then(
 			() => new Promise((resolve, reject) => {

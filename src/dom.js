@@ -270,6 +270,7 @@ function decontent(content) {
 		case content === 'none':
 			return '';
 		case content.indexOf('"') === 0:
+		case content.indexOf("'") === 0:
 			return content.substring(1, content.length - 1);
 		// TODO support attr, counter, *-quote, url;
 	}
