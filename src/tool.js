@@ -1,6 +1,7 @@
 'use strict';
 
 // NOTE user must inject tool.console;
+// NOTE user must inject tool.flaws;
 
 export default tool;
 
@@ -233,14 +234,16 @@ tool('input.clear', (count) => {
 tool('input.click', (what, selector, strict) => {
 	// TODO validate args.
 	dom.click(
-		findNode(what, selector, strict)
+		findNode(what, selector, strict),
+		tool.flaws.navigation
 	);
 });
 
 tool('input.dblclick', (what, selector, strict) => {
 	// TODO validate args.
 	dom.dblclick(
-		findNode(what, selector, strict)
+		findNode(what, selector, strict),
+		tool.flaws.navigation
 	);
 });
 

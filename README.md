@@ -29,9 +29,9 @@ Tasty server controls Tasty clients to run your tests against your application: 
 
 # Is [Selenium](https://github.com/SeleniumHQ/selenium) server needed?
 
-No.
+No. Tasty is intended to run inside browser environment without WebDriver.
 
-However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven clients to run your tests using Tasty.
+However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven clients or headless browsers like [PhantomJS](http://phantomjs.org/) or [SlimerJS](https://slimerjs.org/) to run your Tasty tests.
 
 # Why Tasty?
 

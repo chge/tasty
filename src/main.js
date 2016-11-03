@@ -20,9 +20,12 @@ tasty.delay = util.delay;
 tasty.dom = dom;
 tasty.fail = fail;
 tasty.find = dom.find;
-tasty.flaws = {
+tasty.flaws = tool.flaws = {
+	navigation: !('click' in document.createElement('a')),
+	placeholder: !('placeholder' in document.createElement('input')),
 	pseudo: !!window.attachEvent, // TODO better.
-	selector: !document.querySelector
+	selector: !document.querySelector,
+	websocket: navigator.appVersion.indexOf('MSIE 10') !== -1 // TODO better.
 };
 tasty.forEach = util.forEach;
 tasty.format = util.format;
@@ -97,22 +100,21 @@ function connect() {
 		query.id = id;
 	}
 	if (flaws) {
-		tasty.console.warn('tasty', 'client', 'flaws', flaws);
+		id ||
+			tasty.console.warn('tasty', 'client', 'flaws', flaws);
 		query.flaws = flaws;
 	}
 
 	const socket = new eio(config.origin, {
 		path: config.path || '/',
 		query: query,
-		// TODO skip erroneous WebSocket implementations.
-		transports: window.WebSocket || window.MozWebSocket ?
+		transports: window.WebSocket && !tasty.flaws.websocket ?
 			['websocket'] :
 			['polling']
 	})
-		// TODO reconnect on error.
-		.on('close', reason)
+		.once('close', connect)
 		.on('error', reason)
-		.on('open', () => onOpen(socket, !!id))
+		.once('open', () => onOpen(socket, !!id))
 }
 
 function fail(...args) {
@@ -181,7 +183,8 @@ function onMessage(socket, type, data) {
 		case 'end' :
 			tasty.console.info('tasty', 'end');
 			tasty.id(null);
-			socket.removeListener('close', reason);
+			socket.removeListener('close', connect);
+			socket.removeListener('error', reason);
 			socket.close();
 
 			return thenable();

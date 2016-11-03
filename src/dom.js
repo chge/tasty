@@ -16,20 +16,22 @@ export function blur(node) {
 	return node;
 }
 
-export function click(node) {
+export function click(node, force) {
 	hover(node);
 	focus(node);
+
 	node.click ?
 		node.click() :
-		trigger(node, 'MouseEvent', 'click');
+		trigger(node, 'MouseEvent', 'click', null, force);
 
 	return node;
 }
 
-export function dblclick(node) {
+export function dblclick(node, force) {
 	hover(node);
 	focus(node);
-	trigger(node, 'MouseEvent', 'dblclick');
+
+	trigger(node, 'MouseEvent', 'dblclick', null, force);
 
 	return node;
 }
@@ -213,6 +215,7 @@ function innerText(node, strict) {
 				node.type === 'password' ?
 					node.value ?
 						'' :
+						// TODO check placeholder support?
 						node.placeholder :
 					node.value || node.placeholder || node.textContent || node.nodeValue :
 				node.textContent || node.nodeValue,
@@ -454,7 +457,7 @@ export function highlight(node) {
 	return false;
 }
 
-export function trigger(node, type, arg, init) {
+export function trigger(node, type, arg, init, force) {
 	type = type || 'Event';
 	init = init || {};
 	init.bubbles = init.bubbles !== false,
@@ -465,7 +468,7 @@ export function trigger(node, type, arg, init) {
 		try {
 			event = new window[type](arg, init);
 		} catch (thrown) {
-			// TODO log.
+			// TODO log?
 		}
 	}
 
@@ -476,12 +479,11 @@ export function trigger(node, type, arg, init) {
 			case 'MouseEvent':
 				event = createEvent('MouseEvents');
 				// TODO pass other values from init object.
-				if (event.initEvent) {
-					arg === 'click' ?
-						event.initEvent(arg, bubbles, cancellable, window, 1) :
-						arg === 'dblclick' ?
-							event.initEvent(arg, bubbles, cancellable, window, 2) :
-							event.initEvent(arg, bubbles, cancellable, window);
+				const detail = arg === 'click' ? 1 : arg === 'dblclick' ? 2 : 0;
+				if (event.initMouseEvent) {
+					event.initMouseEvent(arg, bubbles, cancellable, window, detail, 0, 0, 0, 0, false, false, false, false, 0, null);
+				} else if (event.initEvent) {
+					event.initEvent(arg, bubbles, cancellable, window, detail);
 				}
 				break;
 			default:
@@ -492,9 +494,13 @@ export function trigger(node, type, arg, init) {
 		}
 	}
 
-	node.dispatchEvent ?
+	const triggered = node.dispatchEvent ?
 		node.dispatchEvent(event) :
 		node.fireEvent('on' + arg, event);
+
+	if (triggered && force && node.href) {
+		window.location = node.href;
+	}
 
 	return event;
 }

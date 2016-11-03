@@ -101,6 +101,7 @@ module.exports = [
 				}
 			},
 			{
+				skip: tasty.flaws.placeholder,
 				name: 'checks input placeholder',
 				time: 1000,
 				body: () => {
