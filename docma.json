@@ -1,0 +1,61 @@
+{
+	"app": {
+		"entrance": "content:tasty",
+		"routing": "path",
+		"server": "github",
+		"title": "Tasty"
+	},
+	"dest": "docs",
+	"jsdoc": {
+		"sort": "grouped"
+	},
+	"src": [
+		{
+			"client": "src/**/*.js",
+			"server": [
+				"lib/**/*.js",
+				"!lib/runner.js",
+				"!lib/tool.js"
+			],
+			"tasty": "README.md",
+			"test": [
+				"lib/runner.js",
+				"lib/tool.js"
+			]
+		}
+	],
+	"template": {
+		"options": {
+			"title": "Tasty",
+			"navItems": [
+				{
+					"label": "Introduction",
+					"href": "/tasty/",
+					"iconClass": "ico-md ico-book"
+				},
+				{
+					"label": "Client API",
+					"href": "/api/client",
+					"iconClass": "ico-md ico-mouse-pointer"
+				},
+				{
+					"label": "Server API",
+					"href": "/api/server",
+					"iconClass": "ico-md ico-terminal"
+				},
+				{
+					"label": "Test API",
+					"href": "/api/test",
+					"iconClass": "ico-md ico-clipboard"
+				},
+				{
+					"label": "GitHub",
+					"href": "https://github.com/chge/tasty",
+					"target": "_blank",
+					"iconClass": "ico-md ico-github"
+				}
+			]
+		},
+		"path": "default"
+	}
+}

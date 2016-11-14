@@ -203,7 +203,7 @@ module.exports = [
 				}
 			},
 			{
-				skip: tasty.flaws.placeholder,
+				skip: client.flaws.placeholder,
 				name: 'works for input with placeholder',
 				time: 1000,
 				body: () => {

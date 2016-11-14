@@ -4,6 +4,16 @@
 
 import Promise from 'es6-promise';
 
+/**
+ * @memberof tasty
+ * @function delay
+ * @param {Number} ms
+ * @param {*} [result]
+ * @example
+ * .then(() => tasty.delay(42))
+ * @example
+ * .then((result) => tasty.delay(42, result)); // same as .then((result) => tasty.delay(42).then(() => result));
+ */
 export function delay(ms, result) {
 	return thenable(
 		(resolve) => setTimeout(
@@ -143,6 +153,18 @@ export function session(value) {
 	return sessionStorage.getItem(session.key);
 }
 
+/**
+ * @memberof tasty
+ * @function thenable
+ * @param {*|Error|Function} value
+ * @return {Promise}
+ * @example
+ * tasty.thenable(42); // same as Promise.resolve(42);
+ * @example
+ * tasty.thenable(new Error()); // same as Promise.reject(new Error());
+ * @example
+ * tasty.thenable((resolve, reject) => {}); // same as new Promise((resolve, reject) => {});
+ */
 export function thenable(value) {
 	return value instanceof Promise ?
 		value :
@@ -153,7 +175,11 @@ export function thenable(value) {
 
 // NOTE polyfills.
 
-// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
+/**
+ * @function filter
+ * @memberof tasty
+ * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter|MDN}
+ */
 export function filter(array, callback, scope) {
 	if (Array.prototype.filter) {
 		return Array.prototype.filter.call(array, callback, scope);
@@ -181,7 +207,11 @@ export function filter(array, callback, scope) {
 	return res;
 }
 
-// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/find
+/**
+ * @function find
+ * @memberof tasty
+ * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find|MDN}
+ */
 export function find(array, predicate, scope) {
 	if (Array.prototype.find) {
 		return Array.prototype.find.call(array, predicate, scope);
@@ -206,7 +236,11 @@ export function find(array, predicate, scope) {
 	return undefined;
 }
 
-// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+/**
+ * @function forEach
+ * @memberof tasty
+ * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach|MDN}
+ */
 export function forEach(array, callback, scope) {
 	if (Array.prototype.forEach) {
 		return Array.prototype.forEach.call(array, callback, scope);
@@ -235,16 +269,24 @@ export function forEach(array, callback, scope) {
 	}
 }
 
-// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
+/**
+ * @function isArray
+ * @memberof tasty
+ * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray|MDN}
+ */
 export function isArray(value) {
 	if (Array.isArray) {
 		return Array.isArray(value);
-	};
+	}
 
 	return Object.prototype.toString.call(value) === '[object Array]';
 }
 
-// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/map
+/**
+ * @function map
+ * @memberof tasty
+ * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map|MDN}
+ */
 export function map(array, callback, scope) {
 	if (Array.prototype.map) {
 		return Array.prototype.map.call(array, callback, scope);
@@ -277,7 +319,11 @@ export function map(array, callback, scope) {
 	return A;
 }
 
-// LICENSE CC-BY-SA v2.5 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+/**
+ * @function reduce
+ * @memberof tasty
+ * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce|MDN}
+ */
 export function reduce(array, callback, memo) {
 	if (Array.prototype.reduce) {
 		return Array.prototype.reduce.call(array, callback, memo);

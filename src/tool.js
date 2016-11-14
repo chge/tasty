@@ -20,7 +20,7 @@ const delay = util.delay,
 	reason = util.reason,
 	thenable = util.thenable;
 
-function tool(name, handle, callback) {
+function tool(name, handle) {
 	if (typeof handle === 'function') {
 		if (!name) {
 			throw reason('invalid name', name);
@@ -93,7 +93,7 @@ function hook(result, key, args) {
 // NOTE client.
 
 tool('client.breakpoint', () => {
-	debugger;
+	debugger; // eslint-disable-line no-debugger
 });
 
 tool('client.go', (value) => {
@@ -156,7 +156,7 @@ tool('client.reset', (url) => {
 	forEach(
 		document.cookie.split(';'),
 		(pair) => {
-			//document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
+			document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
 		}
 	);
 
@@ -171,7 +171,7 @@ tool('client.reset', (url) => {
 			forEach(
 				event.target.result,
 				(name) => {
-					chain = chain.then(() => thenable((resolve, reject) => {
+					chain = chain.then(() => thenable((resolve) => {
 						request = indexedDB.deleteDatabase(name);
 						request.onsuccess = resolve;
 						request.onerror = (event) => tool.console.error('tasty', event);
@@ -324,6 +324,7 @@ tool('input.type', (text) => {
 
 // NOTE page.
 
+// eslint-disable-next-line no-unused-vars
 tool('page.font', (family, selector) => {
 	// TODO window.getComputedStyle(selector).fontFamily, document.fonts.keys()
 	throw reason('not implemented yet, sorry');
@@ -338,7 +339,7 @@ tool('page.loaded', (src) => {
 		origin = location.origin ||
 			location.protocol + '//' + location.host,
 		url = origin + src,
-		list, item, found, i;
+		list, item, i;
 	switch (type ? type[type.length - 1] : null) {
 		case 'appcache':
 			list = [];

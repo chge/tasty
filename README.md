@@ -156,9 +156,9 @@ Check out a [great tool](https://report-uri.io/home/generate) for generating and
 Each tool adds corresponding action to the runner queue instead of performing that action immediately. This allows to write tests in synchronous manner.
 
 ```javascript
-client.click('Name');
-client.type('John Doe');
-client.click('Save');
+input.click('Name');
+input.type('John Doe');
+input.click('Save');
 ```
 
 Queue is executed after `queue()` call without arguments, which returns `Promise` instance.
@@ -311,7 +311,7 @@ it('remembers', function() {
 
 ### Custom logic
 
-The `queue(...)` call with function allows you to add some custom logic into test, but you should use `queue.*` namespace for tools.
+The `queue(...)` call with function(s) allows you to add some custom logic into test, but you should use `queue.*` namespace for tools.
 
 ```javascript
 it('chooses', function() {
@@ -345,38 +345,9 @@ it('searches', function() {
 });
 ```
 
-# Reference
+# API reference
 
-To be described.
-
-```typescript
-client.after(fn: function, args: any[], filter?: string[], persistent?: boolean): void
-client.before(fn: function, args: any[], filter?: string[], persistent?: boolean): void
-client.location(): string
-client.location(what?: string | RegExp): void
-client.navigate(url: string): void
-client.ready(method: string, value: number | function, filter?: string[]): void
-client.reload(): void
-input.clear(count?: number | boolean): void
-input.click(what?: string | RegExp, selector?: string, strict?: boolean): void
-input.dblclick(what?: string | RegExp, selector?: string, strict?: boolean): void
-input.hover(what?: string | RegExp, selector?: string, strict?: boolean): void
-input.paste(text: string): void
-input.type(text: string): void
-page.font(family: string, selector?: string): void
-page.loaded(): boolean
-page.loaded(src?: string): void
-page.read(what?: string | RegExp, selector?: string): string
-page.ready(method: string, value: number | function, filter?: string[]): void
-page.text(what?: string | RegExp, selector?: string, strict?: boolean): void
-page.title(what?: string | RegExp): string
-runner.get(key: string): any
-runner.pop(): any
-runner.push(value: any): void
-runner.set(key: string, value: any): void
-runner.until(fn: function, args: any[], delay, timeout): void
-runner.while(fn: function, args: any[], delay, timeout): void
-```
+Check out a docs folder.
 
 # Security recommendations
 
@@ -397,7 +368,7 @@ Use [reCAPTCHA testing `sitekey` and `secret`](https://developers.google.com/rec
 Instead of trying to click on iframed content, simply fake reCAPTCHA response with some suitable string, e.g.
 ```javascript
 client.exec(function() {
-	document.querySelector('[name="g-recaptcha-response"]').value = '03AHJ_VutInmeHvq_Dqflmj8Y8VkQEXOG27FYzYZJhGqBxeVjdAZ_LRKhcQmmfelvKmTOFCFU8UJEOPxuNeW5UpPopeAXgcpELTUYhByKBEBuPsv2GhOmhlTmWSbSSRNl9oWCfZLHP0vuRXLUVZXBqGJHCiPBn2rSJSmOAluAYWcfFPt-CswrHsiOdeCS1dxCRbshLNrmQ_J7ZykXQpUIA4FvYqa1AQ9ZPBDGiiU6zGWNojWuKV1j-rWvuhwkhisZJvrhVqdQGVZ5PTWQHrK48SPkFVXmW8l-eV1pS2o4x9-iEIbIIVQm83X3CuR3pJ9a_JKuznOm9xIUo4Zvq3FB7xkjEdNhDynJvL0PecrDVC7HeoyqH5tF6KpPzk6Yu7h8xpygHISPOGl2asCccYadJjrGPkwI9pbuNK-KwL0GeUOBnqEZm--xg4RKHtw8QQfRJDohfGofaeX1SVR6tea0_vvANTKpS2wlGTnu3LudcgXdwo9vBHQdG5aHnIJmOCXBL0opXCec3kx9LOqQ-2mZ41ZMSnOhsGeFfiaubdNAF0WuVEPsgQefNOpKXHeIpAOmFQV8ned5xYaiKZqmLTS4JKW8IRJeTi9UCcULcPFeWUYVhVaL5HzgNErs3RxZzaYzE35CSnvngDM2Dap56EpRiTsxfcr-sZFDdDRKtiPYaKhkGT_rzjUJTKJQrcc3xvoCtdxgZ0yvFbvuIIBP99a1Tr0n0POKO4WgRGdC__UPdgeoFxoOwfxWA-oK1D7_zhoWFwvvQ2Vqm2Xy-9ehzzP1Hd7Vlbcdc1i0VNRHLxbBPEg5R9jlPrufmOFMu_SveMpM77iCtfiFeBm5Z9kyHUT8WrqvquX57tTTB6fU0t21x1qhhlw7ykwUWac9AL8LmtBwOKEHb4q5ykjPAQkvuy4ub02fgyiWKRyAvMg';
+	document.querySelector('[name="g-recaptcha-response"]').value = '03AHJ_VuvHyNQjrLnMZ6eGbmdDZQ3Qma4CBrMSWSOzTcqB8rdl3tbIN1gzAWkB4jPi1qCE-aEw-hx7ns9DuzwNe7bW4E5rCc23SDFs9fQJGqAM27AeNKeg0q6ByJEC3ig3ydkrEzwVd56fi1oyDTVAvwpGCTtg8rjBRYqwn7qDnCp8Fw6Iq6h5vQKc7KtX4mW33QUL8Y5HzJReMDqZio8Rf6zmyqGGcOurvo6Gw4_exJfwcnK0CcnQUpbjlr3-9Mm-1fKeUq_q6s6plM7-2Rc2WNgYdguvp6yxZyyxr5IUKZk1eCvwgxu97zdbM3bPjfuuccrvie4LTGjasRYobPF51H5TbSm3-FacdHJ5usgMSjII6Cba7IaH4NQDPJqyO7ltWH1uPPRybuJmJk1AWALebHTiM-4loixaiI-47JCrBUeJGPPR9A8Q1UfduaZmzP0CrDj5YfFbVzHncDh4ac_KghXgehxbEQ2eD2Qwo18wlc87U-aQQqJLBkvlRUABHDGeWcyRvEzTPnpXfsmbK7Y2WlU4_zbCqtVAdR-pmp3MALqA-njyDtRZmtHsvsVVGvtVXy9UMlGRc4YwmvSyxg0fRegX13K7lMfnY9qqoNV23ZtB3fiQTUwjZnAe0F3KKArRTAt4XFjOJKIaz6-8TxHtqcPfejehTpkOJ0M7cDB3wi9_7BxNu758D6CfqgAXGKqH-kV42K6SJ69S50Lhl3t1l7rEWXmJi5vCEvQ2yHReL1XGtNygpt-WM0qlDiGswUITnUSire2c0JU84vTQCQ3AFZLWXX3eypwRHmyWXvUQAho9LqHZuV_qXoyiyK0SbCZW6lSW4CucElsy5XOpNAFCTgxtY4gTZgnR9uB_JHCjF69ibMeQeUPGNWahECJiRp49TpZi928wvGY_';
 });
 ```
 

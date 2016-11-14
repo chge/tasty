@@ -101,7 +101,7 @@ module.exports = [
 				}
 			},
 			{
-				skip: tasty.flaws.placeholder,
+				skip: client.flaws.placeholder,
 				name: 'checks input placeholder',
 				time: 1000,
 				body: () => {
@@ -110,7 +110,7 @@ module.exports = [
 				}
 			},
 			{
-				skip: tasty.flaws.pseudo,
+				skip: client.flaws.pseudo,
 				name: 'checks pseudo-elements',
 				time: 1000,
 				body: () => {

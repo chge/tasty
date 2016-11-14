@@ -60,10 +60,6 @@ function findAllBySelector(selector, context) {
 	);
 }
 
-function findBySelector(selector, context) {
-	return context.querySelector(selector);
-}
-
 function findByTextInList(regexp, list, strict) {
 	// TODO optimize by number of iterations.
 
@@ -105,10 +101,11 @@ function findAllByText(regexp, context, strict) {
 			polyfill.createTreeWalker(context, what, filter),
 		nodes = [];
 
-	let node;
-	while (node = walker.nextNode()) {
+	let node = walker.nextNode();
+	while (node) {
 		matchText(regexp, node, strict) &&
 			nodes.push(node);
+		node = walker.nextNode();
 	}
 
 	return nodes;
@@ -132,7 +129,8 @@ function findByDepthInList(list) {
 
 function matchParent(parent, child) {
 	while (child) {
-		if (child = child.parentNode === parent) {
+		child = child.parentNode;
+		if (child === parent) {
 			return true;
 		}
 	}
@@ -324,6 +322,7 @@ function setData(node, name, value) {
 	return value;
 }
 
+// eslint-disable-next-line no-unused-vars
 function removeData(node) {
 	node = element(node);
 
@@ -476,7 +475,7 @@ export function trigger(node, type, arg, init, force) {
 		const bubbles = init.bubbles,
 			cancellable = init.cancellable;
 		switch (type) {
-			case 'MouseEvent':
+			case 'MouseEvent': {
 				event = createEvent('MouseEvents');
 				// TODO pass other values from init object.
 				const detail = arg === 'click' ? 1 : arg === 'dblclick' ? 2 : 0;
@@ -486,6 +485,7 @@ export function trigger(node, type, arg, init, force) {
 					event.initEvent(arg, bubbles, cancellable, window, detail);
 				}
 				break;
+			}
 			default:
 				event = createEvent('HTMLEvents');
 				// TODO pass other values from init object.
@@ -511,10 +511,12 @@ function createEvent(type) {
 		document.createEventObject(type);
 }
 
-// LICENSE Copyright Steven Levithan http://blog.stevenlevithan.com/archives/faster-trim-javascript
+/**
+ * @license Copyright Steven Levithan {@link http://blog.stevenlevithan.com/archives/faster-trim-javascript}
+ */
 function trim(str) {
-	var str = str.replace(/^\s\s*/, ''),
-		ws = /\s/,
+	str = str.replace(/^\s\s*/, '');
+	let ws = /\s/,
 		i = str.length;
 
 	while (ws.test(str.charAt(--i)));

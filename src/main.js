@@ -1,6 +1,7 @@
 'use strict';
 
 // TODO exposable API?
+
 export default tasty;
 
 import eio from 'engine.io-client';
@@ -20,6 +21,17 @@ tasty.delay = util.delay;
 tasty.dom = dom;
 tasty.fail = fail;
 tasty.find = dom.find;
+/**
+ * Client flaws.
+ * @memberof tasty
+ * @member {Object} flaws
+ * @readonly
+ * @prop {Boolean} navigation Client requires emulation of anchor navigation.
+ * @prop {Boolean} placeholder Client doesn't support placeholders.
+ * @prop {Boolean} pseudo Client can't search through pseudo-elements.
+ * @prop {Boolean} selector Client doesn't support Selectors API.
+ * @prop {Boolean} websocket Client has unsupported WebSocket implementation.
+ */
 tasty.flaws = tool.flaws = {
 	navigation: !('click' in document.createElement('a')),
 	placeholder: !('placeholder' in document.createElement('input')),
@@ -56,6 +68,25 @@ tasty.forEach(
 	}
 );
 
+/**
+ * Client-side API available in browser environment.
+ * @function tasty
+ * @param {Config|String} [config] Tasty client config (or server URL).
+ * @param {Boolean|Object} [config.log=true] Console logging.
+ * @param {String} [config.url] Tasty server URL.
+ * @return {Function} itself for chaining.
+ * @example <!-- HTML (auto-connect) -->
+<script src="//localhost:8765/tasty.js"></script>
+ * @example // ES2015
+import tasty from 'tasty';
+tasty('//localhost:8765/').connect();
+ * @example // AMD
+define(['tasty'], (tasty) => {
+	tasty('//localhost:8765/').connect();
+});
+ * @example // CommonJS
+require('tasty')('//localhost:8765/').connect();
+ */
 function tasty(config) {
 	config = config ?
 		typeof config === 'string' ?
@@ -87,6 +118,11 @@ function tasty(config) {
 	return tasty;
 }
 
+/**
+ * Connect to Tasty server configured in {@link #tasty|`tasty()`} call.
+ * @memberof tasty
+ * @see {@link Client|examples}
+ */
 function connect() {
 	const config = tasty.config,
 		id = config.id || tasty.id();
@@ -117,6 +153,13 @@ function connect() {
 		.once('open', () => onOpen(socket, !!id))
 }
 
+/**
+ * Fail current hook/tool.
+ * @memberof tasty
+ * @method fail
+ * @param {...*} args Values to log.
+ * @throws {Error}
+ */
 function fail(...args) {
 	throw reason(...args);
 }
@@ -135,15 +178,14 @@ function onOpen(socket, reconnect) {
 				type = message[1],
 				data = message[2];
 
-			let promise = thenable(
+			thenable(
 				reconnect ?
 					tool.hook(null, 'after.reconnect', null) :
 					null
 			)
 			.then(
 				() => onMessage(socket, type, data)
-			)
-			['catch'](
+			)['catch'](
 				(error) => error
 			)
 			.then((result) => {
@@ -175,12 +217,12 @@ function onOpen(socket, reconnect) {
 
 function onMessage(socket, type, data) {
 	switch (type) {
-		case 'coverage' :
+		case 'coverage':
 			data = data || '__coverage__';
 			tasty.console.log('tasty', 'coverage', data);
 
 			return thenable(window[data]);
-		case 'end' :
+		case 'end':
 			tasty.console.info('tasty', 'end');
 			tasty.id(null);
 			socket.removeListener('close', connect);
@@ -188,19 +230,20 @@ function onMessage(socket, type, data) {
 			socket.close();
 
 			return thenable();
-		case 'exec' :
+		case 'exec':
 			tasty.console.log('tasty', 'exec', include.url + data);
 
 			return include(data);
-		case 'message' :
+		case 'message':
 			tasty.console.info('tasty', data);
 
 			return thenable();
-		case 'tool' :
+		case 'tool': {
 			const name = data[0],
 				args = data.slice(1);
 
 			return tool(name, args);
+		}
 		default:
 			return thenable(
 				reason('unknown message', name)
