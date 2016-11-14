@@ -1,11 +1,12 @@
 {
 	"app": {
-		"entrance": "content:tasty",
+		"base": "/tasty",
+		"entrance": "content:readme",
 		"routing": "path",
 		"server": "github",
 		"title": "Tasty"
 	},
-	"dest": "docs",
+	"dest": "docs/tasty",
 	"jsdoc": {
 		"sort": "grouped"
 	},
@@ -17,12 +18,12 @@
 				"!lib/runner.js",
 				"!lib/tool.js"
 			],
-			"tasty": "README.md",
 			"test": [
 				"lib/runner.js",
 				"lib/tool.js"
 			]
-		}
+		},
+		"README.md"
 	],
 	"template": {
 		"options": {
@@ -35,17 +36,17 @@
 				},
 				{
 					"label": "Client API",
-					"href": "/api/client",
+					"href": "/tasty/api/client",
 					"iconClass": "ico-md ico-mouse-pointer"
 				},
 				{
 					"label": "Server API",
-					"href": "/api/server",
+					"href": "/tasty/api/server",
 					"iconClass": "ico-md ico-terminal"
 				},
 				{
 					"label": "Test API",
-					"href": "/api/test",
+					"href": "/tasty/api/test",
 					"iconClass": "ico-md ico-clipboard"
 				},
 				{

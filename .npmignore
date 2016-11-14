@@ -1,6 +1,7 @@
 .nyc_output
 coverage
 coverage_server
+docs
 node_modules
 slimer.log
 tmp

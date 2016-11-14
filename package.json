@@ -1,7 +1,7 @@
 {
   "name": "tasty",
   "title": "Tasty",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Integration testing helper for web",
   "main": "lib/main.js",
   "preferGlobal": true,
@@ -24,7 +24,7 @@
     "docma": "^1.2.0",
     "engine.io-client": "^1.7.2",
     "es6-promise": "^4.0.5",
-    "eslint": "^3.10.1",
+    "eslint": "^3.10.2",
     "istanbul": "^0.4.5",
     "jasmine": "^2.5.2",
     "jasmine-spec-reporter": "^2.7.0",
@@ -69,5 +69,5 @@
   "bugs": {
     "url": "https://github.com/chge/tasty/issues"
   },
-  "homepage": "https://github.com/chge/tasty"
+  "homepage": "https://chge.github.io/tasty"
 }

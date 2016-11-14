@@ -347,7 +347,10 @@ it('searches', function() {
 
 # API reference
 
-Check out a docs folder.
+* [Introduction](https://chge.github.io/tasty/)
+* [Client API](https://chge.github.io/tasty/api/client)
+* [Server API](https://chge.github.io/tasty/api/server)
+* [Test API](https://chge.github.io/tasty/api/test)
 
 # Security recommendations
 
