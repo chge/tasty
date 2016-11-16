@@ -26,7 +26,7 @@ It respects <a href="https://www.w3.org/TR/CSP/">Content Security Policy</a> and
 <h1 id="is-selenium-https-github-com-seleniumhq-selenium-server-needed-">Is <a href="https://github.com/SeleniumHQ/selenium">Selenium</a> server needed?</h1>
 <hr />
 <p>No. Tasty is intended to run inside browser environment without WebDriver.</p>
-<p>However, you can use <a href="https://github.com/SeleniumHQ/selenium">Selenium</a>-driven clients or headless browsers like <a href="http://phantomjs.org/">PhantomJS</a> or <a href="https://slimerjs.org/">SlimerJS</a> to run your Tasty tests.</p>
+<p>However, you can use <a href="https://github.com/SeleniumHQ/selenium">Selenium</a>-driven clients and headless browsers like <a href="http://phantomjs.org/">PhantomJS</a> or <a href="https://slimerjs.org/">SlimerJS</a> to run your Tasty tests.</p>
 <h1 id="why-tasty-">Why Tasty?</h1>
 <hr />
 <p>The main purpose is to emulate real user experience. Interact with text and graphics, not with heartless HTML elements.</p>
@@ -153,7 +153,7 @@ client.ready('window', 500);
 <p>Another way is to provide some application-specific code.</p>
 <pre><code class="lang-javascript">client.ready(
     'until',
-    // This function is executed on client, test will continue when it return true.
+    // This function is executed on client, test will continue when it will return true.
     function() {
         return !document.getElementsByClassName('progress').length;
     },
@@ -162,7 +162,7 @@ client.ready('window', 500);
 </code></pre>
 <pre><code class="lang-javascript">client.ready(
     'exec',
-    // This function is executed on client, test will continue when promise resolve.
+    // This function is executed on client, test will continue when promise will be resolved.
     function(tasty) {
         // tasty.thenable is a built-in Promise for non-supporting browsers.
         return tasty.thenable(
@@ -258,7 +258,12 @@ client.ready('window', 500);
 </code></pre>
 <h1 id="api-reference">API reference</h1>
 <hr />
-<p>Check out a docs folder.</p>
+<ul>
+<li><a href="https://chge.github.io/tasty/">Introduction</a></li>
+<li><a href="https://chge.github.io/tasty/?api=client">Client API</a></li>
+<li><a href="https://chge.github.io/tasty/?api=server">Server API</a></li>
+<li><a href="https://chge.github.io/tasty/?api=test">Test API</a></li>
+</ul>
 <h1 id="security-recommendations">Security recommendations</h1>
 <hr />
 <p>On staging or other near-production environment, Tasty can't pass (re)CAPTCHA or two-factor authentication for you.</p>

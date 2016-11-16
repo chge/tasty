@@ -69,6 +69,7 @@ const CAPS = [
 	// NOTE Selenium.
 	{browserName: CHROME, version: 'dev', platform: WINDOWS10},
 	{browserName: CHROME, version: 'beta', platform: OSX11},
+	{browserName: CHROME, version: 'beta', platform: WINDOWS10},
 	{browserName: CHROME, version: '54.0', platform: OSX11},
 	{browserName: CHROME, version: '54.0', platform: WINDOWS10},
 	{browserName: CHROME, version: '54.0', platform: WINDOWS81},
@@ -91,6 +92,7 @@ const CAPS = [
 	{browserName: CHROME, version: '26.0', platform: WINDOWSXP},
 	{browserName: EDGE, version: '14', platform: WINDOWS10},
 	{browserName: EDGE, version: '13', platform: WINDOWS10},
+	{browserName: FIREFOX, version: 'dev', platform: OSX11},
 	{browserName: FIREFOX, version: 'dev', platform: WINDOWS10},
 	{browserName: FIREFOX, version: 'beta', platform: OSX11},
 	{browserName: FIREFOX, version: 'beta', platform: WINDOWS10},
@@ -123,6 +125,7 @@ const CAPS = [
 	{browserName: OPERA, version: '12.15', platform: LINUX},
 	{browserName: OPERA, version: '12.12', platform: WINDOWSXP},
 	{browserName: OPERA, version: '11.64', platform: WINDOWSXP},
+	{browserName: SAFARI, version: '10.0', platform: OSX11},
 	{browserName: SAFARI, version: '9.0', platform: OSX11},
 	{browserName: SAFARI, version: '8.0', platform: OSX10},
 	{browserName: SAFARI, version: '7.0', platform: OSX9},

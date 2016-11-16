@@ -2,11 +2,11 @@
 	"app": {
 		"base": "/tasty",
 		"entrance": "content:readme",
-		"routing": "path",
+		"routing": "query",
 		"server": "github",
 		"title": "Tasty"
 	},
-	"dest": "docs/tasty",
+	"dest": "docs",
 	"jsdoc": {
 		"sort": "grouped"
 	},
@@ -36,17 +36,17 @@
 				},
 				{
 					"label": "Client API",
-					"href": "/tasty/api/client",
+					"href": "/tasty/?api=client",
 					"iconClass": "ico-md ico-mouse-pointer"
 				},
 				{
 					"label": "Server API",
-					"href": "/tasty/api/server",
+					"href": "/tasty/?api=server",
 					"iconClass": "ico-md ico-terminal"
 				},
 				{
 					"label": "Test API",
-					"href": "/tasty/api/test",
+					"href": "/tasty/?api=test",
 					"iconClass": "ico-md ico-clipboard"
 				},
 				{

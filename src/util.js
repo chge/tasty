@@ -5,19 +5,20 @@
 import Promise from 'es6-promise';
 
 /**
+ * Returns `Promise` that will resolve/reject after delay.
  * @memberof tasty
  * @function delay
- * @param {Number} ms
- * @param {*} [result]
+ * @param {Number} ms Pause in milliseconds.
+ * @param {*} [value] Value/reason to resolve/reject `Promise` with.
  * @example
  * .then(() => tasty.delay(42))
  * @example
  * .then((result) => tasty.delay(42, result)); // same as .then((result) => tasty.delay(42).then(() => result));
  */
-export function delay(ms, result) {
+export function delay(ms, value) {
 	return thenable(
 		(resolve) => setTimeout(
-			() => resolve(result),
+			() => resolve(value),
 			ms | 0
 		)
 	);
@@ -154,16 +155,18 @@ export function session(value) {
 }
 
 /**
+ * Implementation of `Promise` for non-supporting clients.
  * @memberof tasty
  * @function thenable
- * @param {*|Error|Function} value
+ * @param {*|Error|Function} [value] Value/reason to resolve/reject `Promise` with, or a `Promise` executor.
  * @return {Promise}
  * @example
- * tasty.thenable(42); // same as Promise.resolve(42);
+tasty.thenable(); // same as Promise.resolve();
+tasty.thenable(42); // same as Promise.resolve(42);
  * @example
- * tasty.thenable(new Error()); // same as Promise.reject(new Error());
+tasty.thenable(new Error()); // same as Promise.reject(new Error());
  * @example
- * tasty.thenable((resolve, reject) => {}); // same as new Promise((resolve, reject) => {});
+tasty.thenable((resolve, reject) => {}); // same as new Promise((resolve, reject) => {});
  */
 export function thenable(value) {
 	return value instanceof Promise ?
@@ -176,8 +179,11 @@ export function thenable(value) {
 // NOTE polyfills.
 
 /**
+ * Implementation of `Array.prototype.filter`.
  * @function filter
  * @memberof tasty
+ * @param {Array} array Array.
+ * @return {Array}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter|MDN}
  */
 export function filter(array, callback, scope) {
@@ -208,8 +214,11 @@ export function filter(array, callback, scope) {
 }
 
 /**
+ * Implementation of `Array.prototype.find`.
  * @function find
  * @memberof tasty
+ * @param {Array} array Array.
+ * @return {*}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find|MDN}
  */
 export function find(array, predicate, scope) {
@@ -237,8 +246,10 @@ export function find(array, predicate, scope) {
 }
 
 /**
+ * Implementation of `Array.prototype.forEach`.
  * @function forEach
  * @memberof tasty
+ * @param {Array} array Array.
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach|MDN}
  */
 export function forEach(array, callback, scope) {
@@ -270,8 +281,11 @@ export function forEach(array, callback, scope) {
 }
 
 /**
+ * Implementation of `Array.isArray`.
  * @function isArray
  * @memberof tasty
+ * @param {*} value Value to check.
+ * @return {Boolean}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray|MDN}
  */
 export function isArray(value) {
@@ -283,8 +297,11 @@ export function isArray(value) {
 }
 
 /**
+ * Implementation of `Array.prototype.map`.
  * @function map
  * @memberof tasty
+ * @param {Array} array Array.
+ * @return {Array}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map|MDN}
  */
 export function map(array, callback, scope) {
@@ -320,8 +337,11 @@ export function map(array, callback, scope) {
 }
 
 /**
+ * Implementation of `Array.prototype.reduce`.
  * @function reduce
  * @memberof tasty
+ * @param {Array} array Array.
+ * @return {*}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce|MDN}
  */
 export function reduce(array, callback, memo) {

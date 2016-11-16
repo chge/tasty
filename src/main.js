@@ -26,11 +26,11 @@ tasty.find = dom.find;
  * @memberof tasty
  * @member {Object} flaws
  * @readonly
- * @prop {Boolean} navigation Client requires emulation of anchor navigation.
- * @prop {Boolean} placeholder Client doesn't support placeholders.
- * @prop {Boolean} pseudo Client can't search through pseudo-elements.
- * @prop {Boolean} selector Client doesn't support Selectors API.
- * @prop {Boolean} websocket Client has unsupported WebSocket implementation.
+ * @prop {Boolean} navigation Client requires emulation of anchor navigation. Tasty will emulate navigation along with click.
+ * @prop {Boolean} placeholder Client doesn't support placeholders. Search will skip input placeholders.
+ * @prop {Boolean} pseudo Client can't search through pseudo-elements. Search will skip such elements, e.g. `:before` and `:after`.
+ * @prop {Boolean} selector Client doesn't support Selectors API. Search with selectors won't work.
+ * @prop {Boolean} websocket Client has unsupported WebSocket implementation. Tasty will use XHR polling.
  */
 tasty.flaws = tool.flaws = {
 	navigation: !('click' in document.createElement('a')),
@@ -119,9 +119,9 @@ function tasty(config) {
 }
 
 /**
- * Connect to Tasty server configured in {@link #tasty|`tasty()`} call.
+ * Connects to Tasty server configured in {@link #tasty|`tasty()`} call.
  * @memberof tasty
- * @see {@link Client|examples}
+ * @see {@link #tasty|examples}
  */
 function connect() {
 	const config = tasty.config,
@@ -154,7 +154,7 @@ function connect() {
 }
 
 /**
- * Fail current hook/tool.
+ * Fails current hook/tool.
  * @memberof tasty
  * @method fail
  * @param {...*} args Values to log.

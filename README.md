@@ -31,7 +31,7 @@ Tasty server controls Tasty clients to run your tests against your application: 
 
 No. Tasty is intended to run inside browser environment without WebDriver.
 
-However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven clients or headless browsers like [PhantomJS](http://phantomjs.org/) or [SlimerJS](https://slimerjs.org/) to run your Tasty tests.
+However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven clients and headless browsers like [PhantomJS](http://phantomjs.org/) or [SlimerJS](https://slimerjs.org/) to run your Tasty tests.
 
 # Why Tasty?
 
@@ -224,7 +224,7 @@ Another way is to provide some application-specific code.
 ```javascript
 client.ready(
 	'until',
-	// This function is executed on client, test will continue when it return true.
+	// This function is executed on client, test will continue when it will return true.
 	function() {
 		return !document.getElementsByClassName('progress').length;
 	},
@@ -235,7 +235,7 @@ client.ready(
 ```javascript
 client.ready(
 	'exec',
-	// This function is executed on client, test will continue when promise resolve.
+	// This function is executed on client, test will continue when promise will be resolved.
 	function(tasty) {
 		// tasty.thenable is a built-in Promise for non-supporting browsers.
 		return tasty.thenable(
@@ -348,9 +348,9 @@ it('searches', function() {
 # API reference
 
 * [Introduction](https://chge.github.io/tasty/)
-* [Client API](https://chge.github.io/tasty/api/client)
-* [Server API](https://chge.github.io/tasty/api/server)
-* [Test API](https://chge.github.io/tasty/api/test)
+* [Client API](https://chge.github.io/tasty/?api=client)
+* [Server API](https://chge.github.io/tasty/?api=server)
+* [Test API](https://chge.github.io/tasty/?api=test)
 
 # Security recommendations
 
