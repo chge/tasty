@@ -104,8 +104,9 @@ describe('server', function() {
 
 	it('supports HTTPS', function() {
 		const tasty = new Tasty({
-			cert: 'test/cert.pem',
-			key: 'test/key.pem',
+			cert: 'test/localhost.cert',
+			key: 'test/localhost.key',
+			passphrase: 'WHAT DO YOU GET IF YOU MULTIPLY SIX BY NINE',
 			url: URL3
 		});
 
@@ -144,7 +145,7 @@ describe('server', function() {
 
 	it('rejects to start HTTPS without certificate key', function() {
 		const tasty = new Tasty({
-			cert: 'test/cert.pem',
+			cert: 'test/localhost.cert',
 			url: URL3
 		});
 

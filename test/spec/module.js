@@ -144,14 +144,6 @@ describe('tasty', function() {
 		expect(spy).to.have.been.called.with('no test files found');
 	});
 
-	it('throws without URL', function() {
-		expect(() => {
-			new Tasty({
-				url: false
-			});
-		}).to.throw(TypeError);
-	});
-
 	it('throws on unknown coverage toolchain', function() {
 		expect(() => {
 			new Tasty({

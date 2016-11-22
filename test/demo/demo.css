@@ -1,0 +1,47 @@
+* {
+	font-family: "Roboto";
+	font-size: 1em;
+}
+
+fieldset, input[placeholder], button {
+	border: 1px solid #cccccc;
+	border-radius: 2px;
+	box-shadow: 0 1px 0 #dddddd;
+}
+
+body {
+	margin: 0;
+}
+
+fieldset {
+	width: 15em;
+	min-height: 7.5em;
+	display: block;
+	margin: 0.25em auto 0.75em auto;
+	padding: 0.25em 0.75em 0.75em;
+	background: #eeeeee;
+}
+
+legend {
+	padding: 0;
+	background: #ffffff;
+	border-radius: 2px;
+	box-shadow: 0 0 1em #ffffff, 0 0 1em #ffffff;
+}
+
+input[placeholder] {
+	box-sizing: border-box;
+	display: block;
+	margin: 0 0 0.75em 0;
+	padding: 0.2em 0.3em;
+	width: 100%;
+}
+
+input[type="checkbox"] {
+	margin: 0 0 0 0.75em;
+	vertical-align: middle;
+}
+
+button {
+	float: right;
+}

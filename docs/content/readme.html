@@ -13,7 +13,10 @@
 It respects <a href="https://www.w3.org/TR/CSP/">Content Security Policy</a> and SSL/TLS.</p>
 <h1 id="how-it-works">How it works</h1>
 <hr />
-<p>Tasty server controls Tasty clients to run your tests against your application: navigate, fill forms, perform checks.</p>
+<p>Tasty server controls connected clients to run your tests against your application.
+<img src="https://github.com/chge/tasty/raw/master/test/demo/console.gif" alt="console"></p>
+<p>Client can emulate real user: navigate, fill forms, check content.
+<img src="https://github.com/chge/tasty/raw/master/test/demo/browser.gif" alt="browser"></p>
 <ol>
 <li>Add <code>tasty.js</code> module to your assembly or markup.</li>
 <li>Assemble and serve your application from staging server.</li>
@@ -26,12 +29,17 @@ It respects <a href="https://www.w3.org/TR/CSP/">Content Security Policy</a> and
 <h1 id="is-selenium-https-github-com-seleniumhq-selenium-server-needed-">Is <a href="https://github.com/SeleniumHQ/selenium">Selenium</a> server needed?</h1>
 <hr />
 <p>No. Tasty is intended to run inside browser environment without WebDriver.</p>
-<p>However, you can use <a href="https://github.com/SeleniumHQ/selenium">Selenium</a>-driven clients and headless browsers like <a href="http://phantomjs.org/">PhantomJS</a> or <a href="https://slimerjs.org/">SlimerJS</a> to run your Tasty tests.</p>
+<p>However, you can use <a href="https://github.com/SeleniumHQ/selenium">Selenium</a>-driven clients and headless browsers like <a href="http://phantomjs.org/">PhantomJS</a> or <a href="https://slimerjs.org/">SlimerJS</a> to work with Tasty.</p>
 <h1 id="why-tasty-">Why Tasty?</h1>
 <hr />
-<p>The main purpose is to emulate real user experience. Interact with text and graphics, not with heartless HTML elements.</p>
+<p>The main purposes are:</p>
+<ol>
+<li>Emulate real user experience.</li>
+<li>Support any client without WebDriver.</li>
+</ol>
 <p>Tasty gives you only high-level tools to help treat your application as a black box, just like real user does.
-Don't use knowledge of your application's markup, assume you're helping a real person to achieve some goals.</p>
+Interact with text and graphics, not with heartless HTML elements.
+Try not to use knowledge of your application's markup, assume you're helping a real person to achieve some goals.</p>
 <h1 id="similar-tools">Similar tools</h1>
 <hr />
 <p><a href="http://www.protractortest.org/">Protractor</a> and <a href="http://webdriver.io/">WebdriverIO</a> are <a href="https://github.com/SeleniumHQ/selenium">Selenium</a>-based end-to-end test frameworks useful for intergration testing. Also take a look at <a href="http://appium.io/">Appium</a>, <a href="http://casperjs.org/">CasperJS</a> and <a href="http://selendroid.io/">Selendroid</a>.</p>
@@ -49,20 +57,20 @@ Don't use knowledge of your application's markup, assume you're helping a real p
             Welcome!
             &lt;input placeholder="Username" type="text" /&gt;
             &lt;input placeholder="Password" type="password" /&gt;
-            &lt;input text="Login" type="submit" /&gt;
+            &lt;input value="Log in" type="submit" /&gt;
         &lt;/form&gt;
     &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
 <p>Write a test (this one uses <a href="https://mochajs.org/">Mocha</a>).</p>
 <pre><code class="lang-javascript">describe('login form', function() {
-    it('allows user to log in', function() {
+    it('logs user in', function() {
         page.text('Welcome!');
         input.click('Username');
-        input.type('test');
+        input.type(tasty.config.username);
         input.click('Password');
-        input.type(tasty.config.pass);
-        input.click('Login');
+        input.type(tasty.config.password);
+        input.click('Log in');
         client.location('/dashboard');
 
         return queue();
@@ -70,7 +78,7 @@ Don't use knowledge of your application's markup, assume you're helping a real p
 });
 </code></pre>
 <p>Run Tasty server.</p>
-<pre><code class="lang-shell">tasty test.js --runner mocha --pass secret
+<pre><code class="lang-shell">tasty test.js --username 'John Doe' --password 'secret!'
 </code></pre>
 <p>Open your application in your client. Tasty will run the test, print all output and exit.</p>
 <h1 id="server">Server</h1>
@@ -108,6 +116,14 @@ To use one of them, you have to add the following directive:</p>
 <hr />
 <p><a href="https://saucelabs.com/u/tasty"><img src="https://saucelabs.com/buildstatus/tasty" alt="sauce labs"></a></p>
 <p><a href="https://saucelabs.com/u/tasty"><img src="https://saucelabs.com/browser-matrix/tasty.svg" alt="browser support"></a></p>
+<h1 id="known-issues">Known issues</h1>
+<hr />
+<p>Tasty client runs inside JavaScript sandbox, so it simply can't emulate <em>real</em> interaction,
+as <a href="https://developer.chrome.com/devtools/docs/debugger-protocol">debugging</a> <a href="https://wiki.mozilla.org/Remote_Debugging_Protocol">protocols</a> or <a href="https://www.w3.org/TR/webdriver/">WebDriver</a> can.</p>
+<p>Also, currently Tasty can't find text <code>+1 123 456-78-90</code> in the following case or similar:</p>
+<pre><code class="lang-html">+1 &lt;input type="tel" placeholder="123 456-78-90" /&gt;
+</code></pre>
+<p>In other words, it's too hard to join text fragments of <code>textContent</code>, <code>value/placeholder</code>, <code>:before/:after</code> etc.</p>
 <h1 id="tools">Tools</h1>
 <hr />
 <h3 id="queue">Queue</h3>

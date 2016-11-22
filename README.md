@@ -17,7 +17,11 @@ It respects [Content Security Policy](https://www.w3.org/TR/CSP/) and SSL/TLS.
 
 # How it works
 
-Tasty server controls Tasty clients to run your tests against your application: navigate, fill forms, perform checks.
+Tasty server controls connected clients to run your tests against your application.
+![console](https://github.com/chge/tasty/raw/master/test/demo/console.gif)
+
+Client can emulate real user: navigate, fill forms, check content.
+![browser](https://github.com/chge/tasty/raw/master/test/demo/browser.gif)
 
 1. Add `tasty.js` module to your assembly or markup.
 2. Assemble and serve your application from staging server.
@@ -31,14 +35,17 @@ Tasty server controls Tasty clients to run your tests against your application: 
 
 No. Tasty is intended to run inside browser environment without WebDriver.
 
-However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven clients and headless browsers like [PhantomJS](http://phantomjs.org/) or [SlimerJS](https://slimerjs.org/) to run your Tasty tests.
+However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven clients and headless browsers like [PhantomJS](http://phantomjs.org/) or [SlimerJS](https://slimerjs.org/) to work with Tasty.
 
 # Why Tasty?
 
-The main purpose is to emulate real user experience. Interact with text and graphics, not with heartless HTML elements.
+The main purposes are:
+1. Emulate real user experience.
+2. Support any client without WebDriver.
 
 Tasty gives you only high-level tools to help treat your application as a black box, just like real user does.
-Don't use knowledge of your application's markup, assume you're helping a real person to achieve some goals.
+Interact with text and graphics, not with heartless HTML elements.
+Try not to use knowledge of your application's markup, assume you're helping a real person to achieve some goals.
 
 # Similar tools
 
@@ -61,7 +68,7 @@ Serve your application.
 			Welcome!
 			<input placeholder="Username" type="text" />
 			<input placeholder="Password" type="password" />
-			<input text="Login" type="submit" />
+			<input value="Log in" type="submit" />
 		</form>
 	</body>
 </html>
@@ -71,13 +78,13 @@ Write a test (this one uses [Mocha](https://mochajs.org/)).
 
 ```javascript
 describe('login form', function() {
-	it('allows user to log in', function() {
+	it('logs user in', function() {
 		page.text('Welcome!');
 		input.click('Username');
-		input.type('test');
+		input.type(tasty.config.username);
 		input.click('Password');
-		input.type(tasty.config.pass);
-		input.click('Login');
+		input.type(tasty.config.password);
+		input.click('Log in');
 		client.location('/dashboard');
 
 		return queue();
@@ -88,7 +95,7 @@ describe('login form', function() {
 Run Tasty server.
 
 ```shell
-tasty test.js --runner mocha --pass secret
+tasty test.js --username 'John Doe' --password 'secret!'
 ```
 
 Open your application in your client. Tasty will run the test, print all output and exit.
@@ -148,6 +155,19 @@ Check out a [great tool](https://report-uri.io/home/generate) for generating and
 [![sauce labs](https://saucelabs.com/buildstatus/tasty)](https://saucelabs.com/u/tasty)
 
 [![browser support](https://saucelabs.com/browser-matrix/tasty.svg)](https://saucelabs.com/u/tasty)
+
+# Known issues
+
+Tasty client runs inside JavaScript sandbox, so it simply can't emulate *real* interaction,
+as [debugging](https://developer.chrome.com/devtools/docs/debugger-protocol) [protocols](https://wiki.mozilla.org/Remote_Debugging_Protocol) or [WebDriver](https://www.w3.org/TR/webdriver/) can.
+
+Also, currently Tasty can't find text `+1 123 456-78-90` in the following case or similar:
+
+```html
++1 <input type="tel" placeholder="123 456-78-90" />
+```
+
+In other words, it's too hard to join text fragments of `textContent`, `value/placeholder`, `:before/:after` etc.
 
 # Tools
 

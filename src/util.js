@@ -143,15 +143,16 @@ export function reason(...args) {
 // TODO store session in cookie?
 export function session(value) {
 	session.key = session.key || '__tasty';
-	if (arguments.length) {
-		if (value) {
-			sessionStorage.setItem(session.key, value);
-		} else {
-			sessionStorage.removeItem(session.key);
-		}
-	}
+	session.value = arguments.length ?
+		value :
+		session.value ||
+			sessionStorage.getItem(session.key);
 
-	return sessionStorage.getItem(session.key);
+	session.value ?
+		sessionStorage.setItem(session.key, session.value) :
+		sessionStorage.removeItem(session.key);
+
+	return session.value;
 }
 
 /**

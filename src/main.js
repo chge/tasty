@@ -50,6 +50,9 @@ tasty.thenable = thenable;
 tasty.tool = tool;
 
 dom.on(window, 'unload', () => {
+	// NOTE this preserves session in case of app-initiated Storage.clear();
+	tasty.id();
+
 	// TODO configurable key.
 	const key = '__coverage__';
 	key in window &&
@@ -123,7 +126,7 @@ function tasty(config) {
  * @memberof tasty
  * @see {@link #tasty|examples}
  */
-function connect() {
+function connect(_last) {
 	const config = tasty.config,
 		id = config.id || tasty.id();
 	id ?
@@ -148,7 +151,7 @@ function connect() {
 			['websocket'] :
 			['polling']
 	})
-		.once('close', connect)
+		.once('close', _last ? reason : connect)
 		.on('error', reason)
 		.once('open', () => onOpen(socket, !!id))
 }
@@ -189,18 +192,24 @@ function onOpen(socket, reconnect) {
 				(error) => error
 			)
 			.then((result) => {
-				if (result instanceof Error) {
+				if (type === 'tool') {
+					reconnect = false;
+				}
+
+				var callback;
+				if (typeof result === 'function') {
+					callback = result;
+					result = [];
+				} else if (result instanceof Error) {
 					tasty.console.error('tasty', result);
 					result = [0, util.format(result)];
 				} else {
 					result = [result];
 				}
-
-				socket.send(JSON.stringify([mid, 0, result]));
-
-				if (type === 'tool') {
-					reconnect = false;
-				}
+				socket.send(
+					JSON.stringify([mid, 0, result]),
+					callback
+				);
 			});
 		}
 	});
@@ -226,10 +235,11 @@ function onMessage(socket, type, data) {
 			tasty.console.info('tasty', 'end');
 			tasty.id(null);
 			socket.removeListener('close', connect);
-			socket.removeListener('error', reason);
-			socket.close();
 
-			return thenable();
+			return () => {
+				socket.removeListener('error', reason);
+				socket.close();
+			};
 		case 'exec':
 			tasty.console.log('tasty', 'exec', include.url + data);
 

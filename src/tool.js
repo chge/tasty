@@ -140,18 +140,18 @@ tool('client.reload', () => {
 });
 
 tool('client.reset', (url) => {
-	const token = util.session(),
-		done = () => {
-			util.session(token);
-			if (typeof url === 'string') {
+	// NOTE session is restored in window.unload;
+	const done = () => {
+		if (typeof url === 'string') {
+			// TODO close socket first.
+			window.location = url;
+		} else {
+			url === false ||
 				// TODO close socket first.
-				window.location = url;
-			} else {
-				url === false ||
-					// TODO close socket first.
-					window.location.reload(true);
-			}
-		};
+				window.location.reload(true);
+		}
+	};
+
 	// NOTE clear cookies.
 	forEach(
 		document.cookie.split(';'),
@@ -163,6 +163,7 @@ tool('client.reset', (url) => {
 	// NOTE clear Storage.
 	localStorage.clear();
 	sessionStorage.clear();
+
 	// NOTE clear indexedDB.
 	let chain = thenable();
 	if (window.indexedDB && indexedDB.webkitGetDatabaseNames) {
@@ -182,6 +183,7 @@ tool('client.reset', (url) => {
 		};
 		request.onfailure = (event) => tool.console.error('tasty', event);
 	}
+
 	chain.then(done, done);
 	// TODO other.
 });
