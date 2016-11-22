@@ -1,7 +1,7 @@
 {
   "name": "tasty",
   "title": "Tasty",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Integration testing helper for web",
   "main": "lib/main.js",
   "preferGlobal": true,
@@ -43,7 +43,7 @@
   "scripts": {
     "build": "node --harmony node_modules/rollup/bin/rollup -c",
     "docs": "node --harmony node_modules/docma/bin/docma --config docma.json",
-    "lint": "node --harmony node_modules/eslint/bin/eslint src && node --harmony node_modules/eslint/bin/eslint lib",
+    "lint": "node --harmony node_modules/eslint/bin/eslint bin && node --harmony node_modules/eslint/bin/eslint lib && node --harmony node_modules/eslint/bin/eslint src",
     "prepublish": "npm run build && npm run docs && npm run lint",
     "pretest": "node --harmony node_modules/rollup/bin/rollup -c --coverage",
     "posttest": "node --harmony test/report **/*.info coverage.info && node --harmony node_modules/coveralls/bin/coveralls < coverage.info",

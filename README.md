@@ -40,6 +40,7 @@ However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven c
 # Why Tasty?
 
 The main purposes are:
+
 1. Emulate real user experience.
 2. Support any client without WebDriver.
 

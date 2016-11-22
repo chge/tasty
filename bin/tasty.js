@@ -88,5 +88,9 @@ if (config.version) {
 			);
 		}
 	})
-	.start();
+	.start().catch(
+		(error) => process.exit(
+			(error.code | 0) || 255
+		)
+	);
 }
