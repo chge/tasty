@@ -159,10 +159,14 @@ Check out a [great tool](https://report-uri.io/home/generate) for generating and
 
 # Known issues
 
+### Sandbox
+
 Tasty client runs inside JavaScript sandbox, so it simply can't emulate *real* interaction,
 as [debugging](https://developer.chrome.com/devtools/docs/debugger-protocol) [protocols](https://wiki.mozilla.org/Remote_Debugging_Protocol) or [WebDriver](https://www.w3.org/TR/webdriver/) can.
 
-Also, currently Tasty can't find text `+1 123 456-78-90` in the following case or similar:
+### Highly fragmented text
+
+Currently Tasty can't find text `+1 123 456-78-90` in the following case:
 
 ```html
 +1 <input type="tel" placeholder="123 456-78-90" />
@@ -170,11 +174,21 @@ Also, currently Tasty can't find text `+1 123 456-78-90` in the following case o
 
 In other words, it's too hard to join text fragments of `textContent`, `value/placeholder`, `:before/:after` etc.
 
+### Auto-focus elements
+
+When using auto-focus elements (such as `input`), you could encounter `cannot type into active node <body />` error when window loses its focus, which causes `input.type` and `input.paste` tools to fail.
+
+If you don't want to focus such elements explicitly (using `input.click` or something else), make sure that client window remain focused during tests.
+For WebDriver clients you could [maximize window](https://www.w3.org/TR/webdriver/#maximize-window) or use [`alert()` workaround](http://stackoverflow.com/a/19170779) to focus reliably.
+
+Additionally, [Chrome DevTools](https://developer.chrome.com/devtools) could force current tab to lose focus, with the same results.
+
 # Tools
 
 ### Queue
 
-Each tool adds corresponding action to the runner queue instead of performing that action immediately. This allows to write tests in synchronous manner.
+Each tool adds corresponding action to the runner queue instead of performing that action immediately.
+This allows to write tests in synchronous manner.
 
 ```javascript
 input.click('Name');
@@ -406,7 +420,9 @@ For other CAPTCHA implementations, get answers from backdoor.
 
 ### SSL/TLS
 
-Use [Let's encrypt](https://letsencrypt.org/) or self-signed certificates.
+Do not use production certificates with Tasty: server is not intended to be accessible from external networks.
+
+Use [Let's encrypt](https://letsencrypt.org/), self-signed non-CA certificates or set up your own CA.
 
 # Building
 
