@@ -4,18 +4,6 @@ import * as polyfill from 'tasty-treewalker';
 
 import * as util from './util';
 
-export function blur(node) {
-	if (node.blur) {
-		node.blur();
-	} else {
-		// TODO change event if needed.
-		trigger(node, 'FocusEvent', 'blur', {bubbles: false, cancellable: false});
-		trigger(node, 'FocusEvent', 'focusout', {cancellable: false});
-	}
-
-	return node;
-}
-
 export function click(node, force) {
 	hover(node);
 	focus(node);
@@ -349,9 +337,8 @@ export function enabled(node) {
 
 export function focus(node) {
 	const active = document.activeElement;
-	if (active !== node) {
+	active === node ||
 		blur(active);
-	}
 
 	if (node.focus) {
 		node.focus();
@@ -363,9 +350,36 @@ export function focus(node) {
 	return node;
 }
 
+export function blur(node) {
+	if (node.blur) {
+		node.blur();
+	} else {
+		// TODO change event if needed.
+		trigger(node, 'FocusEvent', 'blur', {bubbles: false, cancellable: false});
+		trigger(node, 'FocusEvent', 'focusout', {cancellable: false});
+	}
+
+	return node;
+}
+
 export function hover(node) {
+	const hovered = hover.node;
+	hovered === node ||
+		rest(hover.node);
+
 	trigger(node, 'MouseEvent', 'mouseover');
 	trigger(node, 'MouseEvent', 'mouseenter');
+
+	hover.node = node;
+
+	return node;
+}
+
+export function rest(node) {
+	trigger(node, 'MouseEvent', 'mouseleave');
+	trigger(node, 'MouseEvent', 'mouseout');
+
+	hover.node = null;
 
 	return node;
 }

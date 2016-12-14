@@ -14,7 +14,7 @@ function JasmineHelper(pattern) {
 
 		function run(fn, done) {
 			fn();
-			queue().then(done, done.fail);
+			now().then(done, done.fail);
 		}
 
 		const suiteMethod = suite.skip ?
@@ -59,7 +59,7 @@ function MochaHelper(pattern) {
 				this.slow(time);
 			fn();
 
-			return queue();
+			return now();
 		}
 
 		const suiteMethod = suite.skip ?
@@ -101,7 +101,7 @@ function QUnitHelper(pattern) {
 			//assert.expect(1);
 			fn();
 
-			return queue().then(
+			return now().then(
 				() => assert.ok(true),
 				(error) => assert.ok(false, error.message)
 			);

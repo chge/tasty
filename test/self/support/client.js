@@ -2,86 +2,88 @@
 
 module.exports = [
 	{
-		name: 'client.after',
+		name: 'after',
 		timeout: 30000,
 		afterEach: () => {
-			client.reset(false);
+			reset(false);
 		},
 		specs: [
 			{
 				name: 'executes function after tool',
 				time: 1000,
 				body: () => {
-					client.navigate('/other.html');
+					navigate('/other.html');
 					// NOTE currently reconnect flag is being reset after first tool.
-					page.text('Other');
-					client.after(
+					text('Other');
+					hook(
+						'after',
 						function(text) {
 							debugger;
 							document.body.innerHTML.indexOf(text) === -1 ||
-								tasty.fail('client.after', 'reconnect');
+								tasty.fail('after', 'reconnect');
 						},
 						['Other'],
 						['reconnect']
 					);
-					client.navigate('/test.html');
+					navigate('/test.html');
 				}
 			}
 		]
 	},
 	{
-		name: 'client.before',
+		name: 'before',
 		timeout: 30000,
 		afterEach: () => {
-			client.reset(false);
+			reset(false);
 		},
 		specs: [
 			{
 				name: 'executes function before tool',
 				time: 1000,
 				body: () => {
-					client.navigate('/other.html');
-					client.before(
+					navigate('/other.html');
+					hook(
+						'before',
 						function(text) {
 							document.body.innerHTML.indexOf(text) === -1 &&
-								tasty.fail('client.before', 'client.navigate');
+								tasty.fail('before', 'navigate');
 						},
 						['Other'],
-						['client.navigate']
+						['navigate']
 					);
-					client.navigate('/test.html');
+					navigate('/test.html');
 				}
 			}
 		]
 	},
 	{
-		name: 'client.navigate',
+		name: 'navigate',
 		timeout: 30000,
 		specs: [
 			{
 				name: 'navigates client',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.title('Tasty test');
-					client.navigate('/other.html');
-					page.title('Tasty other');
+					navigate('/test.html');
+					title('Tasty test');
+					navigate('/other.html');
+					title('Tasty other');
 				}
 			}
 		]
 	},
 	{
-		name: 'client.location',
+		name: 'location',
 		timeout: 30000,
 		specs: [
 			{
 				name: 'checks client location',
 				time: 1000,
 				body: () => {
-					client.navigate('/other.html');
-					client.location('/other.html');
-					client.navigate('/test.html');
-					client.location('/test.html');
+					navigate('/other.html');
+					location('/other.html');
+					navigate('/test.html');
+					location('/test.html');
 				}
 			},
 			{
@@ -89,9 +91,9 @@ module.exports = [
 				name: 'fails on wrong location',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					queue(
-						() => expect(queue.client.location('/other.html'))
+					navigate('/test.html');
+					now(
+						() => expect(now.location('/other.html'))
 							.to.be.eventually.rejectedWith(Error)
 					);
 				}
@@ -99,19 +101,19 @@ module.exports = [
 		]
 	},
 	{
-		name: 'client.go',
+		name: 'history',
 		timeout: 30000,
 		specs: [
 			{
 				name: 'navigates client through history',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					client.navigate('/other.html');
-					client.go(-1);
-					client.location('/test.html');
-					client.go(1);
-					client.location('/other.html');
+					navigate('/test.html');
+					navigate('/other.html');
+					history(-1);
+					location('/test.html');
+					history(1);
+					location('/other.html');
 				}
 			}
 			// TODO fail case.

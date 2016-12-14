@@ -30,7 +30,7 @@ tasty.find = dom.find;
  * @prop {Boolean} placeholder Client doesn't support placeholders. Search will skip input placeholders.
  * @prop {Boolean} pseudo Client can't search through pseudo-elements. Search will skip such elements, e.g. `:before` and `:after`.
  * @prop {Boolean} selector Client doesn't support Selectors API. Search with selectors won't work.
- * @prop {Boolean} websocket Client has unsupported WebSocket implementation. Tasty will use XHR polling.
+ * @prop {Boolean} websocket Client has unsupported WebSocket implementation. Tasty will use XHR polling, which is slower.
  */
 tasty.flaws = tool.flaws = {
 	navigation: !('click' in document.createElement('a')),

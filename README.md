@@ -44,6 +44,7 @@ The main purposes are:
 1. Emulate real user experience.
 2. Support any client without WebDriver.
 
+
 Tasty gives you only high-level tools to help treat your application as a black box, just like real user does.
 Interact with text and graphics, not with heartless HTML elements.
 Try not to use knowledge of your application's markup, assume you're helping a real person to achieve some goals.
@@ -80,15 +81,15 @@ Write a test (this one uses [Mocha](https://mochajs.org/)).
 ```javascript
 describe('login form', function() {
 	it('logs user in', function() {
-		page.text('Welcome!');
-		input.click('Username');
-		input.type(tasty.config.username);
-		input.click('Password');
-		input.type(tasty.config.password);
-		input.click('Log in');
-		client.location('/dashboard');
+		text('Welcome!');
+		click('Username');
+		type(tasty.config.username);
+		click('Password');
+		type(tasty.config.password);
+		click('Log in');
+		location('/dashboard');
 
-		return queue();
+		return now();
 	});
 });
 ```
@@ -176,9 +177,9 @@ In other words, it's too hard to join text fragments of `textContent`, `value/pl
 
 ### Auto-focus elements
 
-When using auto-focus elements (such as `input`), you could encounter `cannot type into active node <body />` error when window loses its focus, which causes `input.type` and `input.paste` tools to fail.
+When using auto-focus elements (such as `input`), you could encounter `cannot type into active node <body />` error when window loses its focus, which causes `type` and `paste` tools to fail.
 
-If you don't want to focus such elements explicitly (using `input.click` or something else), make sure that client window remain focused during tests.
+If you don't want to focus such elements explicitly (using `click` or something else), make sure that client window remain focused during tests.
 For WebDriver clients you could [maximize window](https://www.w3.org/TR/webdriver/#maximize-window) or use [`alert()` workaround](http://stackoverflow.com/a/19170779) to focus reliably.
 
 Additionally, [Chrome DevTools](https://developer.chrome.com/devtools) could force current tab to lose focus, with the same results.
@@ -191,17 +192,17 @@ Each tool adds corresponding action to the runner queue instead of performing th
 This allows to write tests in synchronous manner.
 
 ```javascript
-input.click('Name');
-input.type('John Doe');
-input.click('Save');
+click('Name');
+type('John Doe');
+click('Save');
 ```
 
-Queue is executed after `queue()` call without arguments, which returns `Promise` instance.
+Queue is executed after `now()` call without arguments, which returns `Promise` instance.
 
 ```javascript
 it('does something', function() {
 	...
-	return queue();
+	return now();
 });
 ```
 
@@ -210,7 +211,7 @@ Your testing framework may prefer callback for async tests.
 ```javascript
 it('works', function(done) {
 	...
-	queue().then(done, done.fail);
+	now().then(done, done.fail);
 });
 ```
 
@@ -218,46 +219,48 @@ it('works', function(done) {
 
 For testing SPA (or rich MPA) you can provide a method for Tasty to ensure that client is ready for the next action.
 
-Note that built-in methods cannot be combined. Call `client.ready(...)` to register persistent method or use `page.ready(...)` for temporary methods.
-
 The simpliest way is to just wait after using some tools.
 
 ```javascript
-client.ready('delay', 1000);
+ready('delay', 1000);
 ```
 
 You may override the list of tools to wait after.
 
 ```javascript
-client.ready('delay', 1000, [
-	'input.click'
+ready('delay', 1000, [
+	'click'
 ]);
 ```
 
 You always can manually add a delay into queue.
 
 ```javascript
-runner.delay(1000);
+delay(1000);
 ```
 
 There could be enough to just check if DOM is ready...
 
 ```javascript
-client.ready('document'); // 'DOMContentLoaded' aka 'interactive' readyState
-client.ready('window'); // 'load' aka 'complete' readyState
+ready('document'); // 'DOMContentLoaded' aka 'interactive' readyState
+```
+```javascript
+ready('window'); // 'load' aka 'complete' readyState
 ```
 
 ...and maybe wait a little bit.
 
 ```javascript
-client.ready('document', 500);
-client.ready('window', 500);
+ready('document', 500);
+```
+```javascript
+ready('window', 500);
 ```
 
 Another way is to provide some application-specific code.
 
 ```javascript
-client.ready(
+ready(
 	'until',
 	// This function is executed on client, test will continue when it will return true.
 	function() {
@@ -268,7 +271,7 @@ client.ready(
 ```
 
 ```javascript
-client.ready(
+ready(
 	'exec',
 	// This function is executed on client, test will continue when promise will be resolved.
 	function(tasty) {
@@ -283,100 +286,102 @@ client.ready(
 );
 ```
 
+Note that built-in methods cannot be combined.
+
 ### Data from client
 
 Some tools could be called without arguments to get data from client.
 
 ```javascript
 it('reads', function() {
-	page.text(
-		page.title(),
+	text(
+		title(),
 		'h1'
 	);
 
-	return queue();
+	return now();
 });
 ```
 
 ```javascript
 it('remembers', function() {
-	runner.push(
-		page.read('h1')
+	push(
+		read('h1')
 	);
-	input.click('Edit');
-	input.click('Save');
-	page.text(
-		runner.pop(),
+	click('Edit');
+	click('Save');
+	text(
+		pop(),
 		'h1'
 	);
 
-	return queue();
+	return now();
 });
 ```
 
 ```javascript
 it('remembers', function() {
-	runner.set(
+	set(
 		'title',
-		page.read('h1')
+		read('h1')
 	);
-	runner.set(
+	set(
 		'subtitle',
-		page.read('h2')
+		read('h2')
 	);
-	input.click('Edit');
-	input.click('Title');
-	input.type('blah');
-	input.click('Save');
-	page.text(
-		runner.get('title')
+	click('Edit');
+	click('Title');
+	type('blah');
+	click('Save');
+	text(
+		get('title')
 			.then(
 				(value) => value + 'blah'
 			),
 		'h1'
 	);
-	page.text(
-		runner.get('subtitle'),
+	text(
+		get('subtitle'),
 		'h2'
 	);
 
-	return queue();
+	return now();
 });
 ```
 
 ### Custom logic
 
-The `queue(...)` call with function(s) allows you to add some custom logic into test, but you should use `queue.*` namespace for tools.
+The `now(...)` call with function(s) allows you to add some custom logic into test, but you should use `now.*` namespace for tools.
 
 ```javascript
 it('chooses', function() {
-	queue(
-		() => queue.page.text('Welcome back')
+	now(
+		() => now.text('Welcome back')
 			.then(
-				() => queue.input.click('Log in'),
-				() => queue.input.click('Sign up')
+				() => now.click('Log in'),
+				() => now.click('Sign up')
 			)
 	);
 
-	return queue();
+	return now();
 });
 ```
 
-The `queue.namespace.tool` is the same as `namespace.tool`, but runs immediately. You should use `queue.*` tools only inside `queue(...)` call if you don't want to break execution order.
+The `now.smth()` is the same as just `smth()`, but runs immediately. You should use `now.*` tools only inside `now(...)` call if you don't want to break execution order.
 
 ```javascript
 it('searches', function() {
-	runner.until(
-		queue(
-			() => queue.page.text('Chapter 42', 'h1')
+	until(
+		now(
+			() => now.text('Chapter 42', 'h1')
 				.catch(
-					() => queue.input.click('Next')
+					() => now.click('Next')
 				)
 		)
 	);
-	input.click('Bookmark');
+	click('Bookmark');
 
-	return queue();
+	return now();
 });
 ```
 
@@ -405,7 +410,7 @@ Use [reCAPTCHA testing `sitekey` and `secret`](https://developers.google.com/rec
 
 Instead of trying to click on iframed content, simply fake reCAPTCHA response with some suitable string, e.g.
 ```javascript
-client.exec(function() {
+exec(function() {
 	document.querySelector('[name="g-recaptcha-response"]').value = '03AHJ_VuvHyNQjrLnMZ6eGbmdDZQ3Qma4CBrMSWSOzTcqB8rdl3tbIN1gzAWkB4jPi1qCE-aEw-hx7ns9DuzwNe7bW4E5rCc23SDFs9fQJGqAM27AeNKeg0q6ByJEC3ig3ydkrEzwVd56fi1oyDTVAvwpGCTtg8rjBRYqwn7qDnCp8Fw6Iq6h5vQKc7KtX4mW33QUL8Y5HzJReMDqZio8Rf6zmyqGGcOurvo6Gw4_exJfwcnK0CcnQUpbjlr3-9Mm-1fKeUq_q6s6plM7-2Rc2WNgYdguvp6yxZyyxr5IUKZk1eCvwgxu97zdbM3bPjfuuccrvie4LTGjasRYobPF51H5TbSm3-FacdHJ5usgMSjII6Cba7IaH4NQDPJqyO7ltWH1uPPRybuJmJk1AWALebHTiM-4loixaiI-47JCrBUeJGPPR9A8Q1UfduaZmzP0CrDj5YfFbVzHncDh4ac_KghXgehxbEQ2eD2Qwo18wlc87U-aQQqJLBkvlRUABHDGeWcyRvEzTPnpXfsmbK7Y2WlU4_zbCqtVAdR-pmp3MALqA-njyDtRZmtHsvsVVGvtVXy9UMlGRc4YwmvSyxg0fRegX13K7lMfnY9qqoNV23ZtB3fiQTUwjZnAe0F3KKArRTAt4XFjOJKIaz6-8TxHtqcPfejehTpkOJ0M7cDB3wi9_7BxNu758D6CfqgAXGKqH-kV42K6SJ69S50Lhl3t1l7rEWXmJi5vCEvQ2yHReL1XGtNygpt-WM0qlDiGswUITnUSire2c0JU84vTQCQ3AFZLWXX3eypwRHmyWXvUQAho9LqHZuV_qXoyiyK0SbCZW6lSW4CucElsy5XOpNAFCTgxtY4gTZgnR9uB_JHCjF69ibMeQeUPGNWahECJiRp49TpZi928wvGY_';
 });
 ```

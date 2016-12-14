@@ -17,21 +17,17 @@ module.exports = [
 				name: 'require scope',
 				skip: !global.chai,
 				body: () => {
-					expect(() => tasty.globals()).to.throw(TypeError);
+					expect(() => tasty.api()).to.throw(TypeError);
 				}
 			},
 			{
 				name: 'are defined after call',
 				skip: !global['chai-as-promised'],
 				body: () => {
-					tasty.globals(global);
+					tasty.api(global);
 
-					Object.keys(tasty.tool).forEach((space) => {
-						assert(global[space], 'global.' + space);
-
-						Object.keys(tasty.tool[space]).forEach((name) => {
-							expect(global[space][name]).to.be.a('function');
-						});
+					Object.keys(tasty.tool).forEach((name) => {
+						expect(global[name]).to.be.a('function');
 					});
 				}
 			}

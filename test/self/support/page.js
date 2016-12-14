@@ -2,23 +2,23 @@
 
 module.exports = [
 	{
-		name: 'page.loaded',
+		name: 'loaded',
 		timeout: 30000,
 		specs: [
 			{
 				name: 'checks resources',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.loaded('/manifest.appcache');
-					page.loaded('/test.css');
-					page.loaded('/test.js');
-					page.loaded('/favicon.png');
-					client.navigate('/other.html');
-					page.loaded('/manifest.appcache');
-					page.loaded('/other.css');
-					page.loaded('/other.js');
-					page.loaded('/favicon.png');
+					navigate('/test.html');
+					loaded('/manifest.appcache');
+					loaded('/test.css');
+					loaded('/test.js');
+					loaded('/favicon.png');
+					navigate('/other.html');
+					loaded('/manifest.appcache');
+					loaded('/other.css');
+					loaded('/other.js');
+					loaded('/favicon.png');
 				}
 			},
 			{
@@ -26,12 +26,12 @@ module.exports = [
 				name: 'fails on missing resources',
 				time: 1000,
 				body: () => {
-					client.navigate('/other.html');
-					queue(
+					navigate('/other.html');
+					now(
 						// TODO manifest.
-						() => expect(queue.page.loaded('/test.css'))
+						() => expect(now.loaded('/test.css'))
 							.to.be.eventually.rejectedWith(Error),
-						() => expect(queue.page.loaded('/test.js'))
+						() => expect(now.loaded('/test.js'))
 							.to.be.eventually.rejectedWith(Error)
 						// TODO favicon.
 					);
@@ -40,27 +40,27 @@ module.exports = [
 		]
 	},
 	{
-		name: 'page.text',
+		name: 'text',
 		timeout: 30000,
 		specs: [
 			{
 				name: 'checks static text',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.text('Test');
-					client.navigate('/other.html');
-					page.text('Other');
+					navigate('/test.html');
+					text('Test');
+					navigate('/other.html');
+					text('Other');
 				}
 			},
 			{
 				name: 'checks text fragment',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.text('est');
-					client.navigate('/other.html');
-					page.text('ther');
+					navigate('/test.html');
+					text('est');
+					navigate('/other.html');
+					text('ther');
 				}
 			},
 			{
@@ -68,9 +68,9 @@ module.exports = [
 				name: 'fails on missing text',
 				time: 1000,
 				body: () => {
-					client.navigate('/other.html');
-					queue(
-						() => expect(queue.page.text('Text'))
+					navigate('/other.html');
+					now(
+						() => expect(now.text('Text'))
 							.to.be.eventually.rejectedWith(Error)
 					);
 				}
@@ -79,46 +79,46 @@ module.exports = [
 				name: 'skips not displayed text',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.text('None');
+					navigate('/test.html');
+					text('None');
 				}
 			},
 			{
 				name: 'skips hidden text',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.text('Hidden');
+					navigate('/test.html');
+					text('Hidden');
 				}
 			},
 			{
 				name: 'checks input value',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.text('Value');
-					page.text('42');
+					navigate('/test.html');
+					text('Value');
+					text('42');
 				}
 			},
 			{
-				skip: client.flaws.placeholder,
+				skip: tasty.flaws.placeholder,
 				name: 'checks input placeholder',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.text('Placeholder');
+					navigate('/test.html');
+					text('Placeholder');
 				}
 			},
 			{
-				skip: client.flaws.pseudo,
+				skip: tasty.flaws.pseudo,
 				name: 'checks pseudo-elements',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.text('Before Before');
-					page.text('inner Inner');
-					page.text('after After');
-					page.text('Before Beforeinner Innerafter After');
+					navigate('/test.html');
+					text('Before Before');
+					text('inner Inner');
+					text('after After');
+					text('Before Beforeinner Innerafter After');
 				}
 			},
 			{
@@ -126,9 +126,9 @@ module.exports = [
 				name: 'skips password',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					queue(
-						() => expect(queue.page.text('Secret'))
+					navigate('/test.html');
+					now(
+						() => expect(now.text('Secret'))
 							.to.be.eventually.rejectedWith(Error)
 					);
 				}
@@ -137,20 +137,20 @@ module.exports = [
 				name: 'works with strict flag',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.text('Value', true);
-					page.text('42', true);
-					page.text('inner Inner', true);
+					navigate('/test.html');
+					text('Value', true);
+					text('42', true);
+					text('inner Inner', true);
 				}
 			},
 			{
 				name: 'works with regexp',
 				time: 1000,
 				body: () => {
-					client.navigate('/test.html');
-					page.text(/Value/);
-					page.text(/^value$/i);
-					page.text(/\d\d/);
+					navigate('/test.html');
+					text(/Value/);
+					text(/^value$/i);
+					text(/\d\d/);
 				}
 			}
 		]

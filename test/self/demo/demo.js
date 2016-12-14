@@ -7,63 +7,63 @@ describe('demo', function() {
 		password = tasty.config.password;
 
 	beforeEach(function() {
-		client.reset(false);
-		client.ready('window', 100);
+		reset(false);
+		ready('window', 100);
 
 		return queue();
 	});
 
 	it('signs user up', function() {
-		client.navigate('/entry.html');
-		page.title('Tasty demo — Signup');
-		page.text('Welcome!');
-		input.click('Username');
-		input.type(username);
-		input.click('Password');
-		input.type(password);
-		input.click('Sign up');
-		client.location('/home.html');
-		page.title('Tasty demo — Home');
-		page.text('Hi, ' + username + '!');
+		navigate('/entry.html');
+		title('Tasty demo — Signup');
+		text('Welcome!');
+		click('Username');
+		type(username);
+		click('Password');
+		type(password);
+		click('Sign up');
+		location('/home.html');
+		title('Tasty demo — Home');
+		text('Hi, ' + username + '!');
 
 		return queue();
 	});
 
 	it('logs user out', function() {
-		client.navigate('/entry.html');
-		input.click('Username');
-		input.type(username);
-		input.click('Password');
-		input.type(password);
-		input.click('Sign up');
-		client.location('/home.html');
-		input.click('Log out');
-		client.location('/entry.html');
-		page.text('Welcome!');
+		navigate('/entry.html');
+		click('Username');
+		type(username);
+		click('Password');
+		type(password);
+		click('Sign up');
+		location('/home.html');
+		click('Log out');
+		location('/entry.html');
+		text('Welcome!');
 
 		return queue();
 	});
 
 	it('remembers user', function() {
-		client.navigate('/entry.html');
-		input.click('Username');
-		input.type(username);
-		input.click('Password');
-		input.type(password);
-		input.click('Remember me');
-		input.click('Sign up');
-		client.location('/home.html');
-		page.text('Hi, ' + username + '!');
-		input.click('Log out');
-		client.location('/entry.html');
-		page.title('Tasty demo — Login');
-		page.text('Welcome back!');
-		page.text(username);
-		input.click('Password');
-		input.type(password);
-		input.click('Log in');
-		client.location('/home.html');
-		page.text('Hi, ' + username + '!');
+		navigate('/entry.html');
+		click('Username');
+		type(username);
+		click('Password');
+		type(password);
+		click('Remember me');
+		click('Sign up');
+		location('/home.html');
+		text('Hi, ' + username + '!');
+		click('Log out');
+		location('/entry.html');
+		title('Tasty demo — Login');
+		text('Welcome back!');
+		text(username);
+		click('Password');
+		type(password);
+		click('Log in');
+		location('/home.html');
+		text('Hi, ' + username + '!');
 
 		return queue();
 	});

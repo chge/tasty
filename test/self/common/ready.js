@@ -2,91 +2,91 @@
 
 module.exports = [
 	{
-		name: 'client.ready',
+		name: 'ready',
 		timeout: 50000,
 		afterEach: () => {
-			client.reset(false);
+			reset(false);
 		},
 		specs: [
 			{
 				name: 'supports delay',
 				time: 500 + 100,
 				body: () => {
-					client.ready('delay', 500);
-					client.navigate('/async.html');
-					page.text('Async');
+					ready('delay', 500);
+					navigate('/async.html');
+					text('Async');
 				}
 			},
 			{
 				name: 'supports document',
 				time: 500 + 100,
 				body: () => {
-					client.ready('document');
-					client.navigate('/async.html');
-					page.text('Test');
-					runner.delay(500);
-					page.text('Async');
+					ready('document');
+					navigate('/async.html');
+					text('Test');
+					delay(500);
+					text('Async');
 				}
 			},
 			{
 				name: 'supports document with delay',
 				time: 500 + 100,
 				body: () => {
-					client.ready('document', 500);
-					client.navigate('/async.html');
-					page.text('Async');
+					ready('document', 500);
+					navigate('/async.html');
+					text('Async');
 				}
 			},
 			{
 				name: 'supports exec',
 				time: 500 + 100,
 				body: () => {
-					client.ready('exec', function(tasty) {
+					ready('exec', function(tasty) {
 						return tasty.thenable(function(resolve) {
 							setTimeout(resolve, 500);
 						});
 					});
-					client.navigate('/async.html');
-					page.text('Async');
+					navigate('/async.html');
+					text('Async');
 				}
 			},
 			{
 				name: 'supports until',
 				time: 500 + 100,
 				body: () => {
-					client.ready('until', function() {
+					ready('until', function() {
 						return document.body.innerHTML.indexOf('Async') !== -1;
 					});
-					client.navigate('/async.html');
-					page.text('Async');
+					navigate('/async.html');
+					text('Async');
 				}
 			},
 			{
 				name: 'supports window',
 				time: 500 + 100,
 				body: () => {
-					client.ready('window');
-					client.navigate('/async.html');
-					page.text('Test');
-					runner.delay(500);
-					page.text('Async');
+					ready('window');
+					navigate('/async.html');
+					text('Test');
+					delay(500);
+					text('Async');
 				}
 			},
 			{
 				name: 'supports window with delay',
 				time: 500 + 100,
 				body: () => {
-					client.ready('window', 500);
-					client.navigate('/async.html');
-					page.text('Async');
+					ready('window', 500);
+					navigate('/async.html');
+					text('Async');
 				}
 			},
 			{
 				skip: !global.chai,
 				name: 'fails on unknown method',
 				body: () => {
-					queue(
-						() => expect(queue.client.ready('unknown'))
+					now(
+						() => expect(now.ready('unknown'))
 							.to.be.eventually.rejectedWith(Error)
 					);
 				}
@@ -94,94 +94,94 @@ module.exports = [
 		]
 	},
 	{
-		name: 'page.ready',
+		name: 'ready',
 		timeout: 5000,
 		specs: [
 			{
 				name: 'supports delay',
 				time: 500 + 100,
 				body: () => {
-					client.navigate('/async.html');
-					page.ready('delay', 500, ['page.text']);
-					page.text('Test');
-					page.ready('delay', 0, ['page.text']); // WORKAROUND: skip delay after last check.
-					page.text('Async');
+					navigate('/async.html');
+					ready('delay', 500, ['text']);
+					text('Test');
+					ready('delay', 0, ['text']); // WORKAROUND: skip delay after last check.
+					text('Async');
 				}
 			},
 			{
 				name: 'supports document',
 				time: 500 + 100,
 				body: () => {
-					client.navigate('/async.html');
-					page.ready('document');
-					page.text('Test');
-					runner.delay(500);
-					page.text('Async');
+					navigate('/async.html');
+					ready('document');
+					text('Test');
+					delay(500);
+					text('Async');
 				}
 			},
 			{
 				name: 'supports document with delay',
 				time: 500 + 100,
 				body: () => {
-					client.navigate('/async.html');
-					page.ready('document', 500);
-					page.text('Async');
+					navigate('/async.html');
+					ready('document', 500);
+					text('Async');
 				}
 			},
 			{
 				name: 'supports exec',
 				time: 500 + 100,
 				body: () => {
-					client.navigate('/async.html');
-					page.ready('exec', function(tasty) {
+					navigate('/async.html');
+					ready('exec', function(tasty) {
 						return tasty.thenable(function(resolve) {
 							setTimeout(resolve, 500);
 						});
-					}, ['page.text']);
-					page.text('Test');
-					page.ready('delay', 0, ['page.text']); // WORKAROUND: skip delay after last check.
-					page.text('Async');
+					}, ['text']);
+					text('Test');
+					ready('delay', 0, ['text']); // WORKAROUND: skip delay after last check.
+					text('Async');
 				}
 			},
 			{
 				name: 'supports until',
 				time: 500 + 100,
 				body: () => {
-					client.navigate('/async.html');
-					page.ready('until', function() {
+					navigate('/async.html');
+					ready('until', function() {
 						return document.body.innerHTML.indexOf('Async') !== -1;
-					}, ['page.text']);
-					page.text('Test');
-					page.ready('delay', 0, ['page.text']); // WORKAROUND: skip delay after last check.
-					page.text('Async');
+					}, ['text']);
+					text('Test');
+					ready('delay', 0, ['text']); // WORKAROUND: skip delay after last check.
+					text('Async');
 				}
 			},
 			{
 				name: 'supports window',
 				time: 500 + 100,
 				body: () => {
-					client.navigate('/async.html');
-					page.ready('window');
-					page.text('Test');
-					runner.delay(500);
-					page.text('Async');
+					navigate('/async.html');
+					ready('window');
+					text('Test');
+					delay(500);
+					text('Async');
 				}
 			},
 			{
 				name: 'supports window with delay',
 				time: 500 + 100,
 				body: () => {
-					client.navigate('/async.html');
-					page.ready('window', 500);
-					page.text('Async');
+					navigate('/async.html');
+					ready('window', 500);
+					text('Async');
 				}
 			},
 			{
 				skip: !global.chai,
 				name: 'fails on unknown method',
 				body: () => {
-					queue(
-						() => expect(queue.page.ready('unknown'))
+					now(
+						() => expect(now.ready('unknown'))
 							.to.be.eventually.rejectedWith(Error)
 					);
 				}

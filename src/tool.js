@@ -90,20 +90,18 @@ function hook(result, key, args) {
 	return thenable(result);
 }
 
-// NOTE client.
-
-tool('client.breakpoint', () => {
+tool('breakpoint', () => {
 	debugger; // eslint-disable-line no-debugger
 });
 
-tool('client.go', (value) => {
+tool('history', (value) => {
 	return thenable(() => {
 		// NOTE never resolve.
 		window.history.go(value);
 	});
 });
 
-tool('client.location', function(what) {
+tool('location', function(what) {
 	if (!arguments.length) {
 		return window.location.pathname;
 	}
@@ -122,7 +120,7 @@ tool('client.location', function(what) {
 	}
 });
 
-tool('client.navigate', (url) => {
+tool('navigate', (url) => {
 	// TODO allow to skip navigation if url already matches.
 	return thenable(() => {
 		// NOTE never resolve.
@@ -131,7 +129,7 @@ tool('client.navigate', (url) => {
 	});
 });
 
-tool('client.reload', () => {
+tool('reload', () => {
 	return thenable(() => {
 		// NOTE never resolve.
 		// TODO close socket first.
@@ -139,7 +137,7 @@ tool('client.reload', () => {
 	});
 });
 
-tool('client.reset', (url) => {
+tool('reset', (url) => {
 	// NOTE session is restored in window.unload;
 	const done = () => {
 		if (typeof url === 'string') {
@@ -190,7 +188,7 @@ tool('client.reset', (url) => {
 
 // NOTE input.
 
-tool('input.clear', (count) => {
+tool('clear', (count) => {
 	const target = document.activeElement;
 	if (!('value' in target)) {
 		throw reason('cannot clear active node', target);
@@ -233,7 +231,7 @@ tool('input.clear', (count) => {
 	});
 });
 
-tool('input.click', (what, selector, strict) => {
+tool('click', (what, selector, strict) => {
 	// TODO validate args.
 	dom.click(
 		findNode(what, selector, strict),
@@ -241,7 +239,7 @@ tool('input.click', (what, selector, strict) => {
 	);
 });
 
-tool('input.dblclick', (what, selector, strict) => {
+tool('dblclick', (what, selector, strict) => {
 	// TODO validate args.
 	dom.dblclick(
 		findNode(what, selector, strict),
@@ -249,14 +247,14 @@ tool('input.dblclick', (what, selector, strict) => {
 	);
 });
 
-tool('input.hover', (what, selector, strict) => {
+tool('hover', (what, selector, strict) => {
 	// TODO validate args.
 	dom.hover(
 		findNode(what, selector, strict)
 	);
 });
 
-tool('input.paste', (text) => {
+tool('paste', (text) => {
 	const target = document.activeElement;
 	if (!('value' in target)) {
 		throw reason('cannot paste into active node', target);
@@ -283,7 +281,7 @@ tool('input.paste', (text) => {
 		dom.trigger(target, 'Event', 'change', {cancellable: false});
 });
 
-tool('input.type', (text) => {
+tool('type', (text) => {
 	const target = document.activeElement;
 	if (!('value' in target)) {
 		throw reason('cannot type into active node', target);
@@ -324,15 +322,13 @@ tool('input.type', (text) => {
 	});
 });
 
-// NOTE page.
-
 // eslint-disable-next-line no-unused-vars
-tool('page.font', (family, selector) => {
+tool('font', (family, selector) => {
 	// TODO window.getComputedStyle(selector).fontFamily, document.fonts.keys()
 	throw reason('not implemented yet, sorry');
 });
 
-tool('page.loaded', (src) => {
+tool('loaded', (src) => {
 	if (!src) {
 		return document.readyState === 'complete';
 	}
@@ -391,7 +387,7 @@ tool('page.loaded', (src) => {
 	throw reason('resource', src, 'not found');
 });
 
-tool('page.text', (what, selector, strict) => {
+tool('text', (what, selector, strict) => {
 	// TODO validate all args.
 	if (typeof strict === 'undefined' && typeof selector !== 'string') {
 		strict = selector;
@@ -401,7 +397,7 @@ tool('page.text', (what, selector, strict) => {
 	findNode(what, selector, strict === true, false);
 });
 
-tool('page.title', (what) => {
+tool('title', (what) => {
 	// TODO validate args.
 	what = what instanceof RegExp ?
 		what :

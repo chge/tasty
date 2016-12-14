@@ -65,15 +65,15 @@ Try not to use knowledge of your application's markup, assume you're helping a r
 <p>Write a test (this one uses <a href="https://mochajs.org/">Mocha</a>).</p>
 <pre><code class="lang-javascript">describe('login form', function() {
     it('logs user in', function() {
-        page.text('Welcome!');
-        input.click('Username');
-        input.type(tasty.config.username);
-        input.click('Password');
-        input.type(tasty.config.password);
-        input.click('Log in');
-        client.location('/dashboard');
+        text('Welcome!');
+        click('Username');
+        type(tasty.config.username);
+        click('Password');
+        type(tasty.config.password);
+        click('Log in');
+        location('/dashboard');
 
-        return queue();
+        return now();
     });
 });
 </code></pre>
@@ -118,56 +118,65 @@ To use one of them, you have to add the following directive:</p>
 <p><a href="https://saucelabs.com/u/tasty"><img src="https://saucelabs.com/browser-matrix/tasty.svg" alt="browser support"></a></p>
 <h1 id="known-issues">Known issues</h1>
 <hr />
+<h3 id="sandbox">Sandbox</h3>
 <p>Tasty client runs inside JavaScript sandbox, so it simply can't emulate <em>real</em> interaction,
 as <a href="https://developer.chrome.com/devtools/docs/debugger-protocol">debugging</a> <a href="https://wiki.mozilla.org/Remote_Debugging_Protocol">protocols</a> or <a href="https://www.w3.org/TR/webdriver/">WebDriver</a> can.</p>
-<p>Also, currently Tasty can't find text <code>+1 123 456-78-90</code> in the following case or similar:</p>
+<h3 id="highly-fragmented-text">Highly fragmented text</h3>
+<p>Currently Tasty can't find text <code>+1 123 456-78-90</code> in the following case:</p>
 <pre><code class="lang-html">+1 &lt;input type="tel" placeholder="123 456-78-90" /&gt;
 </code></pre>
 <p>In other words, it's too hard to join text fragments of <code>textContent</code>, <code>value/placeholder</code>, <code>:before/:after</code> etc.</p>
+<h3 id="auto-focus-elements">Auto-focus elements</h3>
+<p>When using auto-focus elements (such as <code>input</code>), you could encounter <code>cannot type into active node &lt;body /&gt;</code> error when window loses its focus, which causes <code>type</code> and <code>paste</code> tools to fail.</p>
+<p>If you don't want to focus such elements explicitly (using <code>click</code> or something else), make sure that client window remain focused during tests.
+For WebDriver clients you could <a href="https://www.w3.org/TR/webdriver/#maximize-window">maximize window</a> or use <a href="http://stackoverflow.com/a/19170779"><code>alert()</code> workaround</a> to focus reliably.</p>
+<p>Additionally, <a href="https://developer.chrome.com/devtools">Chrome DevTools</a> could force current tab to lose focus, with the same results.</p>
 <h1 id="tools">Tools</h1>
 <hr />
 <h3 id="queue">Queue</h3>
-<p>Each tool adds corresponding action to the runner queue instead of performing that action immediately. This allows to write tests in synchronous manner.</p>
-<pre><code class="lang-javascript">input.click('Name');
-input.type('John Doe');
-input.click('Save');
+<p>Each tool adds corresponding action to the runner queue instead of performing that action immediately.
+This allows to write tests in synchronous manner.</p>
+<pre><code class="lang-javascript">click('Name');
+type('John Doe');
+click('Save');
 </code></pre>
-<p>Queue is executed after <code>queue()</code> call without arguments, which returns <code>Promise</code> instance.</p>
+<p>Queue is executed after <code>now()</code> call without arguments, which returns <code>Promise</code> instance.</p>
 <pre><code class="lang-javascript">it('does something', function() {
     ...
-    return queue();
+    return now();
 });
 </code></pre>
 <p>Your testing framework may prefer callback for async tests.</p>
 <pre><code class="lang-javascript">it('works', function(done) {
     ...
-    queue().then(done, done.fail);
+    now().then(done, done.fail);
 });
 </code></pre>
 <h3 id="ready-state">Ready state</h3>
 <p>For testing SPA (or rich MPA) you can provide a method for Tasty to ensure that client is ready for the next action.</p>
-<p>Note that built-in methods cannot be combined. Call <code>client.ready(...)</code> to register persistent method or use <code>page.ready(...)</code> for temporary methods.</p>
 <p>The simpliest way is to just wait after using some tools.</p>
-<pre><code class="lang-javascript">client.ready('delay', 1000);
+<pre><code class="lang-javascript">ready('delay', 1000);
 </code></pre>
 <p>You may override the list of tools to wait after.</p>
-<pre><code class="lang-javascript">client.ready('delay', 1000, [
-    'input.click'
+<pre><code class="lang-javascript">ready('delay', 1000, [
+    'click'
 ]);
 </code></pre>
 <p>You always can manually add a delay into queue.</p>
-<pre><code class="lang-javascript">runner.delay(1000);
+<pre><code class="lang-javascript">delay(1000);
 </code></pre>
 <p>There could be enough to just check if DOM is ready...</p>
-<pre><code class="lang-javascript">client.ready('document'); // 'DOMContentLoaded' aka 'interactive' readyState
-client.ready('window'); // 'load' aka 'complete' readyState
+<pre><code class="lang-javascript">ready('document'); // 'DOMContentLoaded' aka 'interactive' readyState
+</code></pre>
+<pre><code class="lang-javascript">ready('window'); // 'load' aka 'complete' readyState
 </code></pre>
 <p>...and maybe wait a little bit.</p>
-<pre><code class="lang-javascript">client.ready('document', 500);
-client.ready('window', 500);
+<pre><code class="lang-javascript">ready('document', 500);
+</code></pre>
+<pre><code class="lang-javascript">ready('window', 500);
 </code></pre>
 <p>Another way is to provide some application-specific code.</p>
-<pre><code class="lang-javascript">client.ready(
+<pre><code class="lang-javascript">ready(
     'until',
     // This function is executed on client, test will continue when it will return true.
     function() {
@@ -176,7 +185,7 @@ client.ready('window', 500);
     [...]
 );
 </code></pre>
-<pre><code class="lang-javascript">client.ready(
+<pre><code class="lang-javascript">ready(
     'exec',
     // This function is executed on client, test will continue when promise will be resolved.
     function(tasty) {
@@ -190,86 +199,87 @@ client.ready('window', 500);
     [...]
 );
 </code></pre>
+<p>Note that built-in methods cannot be combined.</p>
 <h3 id="data-from-client">Data from client</h3>
 <p>Some tools could be called without arguments to get data from client.</p>
 <pre><code class="lang-javascript">it('reads', function() {
-    page.text(
-        page.title(),
+    text(
+        title(),
         'h1'
     );
 
-    return queue();
+    return now();
 });
 </code></pre>
 <pre><code class="lang-javascript">it('remembers', function() {
-    runner.push(
-        page.read('h1')
+    push(
+        read('h1')
     );
-    input.click('Edit');
-    input.click('Save');
-    page.text(
-        runner.pop(),
+    click('Edit');
+    click('Save');
+    text(
+        pop(),
         'h1'
     );
 
-    return queue();
+    return now();
 });
 </code></pre>
 <pre><code class="lang-javascript">it('remembers', function() {
-    runner.set(
+    set(
         'title',
-        page.read('h1')
+        read('h1')
     );
-    runner.set(
+    set(
         'subtitle',
-        page.read('h2')
+        read('h2')
     );
-    input.click('Edit');
-    input.click('Title');
-    input.type('blah');
-    input.click('Save');
-    page.text(
-        runner.get('title')
+    click('Edit');
+    click('Title');
+    type('blah');
+    click('Save');
+    text(
+        get('title')
             .then(
                 (value) =&gt; value + 'blah'
             ),
         'h1'
     );
-    page.text(
-        runner.get('subtitle'),
+    text(
+        get('subtitle'),
         'h2'
     );
 
-    return queue();
+    return now();
 });
 </code></pre>
 <h3 id="custom-logic">Custom logic</h3>
-<p>The <code>queue(...)</code> call with function(s) allows you to add some custom logic into test, but you should use <code>queue.*</code> namespace for tools.</p>
+<p>The <code>now(...)</code> call with function(s) allows you to add some custom logic into test, but you should use <code>now.*</code> namespace for tools.</p>
 <pre><code class="lang-javascript">it('chooses', function() {
-    queue(
-        () =&gt; queue.page.text('Welcome back')
+    now(
+        () =&gt; now.text('Welcome back')
             .then(
-                () =&gt; queue.input.click('Log in'),
-                () =&gt; queue.input.click('Sign up')
+                () =&gt; now.click('Log in'),
+                () =&gt; now.click('Sign up')
             )
     );
 
-    return queue();
+    return now();
 });
 </code></pre>
-<p>The <code>queue.namespace.tool</code> is the same as <code>namespace.tool</code>, but runs immediately. You should use <code>queue.*</code> tools only inside <code>queue(...)</code> call if you don't want to break execution order.</p>
+<p>The <code>now.smth()</code> is the same as just <code>smth()</code>, but runs immediately. You should use <code>now.*</code> tools only inside <code>now(...)</code> call if you don't want to break execution order.</p>
 <pre><code class="lang-javascript">it('searches', function() {
-    runner.until(
-        queue(
-            () =&gt; queue.page.text('Chapter 42', 'h1')
+    until(
+        now(
+            () =&gt; now.text('Chapter 42', 'h1')
                 .catch(
-                    () =&gt; queue.input.click('Next')
+                    () =&gt; now.click('Next')
                 )
         )
     );
-    input.click('Bookmark');
+    click('Bookmark');
 
-    return queue();
+    return now();
 });
 </code></pre>
 <h1 id="api-reference">API reference</h1>
@@ -290,7 +300,7 @@ client.ready('window', 500);
 <h3 id="-re-captcha">(re)CAPTCHA</h3>
 <p>Use <a href="https://developers.google.com/recaptcha/docs/faq">reCAPTCHA testing <code>sitekey</code> and <code>secret</code></a> for testing environment.</p>
 <p>Instead of trying to click on iframed content, simply fake reCAPTCHA response with some suitable string, e.g.</p>
-<pre><code class="lang-javascript">client.exec(function() {
+<pre><code class="lang-javascript">exec(function() {
     document.querySelector('[name="g-recaptcha-response"]').value = '03AHJ_VuvHyNQjrLnMZ6eGbmdDZQ3Qma4CBrMSWSOzTcqB8rdl3tbIN1gzAWkB4jPi1qCE-aEw-hx7ns9DuzwNe7bW4E5rCc23SDFs9fQJGqAM27AeNKeg0q6ByJEC3ig3ydkrEzwVd56fi1oyDTVAvwpGCTtg8rjBRYqwn7qDnCp8Fw6Iq6h5vQKc7KtX4mW33QUL8Y5HzJReMDqZio8Rf6zmyqGGcOurvo6Gw4_exJfwcnK0CcnQUpbjlr3-9Mm-1fKeUq_q6s6plM7-2Rc2WNgYdguvp6yxZyyxr5IUKZk1eCvwgxu97zdbM3bPjfuuccrvie4LTGjasRYobPF51H5TbSm3-FacdHJ5usgMSjII6Cba7IaH4NQDPJqyO7ltWH1uPPRybuJmJk1AWALebHTiM-4loixaiI-47JCrBUeJGPPR9A8Q1UfduaZmzP0CrDj5YfFbVzHncDh4ac_KghXgehxbEQ2eD2Qwo18wlc87U-aQQqJLBkvlRUABHDGeWcyRvEzTPnpXfsmbK7Y2WlU4_zbCqtVAdR-pmp3MALqA-njyDtRZmtHsvsVVGvtVXy9UMlGRc4YwmvSyxg0fRegX13K7lMfnY9qqoNV23ZtB3fiQTUwjZnAe0F3KKArRTAt4XFjOJKIaz6-8TxHtqcPfejehTpkOJ0M7cDB3wi9_7BxNu758D6CfqgAXGKqH-kV42K6SJ69S50Lhl3t1l7rEWXmJi5vCEvQ2yHReL1XGtNygpt-WM0qlDiGswUITnUSire2c0JU84vTQCQ3AFZLWXX3eypwRHmyWXvUQAho9LqHZuV_qXoyiyK0SbCZW6lSW4CucElsy5XOpNAFCTgxtY4gTZgnR9uB_JHCjF69ibMeQeUPGNWahECJiRp49TpZi928wvGY_';
 });
 </code></pre>
@@ -302,7 +312,8 @@ client.ready('window', 500);
 </ul>
 <p>For other CAPTCHA implementations, get answers from backdoor.</p>
 <h3 id="ssl-tls">SSL/TLS</h3>
-<p>Use <a href="https://letsencrypt.org/">Let's encrypt</a> or self-signed certificates.</p>
+<p>Do not use production certificates with Tasty: server is not intended to be accessible from external networks.</p>
+<p>Use <a href="https://letsencrypt.org/">Let's encrypt</a>, self-signed non-CA certificates or set up your own CA.</p>
 <h1 id="building">Building</h1>
 <hr />
 <pre><code class="lang-shell">npm run prepublish
