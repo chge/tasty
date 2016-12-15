@@ -65,13 +65,13 @@ Try not to use knowledge of your application's markup, assume you're helping a r
 <p>Write a test (this one uses <a href="https://mochajs.org/">Mocha</a>).</p>
 <pre><code class="lang-javascript">describe('login form', function() {
     it('logs user in', function() {
-        text('Welcome!');
-        click('Username');
+        is(text('Welcome!'));
+        click(text('Username'));
         type(tasty.config.username);
-        click('Password');
+        click(text('Password'));
         type(tasty.config.password);
-        click('Log in');
-        location('/dashboard');
+        click(text('Log in'));
+        is(location('/dashboard'));
 
         return now();
     });
@@ -110,7 +110,8 @@ script-src localhost:8765/path/*.js
 </code></pre><p>Unfortunately, both <a href="https://gotwarlost.github.io/istanbul">Istanbul</a> and <a href="https://istanbul.js.org/">NYC</a> instrumenters use <code>new Function()</code> to get top-level scope.
 To use one of them, you have to add the following directive:</p>
 <pre><code>script-src 'unsafe-eval'
-</code></pre><p>Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.</p>
+</code></pre><p>Tasty's static server automatically injects that directive into HTML files when <code>--coverage &lt;name&gt;</code> flag is used.</p>
+<p>Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.</p>
 <p>Check out a <a href="https://report-uri.io/home/generate">great tool</a> for generating and validating CSP directives.</p>
 <h1 id="browser-support">Browser support</h1>
 <hr />
@@ -126,11 +127,18 @@ as <a href="https://developer.chrome.com/devtools/docs/debugger-protocol">debugg
 <pre><code class="lang-html">+1 &lt;input type="tel" placeholder="123 456-78-90" /&gt;
 </code></pre>
 <p>In other words, it's too hard to join text fragments of <code>textContent</code>, <code>value/placeholder</code>, <code>:before/:after</code> etc.</p>
+<h3 id="images">Images</h3>
+<p>Work is in progress.</p>
+<p>Search cannot detect text from <code>alt</code> attribute yet.</p>
 <h3 id="auto-focus-elements">Auto-focus elements</h3>
 <p>When using auto-focus elements (such as <code>input</code>), you could encounter <code>cannot type into active node &lt;body /&gt;</code> error when window loses its focus, which causes <code>type</code> and <code>paste</code> tools to fail.</p>
 <p>If you don't want to focus such elements explicitly (using <code>click</code> or something else), make sure that client window remain focused during tests.
 For WebDriver clients you could <a href="https://www.w3.org/TR/webdriver/#maximize-window">maximize window</a> or use <a href="http://stackoverflow.com/a/19170779"><code>alert()</code> workaround</a> to focus reliably.</p>
 <p>Additionally, <a href="https://developer.chrome.com/devtools">Chrome DevTools</a> could force current tab to lose focus, with the same results.</p>
+<h3 id="shadow-dom">Shadow DOM</h3>
+<p>Not supported yet.</p>
+<h3 id="browser-ui">Browser UI</h3>
+<p>Some elements of browser itself, such as tooltips from <code>title</code> attribute or HTML5 Form validation messages, could be potentially detected, but currently aren't supported.</p>
 <h1 id="tools">Tools</h1>
 <hr />
 <h3 id="queue">Queue</h3>
@@ -200,64 +208,11 @@ click('Save');
 );
 </code></pre>
 <p>Note that built-in methods cannot be combined.</p>
-<h3 id="data-from-client">Data from client</h3>
-<p>Some tools could be called without arguments to get data from client.</p>
-<pre><code class="lang-javascript">it('reads', function() {
-    text(
-        title(),
-        'h1'
-    );
-
-    return now();
-});
-</code></pre>
-<pre><code class="lang-javascript">it('remembers', function() {
-    push(
-        read('h1')
-    );
-    click('Edit');
-    click('Save');
-    text(
-        pop(),
-        'h1'
-    );
-
-    return now();
-});
-</code></pre>
-<pre><code class="lang-javascript">it('remembers', function() {
-    set(
-        'title',
-        read('h1')
-    );
-    set(
-        'subtitle',
-        read('h2')
-    );
-    click('Edit');
-    click('Title');
-    type('blah');
-    click('Save');
-    text(
-        get('title')
-            .then(
-                (value) =&gt; value + 'blah'
-            ),
-        'h1'
-    );
-    text(
-        get('subtitle'),
-        'h2'
-    );
-
-    return now();
-});
-</code></pre>
 <h3 id="custom-logic">Custom logic</h3>
 <p>The <code>now(...)</code> call with function(s) allows you to add some custom logic into test, but you should use <code>now.*</code> namespace for tools.</p>
 <pre><code class="lang-javascript">it('chooses', function() {
     now(
-        () =&gt; now.text('Welcome back')
+        () =&gt; now.is(text('Welcome back'))
             .then(
                 () =&gt; now.click('Log in'),
                 () =&gt; now.click('Sign up')
@@ -271,7 +226,7 @@ click('Save');
 <pre><code class="lang-javascript">it('searches', function() {
     until(
         now(
-            () =&gt; now.text('Chapter 42', 'h1')
+            () =&gt; now.is(text('Chapter 42', 'h1'))
                 .catch(
                     () =&gt; now.click('Next')
                 )
@@ -322,9 +277,11 @@ click('Save');
 <hr />
 <pre><code class="lang-shell">npm test
 </code></pre>
-<p>Main tests use <a href="https://slimerjs.org/">SlimerJS</a> which requires <a href="https://www.mozilla.org/firefox">Firefox</a> to be installed.</p>
-<p>Real-browser support tests are automated for <a href="https://saucelabs.com/">SauceLabs</a> environment
-and require <code>TRAVIS_JOB_NUMBER</code>, <code>SAUCE_USERNAME</code> and <code>SAUCE_ACCESS_KEY</code> environment variables,
+<p>Main tests use <a href="https://slimerjs.org/">SlimerJS</a> and <a href="http://phantomjs.org/">PhantomJS</a>. SlimerJS itself requires <a href="https://www.mozilla.org/firefox">Firefox</a> to be installed. PhantomJS suite requires <code>phantomjs</code> to be available via command prompt.</p>
+<h3 id="browser-support">Browser support</h3>
+<pre><code class="lang-shell">npm run support
+</code></pre>
+<p>Real-browser support tests are made possible by <a href="https://saucelabs.com/">SauceLabs</a>. Automation requires <code>SAUCE_USERNAME</code> and <code>SAUCE_ACCESS_KEY</code> environment variables,
 which are kindly provided by <a href="https://docs.travis-ci.com/user/sauce-connect">TravisCI</a>.</p>
 <h1 id="windows">Windows</h1>
 <hr />

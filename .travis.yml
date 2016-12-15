@@ -1,50 +1,127 @@
+dist: trusty
+sudo: false
+
 language: node_js
 
-node_js:
-  - "node"
-  - "7.0"
-  - "6.9"
-  - "6.8"
-  - "6.7"
-  - "6.6"
-  - "6.5"
-  - "6.4"
-  - "6.3"
-  - "6.2"
-  - "6.1"
-  - "6.0"
-  - "5.12"
-  - "5.11"
-  - "5.10"
-  - "5.9"
-  - "5.8"
-  - "5.7"
-  - "5.6"
-  - "5.5"
-  - "5.4"
-  - "5.3"
-  - "5.2"
-  - "5.1"
-  - "5.0"
-  - "4.6"
-  - "4.5"
-  - "4.4"
-  - "4.3"
-
-addons:
-  firefox: "latest"
-  sauce_connect:
-    username: "tasty"
-    direct_domains: all
-    no_ssl_bump_domains: all
-    tunnel_domains: localhost
-  jwt:
-    secure: "aXO1EoblOPDTFdmCwAnhA6kvUu53Ra26fVtyKRTLhdkKIVJ4XOEXundiSGESff7FgM7kGkQkGiP4peK7Dvqe7ED/C3+wR8py1dLMvzn8rFzWqIyvGhIU1rsn5jNebAbnj+8KECmRM9ioRRCZhWG0emkHhlcrlt1JHB5Hg8V5WA6J/2bM9h+GShyD5kgJ+KYaoWs4gRZWDOuTNfWW2+P7mW4AsRpfGLLhfcPav2yDauCNEu6JYS77SKrcDY9pamL49NHEXs7D+I/x6Lg1Dl2TkNnZtCK9czwJp6dPq+Yb8f2TX3sJlPFiGsUcnh9igqWKaDNZ7UsFk2JCxXLXD6Lx2c1JNEx7SzHkw70kWHZfyqCnzPMVpTBL1xSTpzCMIr0x0arKYU08ezU/vb/L7ntfPum3BtxaOiDPZEMSKQhwpuvYDSOUpOWy2JbQ+VTFP91371OnTa4Q88qaZ16o4B6ZAccjz23oELYeBJtop5qpedWKt/8fsFYNZSmFL/pva6kbblfKx9dLLc/FHUgKsuFONCogUxu7VSbZyh8MFhKrxNTqT7ORHg/1Ef/rkNnZ+Eyfo7Qx9BkG1gm7xZ3bm2e46yWx3aAb6D36xLzVwRGdG+j5bGCTVszJdFoyShah7+ndzWif3PQLXp0lUCwd6f8hiJVL3DeLPoDgRZJkay4ohBw="
-
-before_script:
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - "sleep 3" # give xvfb some time to start
+matrix:
+  fast_finish: true
+  include:
+    - node_js: "node"
+      addons: &firefox
+        firefox: "52.0"
+      script: &test
+        - phantomjs --version
+        - export DISPLAY=:99.0 && sh -e /etc/init.d/xvfb start && sleep 3
+        - npm test
+    - { node_js: "7.10", addons: *firefox, script: *test }
+    - { node_js: "7.9", addons: *firefox, script: *test }
+    - { node_js: "7.1", addons: *firefox, script: *test }
+    - { node_js: "7.0", addons: *firefox, script: *test }
+    - { node_js: "6.10", addons: *firefox, script: *test }
+    - { node_js: "6.9", addons: *firefox, script: *test }
+    - { node_js: "6.1", addons: *firefox, script: *test }
+    - { node_js: "6.0", addons: *firefox, script: *test }
+    - { node_js: "5.12", addons: *firefox, script: *test }
+    - { node_js: "5.11", addons: *firefox, script: *test }
+    - { node_js: "5.1", addons: *firefox, script: *test }
+    - { node_js: "5.0", addons: *firefox, script: *test }
+    - { node_js: "4.8", addons: *firefox, script: *test }
+    - { node_js: "4.7", addons: *firefox, script: *test }
+    - { node_js: "4.4", addons: *firefox, script: *test }
+    - { node_js: "4.3", addons: *firefox, script: *test }
+    - node_js: "node"
+      addons: &sauce
+        jwt:
+          secure: xKrWkJu58y5lmkZzpPr5bGt0TAkFo2053Pw4BPU9x8vAFINGeUAvj8VEIyQn5MMstntG1xO96ih/WAq0OhHCxwZgWLpUNxmzC1kJC93eyMHIlxttPL90lQIBOTtGzGLTkQe3HuGRwDmXZPehURkElPwWPUvPVyQHgyxLX78T2/ktBkElm/wp7MTSe2j0Adzo4Wt3Aga3WzTRde9gW5IH+/U/JXtpj247/AQCvMH2wmQSRP2XqrqAPF1y6jA3CECiTLpX0zVPnup62/S3QL5WTQspB37E7qNutruewlItxqy+vWJ40zredXIiZKDoXq6IA6h8SYktzXNPGMo/5fBP1gEEBKkgPG0A6vT/CaUvSyShx3zwMMT8WnPNyOVpNDxXw2JAP3ru9kj717cJxswIWvzLfc+MEX5kdOwHtB/zTz3xBYbgpjJ/SbJ3l0XdVQ5owxU1OCBVgwarYFXRFpORctGtE9BIgns5r8ukmQCvZGGG3UUCQxiOKwdIYZh1YZ4JJpvdQMHs0RESoRSWQoQiwWwfkbseCC7uSROtojgQp05x6qUHPA4VdoN9MGx+PDLItlhb/VB7T6YuVPPnkB2a6rfrw3XC7eZidCgXK9mKG2k4cnfPQ9KfaS5zefo39ghgFAsKc1xbPk/ldGfKVoNkNTSTLA0gYnLn5o2ALJJS8u4=
+        sauce_connect:
+          username: tasty
+          direct_domains: all
+          no_ssl_bump_domains: all
+          tunnel_domains: localhost
+      script: &support
+        - npm run support
+    - { node_js: "node", addons: *sauce, script: *support }
+    - { node_js: "7.10.0", addons: *sauce, script: *support }
+    - { node_js: "7.10.0", addons: *sauce, script: *support }
+    - { node_js: "7.9.0", addons: *sauce, script: *support }
+    - { node_js: "7.9.0", addons: *sauce, script: *support }
+    - { node_js: "7.8.0", addons: *sauce, script: *support }
+    - { node_js: "7.8.0", addons: *sauce, script: *support }
+    - { node_js: "7.7.4", addons: *sauce, script: *support }
+    - { node_js: "7.7.4", addons: *sauce, script: *support }
+    - { node_js: "7.7.3", addons: *sauce, script: *support }
+    - { node_js: "7.7.3", addons: *sauce, script: *support }
+    - { node_js: "7.7.2", addons: *sauce, script: *support }
+    - { node_js: "7.7.2", addons: *sauce, script: *support }
+    - { node_js: "7.7.1", addons: *sauce, script: *support }
+    - { node_js: "7.7.1", addons: *sauce, script: *support }
+    - { node_js: "7.7.0", addons: *sauce, script: *support }
+    - { node_js: "7.7.0", addons: *sauce, script: *support }
+    - { node_js: "7.6.0", addons: *sauce, script: *support }
+    - { node_js: "7.6.0", addons: *sauce, script: *support }
+    - { node_js: "7.5.0", addons: *sauce, script: *support }
+    - { node_js: "7.5.0", addons: *sauce, script: *support }
+    - { node_js: "7.4.0", addons: *sauce, script: *support }
+    - { node_js: "7.4.0", addons: *sauce, script: *support }
+    - { node_js: "7.3.0", addons: *sauce, script: *support }
+    - { node_js: "7.3.0", addons: *sauce, script: *support }
+    - { node_js: "7.2.1", addons: *sauce, script: *support }
+    - { node_js: "7.2.1", addons: *sauce, script: *support }
+    - { node_js: "7.2.0", addons: *sauce, script: *support }
+    - { node_js: "7.2.0", addons: *sauce, script: *support }
+    - { node_js: "7.1.0", addons: *sauce, script: *support }
+    - { node_js: "7.1.0", addons: *sauce, script: *support }
+    - { node_js: "7.0.0", addons: *sauce, script: *support }
+    - { node_js: "7.0.0", addons: *sauce, script: *support }
+    - { node_js: "6.10.3", addons: *sauce, script: *support }
+    - { node_js: "6.10.3", addons: *sauce, script: *support }
+    - { node_js: "6.10.2", addons: *sauce, script: *support }
+    - { node_js: "6.10.2", addons: *sauce, script: *support }
+    - { node_js: "6.10.1", addons: *sauce, script: *support }
+    - { node_js: "6.10.1", addons: *sauce, script: *support }
+    - { node_js: "6.10.0", addons: *sauce, script: *support }
+    - { node_js: "6.10.0", addons: *sauce, script: *support }
+    - { node_js: "6.9.5", addons: *sauce, script: *support }
+    - { node_js: "6.9.5", addons: *sauce, script: *support }
+    - { node_js: "6.9.4", addons: *sauce, script: *support }
+    - { node_js: "6.9.4", addons: *sauce, script: *support }
+    - { node_js: "6.9.3", addons: *sauce, script: *support }
+    - { node_js: "6.9.3", addons: *sauce, script: *support }
+    - { node_js: "6.9.2", addons: *sauce, script: *support }
+    - { node_js: "6.9.2", addons: *sauce, script: *support }
+    - { node_js: "6.9.1", addons: *sauce, script: *support }
+    - { node_js: "6.9.1", addons: *sauce, script: *support }
+    - { node_js: "6.9.0", addons: *sauce, script: *support }
+    - { node_js: "6.9.0", addons: *sauce, script: *support }
+    - { node_js: "6.8.1", addons: *sauce, script: *support }
+    - { node_js: "6.8.1", addons: *sauce, script: *support }
+    - { node_js: "6.8.0", addons: *sauce, script: *support }
+    - { node_js: "6.8.0", addons: *sauce, script: *support }
+    - { node_js: "6.7.0", addons: *sauce, script: *support }
+    - { node_js: "6.7.0", addons: *sauce, script: *support }
+    - { node_js: "6.6.0", addons: *sauce, script: *support }
+    - { node_js: "6.6.0", addons: *sauce, script: *support }
+    - { node_js: "6.5.0", addons: *sauce, script: *support }
+    - { node_js: "6.5.0", addons: *sauce, script: *support }
+    - { node_js: "6.4.0", addons: *sauce, script: *support }
+    - { node_js: "6.4.0", addons: *sauce, script: *support }
+    - { node_js: "6.3.1", addons: *sauce, script: *support }
+    - { node_js: "6.3.1", addons: *sauce, script: *support }
+    - { node_js: "6.3.0", addons: *sauce, script: *support }
+    - { node_js: "6.3.0", addons: *sauce, script: *support }
+    - { node_js: "6.2.2", addons: *sauce, script: *support }
+    - { node_js: "6.2.2", addons: *sauce, script: *support }
+    - { node_js: "6.2.1", addons: *sauce, script: *support }
+    - { node_js: "6.2.1", addons: *sauce, script: *support }
+    - { node_js: "6.2.0", addons: *sauce, script: *support }
+    - { node_js: "6.2.0", addons: *sauce, script: *support }
+    - { node_js: "6.1.0", addons: *sauce, script: *support }
+    - { node_js: "6.1.0", addons: *sauce, script: *support }
+    - { node_js: "6.0.0", addons: *sauce, script: *support }
+    - { node_js: "6.0.0", addons: *sauce, script: *support }
+    # selenium-webdriver doesn't work below 6.*
+  allow_failures:
+    - script: *support
 
 notifications:
   email: false

@@ -6,5 +6,6 @@ node_modules
 slimer.log
 tmp
 *.info
+*.log
+*.png
 .travis.yml
-npm-debug.log

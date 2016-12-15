@@ -98,7 +98,6 @@ function QUnitHelper(pattern) {
 		function run(fn, assert, timeout) {
 			QUnit.config.testTimeout = timeout;
 
-			//assert.expect(1);
 			fn();
 
 			return now().then(

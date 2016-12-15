@@ -16,10 +16,12 @@
 			"server": [
 				"lib/**/*.js",
 				"!lib/runner.js",
+				"!lib/thing.js",
 				"!lib/tool.js"
 			],
 			"test": [
 				"lib/runner.js",
+				"lib/thing.js",
 				"lib/tool.js"
 			]
 		},

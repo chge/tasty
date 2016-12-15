@@ -81,13 +81,13 @@ Write a test (this one uses [Mocha](https://mochajs.org/)).
 ```javascript
 describe('login form', function() {
 	it('logs user in', function() {
-		text('Welcome!');
-		click('Username');
+		is(text('Welcome!'));
+		click(text('Username'));
 		type(tasty.config.username);
-		click('Password');
+		click(text('Password'));
 		type(tasty.config.password);
-		click('Log in');
-		location('/dashboard');
+		click(text('Log in'));
+		is(location('/dashboard'));
 
 		return now();
 	});
@@ -148,6 +148,8 @@ To use one of them, you have to add the following directive:
 script-src 'unsafe-eval'
 ```
 
+Tasty's static server automatically injects that directive into HTML files when `--coverage <name>` flag is used.
+
 Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.
 
 Check out a [great tool](https://report-uri.io/home/generate) for generating and validating CSP directives.
@@ -175,6 +177,12 @@ Currently Tasty can't find text `+1 123 456-78-90` in the following case:
 
 In other words, it's too hard to join text fragments of `textContent`, `value/placeholder`, `:before/:after` etc.
 
+### Images
+
+Work is in progress.
+
+Search cannot detect text from `alt` attribute yet.
+
 ### Auto-focus elements
 
 When using auto-focus elements (such as `input`), you could encounter `cannot type into active node <body />` error when window loses its focus, which causes `type` and `paste` tools to fail.
@@ -183,6 +191,14 @@ If you don't want to focus such elements explicitly (using `click` or something 
 For WebDriver clients you could [maximize window](https://www.w3.org/TR/webdriver/#maximize-window) or use [`alert()` workaround](http://stackoverflow.com/a/19170779) to focus reliably.
 
 Additionally, [Chrome DevTools](https://developer.chrome.com/devtools) could force current tab to lose focus, with the same results.
+
+### Shadow DOM
+
+Not supported yet.
+
+### Browser UI
+
+Some elements of browser itself, such as tooltips from `title` attribute or HTML5 Form validation messages, could be potentially detected, but currently aren't supported.
 
 # Tools
 
@@ -288,67 +304,6 @@ ready(
 
 Note that built-in methods cannot be combined.
 
-### Data from client
-
-Some tools could be called without arguments to get data from client.
-
-```javascript
-it('reads', function() {
-	text(
-		title(),
-		'h1'
-	);
-
-	return now();
-});
-```
-
-```javascript
-it('remembers', function() {
-	push(
-		read('h1')
-	);
-	click('Edit');
-	click('Save');
-	text(
-		pop(),
-		'h1'
-	);
-
-	return now();
-});
-```
-
-```javascript
-it('remembers', function() {
-	set(
-		'title',
-		read('h1')
-	);
-	set(
-		'subtitle',
-		read('h2')
-	);
-	click('Edit');
-	click('Title');
-	type('blah');
-	click('Save');
-	text(
-		get('title')
-			.then(
-				(value) => value + 'blah'
-			),
-		'h1'
-	);
-	text(
-		get('subtitle'),
-		'h2'
-	);
-
-	return now();
-});
-```
-
 ### Custom logic
 
 The `now(...)` call with function(s) allows you to add some custom logic into test, but you should use `now.*` namespace for tools.
@@ -356,7 +311,7 @@ The `now(...)` call with function(s) allows you to add some custom logic into te
 ```javascript
 it('chooses', function() {
 	now(
-		() => now.text('Welcome back')
+		() => now.is(text('Welcome back'))
 			.then(
 				() => now.click('Log in'),
 				() => now.click('Sign up')
@@ -373,7 +328,7 @@ The `now.smth()` is the same as just `smth()`, but runs immediately. You should 
 it('searches', function() {
 	until(
 		now(
-			() => now.text('Chapter 42', 'h1')
+			() => now.is(text('Chapter 42', 'h1'))
 				.catch(
 					() => now.click('Next')
 				)
@@ -441,10 +396,15 @@ npm run prepublish
 npm test
 ```
 
-Main tests use [SlimerJS](https://slimerjs.org/) which requires [Firefox](https://www.mozilla.org/firefox) to be installed.
+Main tests use [SlimerJS](https://slimerjs.org/) and [PhantomJS](http://phantomjs.org/). SlimerJS itself requires [Firefox](https://www.mozilla.org/firefox) to be installed. PhantomJS suite requires `phantomjs` to be available via command prompt.
 
-Real-browser support tests are automated for [SauceLabs](https://saucelabs.com/) environment
-and require `TRAVIS_JOB_NUMBER`, `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables,
+### Browser support
+
+```shell
+npm run support
+```
+
+Real-browser support tests are made possible by [SauceLabs](https://saucelabs.com/). Automation requires `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables,
 which are kindly provided by [TravisCI](https://docs.travis-ci.com/user/sauce-connect).
 
 # Windows

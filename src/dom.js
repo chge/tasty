@@ -2,15 +2,28 @@
 
 import * as polyfill from 'tasty-treewalker';
 
-import * as util from './util';
+import { escape, filter, find as findItem, random, reason } from './util';
 
 export function click(node, force) {
 	hover(node);
 	focus(node);
 
-	node.click ?
-		node.click() :
+	if (node.disabled) {
+		throw reason('node', node, 'is disabled');
+	}
+	const parent = node.parentNode;
+	if (parent && parent.disabled) {
+		throw reason('node', parent, 'is disabled');
+	}
+	if (node.click) {
+		node.click();
+	} else if (parent && parent.click) {
+		parent.click();
+	} else {
+		trigger(node, 'MouseEvent', 'mousedown', null, force);
+		trigger(node, 'MouseEvent', 'mouseup', null, force);
 		trigger(node, 'MouseEvent', 'click', null, force);
+	}
 
 	return node;
 }
@@ -19,6 +32,17 @@ export function dblclick(node, force) {
 	hover(node);
 	focus(node);
 
+	if (node.disabled) {
+		throw reason('node', node, 'is disabled');
+	}
+	const parent = node.parentNode;
+	if (parent && parent.disabled) {
+		throw reason('node', parent, 'is disabled');
+	}
+	trigger(node, 'MouseEvent', 'mousedown', null, force);
+	trigger(node, 'MouseEvent', 'mouseup', null, force);
+	trigger(node, 'MouseEvent', 'mousedown', null, force);
+	trigger(node, 'MouseEvent', 'mouseup', null, force);
 	trigger(node, 'MouseEvent', 'dblclick', null, force);
 
 	return node;
@@ -30,16 +54,65 @@ export function element(node) {
 		node;
 }
 
-export function find(regexp, selector, strict) {
-	const body = document.body;
+export function find(what, where, options) {
+	switch (what.type) {
+		case 'any':
+			return findByText(/.*/, where, options);
+		case 'empty':
+			return findByText(/^\s*$/, where, options);
+		case 'font':
+			// TODO window.getComputedStyle(selector).fontFamily;
+			throw reason(what.type, 'is not implemented yet, sorry');
+		case 'image':
+			// TODO return findByImage(what.value, where, options);
+			throw reason(what.type, 'is not implemented yet, sorry');
+		case 'node':
+		case 'nodes':
+			if (where.type) {
+				throw reason('cannot search node(s) in', where.type);
+			}
+			return findBySelector(what.value, document.documentElement);
+		case 'text': {
+			const value = what.value,
+				regexp = value instanceof RegExp ?
+					value :
+					new RegExp(escape(value, true));
 
-	return findByTextInList(
-		regexp,
-		selector ?
-			findAllBySelector(selector, body) :
-			findAllByText(regexp, body, strict),
-		strict
-	);
+			return findByText(regexp, where, options);
+		}
+		default:
+			throw reason(what.type, 'is not supported');
+	}
+}
+
+function findByText(regexp, where, options) {
+	let list;
+	switch (where.type) {
+		case 'node':
+			list = findBySelector(where.value, document.documentElement);
+			break;
+		case 'nodes':
+			list = findAllBySelector(where.value, document.documentElement);
+			break;
+		case 'unknown':
+		case 'window':
+			list = findAllByText(
+				regexp,
+				where.value ?
+					findWindowByName(where.value).document.body :
+					document.body,
+				options.strict
+			);
+			break;
+		default:
+			throw reason('find, scope', where.type, 'is not supported');
+	}
+
+	return findByTextInList(regexp, list, options.strict);
+}
+
+function findBySelector(selector, context) {
+	return context.querySelector(selector);
 }
 
 function findAllBySelector(selector, context) {
@@ -50,7 +123,6 @@ function findAllBySelector(selector, context) {
 
 function findByTextInList(regexp, list, strict) {
 	// TODO optimize by number of iterations.
-
 	let nodes;
 	if (regexp) {
 		nodes = [];
@@ -63,7 +135,7 @@ function findByTextInList(regexp, list, strict) {
 		nodes = list;
 	}
 
-	const filtered = util.filter(
+	const filtered = filter(
 		nodes,
 		(node) => visible(node, strict)
 	);
@@ -104,15 +176,28 @@ function findByDepthInList(list) {
 		return list[0];
 	}
 
-	const deep = util.filter(
+	const deep = filter(
 		list,
-		(parent) => !util.find(
+		(parent) => !findItem(
 			list,
 			(child) => matchParent(parent, child)
 		)
 	);
 
 	return deep[0];
+}
+
+function findWindowByName(name) {
+	const child = window.open(null, name),
+		doc = child.document;
+
+	// WORKAROUND: it's impossible to get list of child windows afterwards.
+	if (doc.head && !doc.head.childElementCount || doc.body && !doc.body.childElementCount) {
+		child.close();
+		throw reason('no such window', name);
+	}
+
+	return child;
 }
 
 function matchParent(parent, child) {
@@ -139,9 +224,12 @@ function matchText(regexp, node, strict) {
 	if (regexp.test(before)) {
 		return true;
 	}
+	// TODO support img's alt attribute in error state (via naturalWidth).
+	// TODO support title attribute in hovered state.
+	// TODO support HTML5 Forms messages (via validationMessage).
 
 	return regexp.test(
-		util.filter(
+		filter(
 			[before, inner, after],
 			(text) => !!text
 		).join('')
@@ -194,21 +282,41 @@ function innerText(node, strict) {
 
 	// NOTE Node.textContent doesn't respect CSS text-transform, while HTMLElement.innerText does, but not always.
 	// TODO optimize: return node.innerText straightforward, when it certainly respects CSS text-transform.
+
+	const style = getStyle(node);
+
 	return transform(
 		node.innerText ?
 			node.innerText :
 			'value' in node ?
 				node.type === 'password' ?
-					node.value ?
-						'' :
-						// TODO check placeholder support?
-						node.placeholder :
+					getPassword(node, style) :
 					node.value || node.placeholder || node.textContent || node.nodeValue :
 				node.textContent || node.nodeValue,
-		getStyle(node),
+		style,
 		strict,
 		true
 	);
+}
+
+function getPassword(node, style) {
+	if (!node.value) {
+		// TODO check placeholder support?
+		return node.placeholder || '';
+	}
+
+	const length = node.value.length;
+	switch (style.webkitTextSecurity) {
+		case 'circle':
+			return symbols('◦', length);
+		case 'square':
+			return symbols('■', length);
+		case 'none':
+			return node.value;
+		case 'disc':
+		default:
+			return symbols('•', length);
+	}
 }
 
 function getStyle(node, pseudo) {
@@ -283,7 +391,7 @@ function getData(node, name) {
 		undefined;
 }
 
-function nodeListToArray(list) {
+export function nodeListToArray(list) {
 	// NOTE [].slice not always works.
 
 	const array = [];
@@ -319,6 +427,16 @@ function removeData(node) {
 	}
 
 	return node;
+}
+
+function symbols(symbol, length) {
+	let string = '',
+		i;
+	for (i = 0; i < length | 0; i++) {
+		string += symbol;
+	}
+
+	return string;
 }
 
 export function enabled(node) {
@@ -364,8 +482,8 @@ export function blur(node) {
 
 export function hover(node) {
 	const hovered = hover.node;
-	hovered === node ||
-		rest(hover.node);
+	hovered && hovered !== node &&
+		rest(hovered);
 
 	trigger(node, 'MouseEvent', 'mouseover');
 	trigger(node, 'MouseEvent', 'mouseenter');
@@ -408,27 +526,28 @@ export function visible(node, strict) {
 			style.visibility === 'hidden' :
 			false;
 
+	// TODO check color vs background (via https://www.w3.org/TR/AERT#color-contrast).
+
 	// TODO more reliable.
 	return viewport && !hidden;
 }
 
-export function on(node, event, handler, capture) {
-	node.addEventListener ?
-		node.addEventListener(event, handler, capture === true) :
-		node.attachEvent('on' + event, handler);
+export function on(target, event, handler, options) {
+	target.addEventListener ?
+		target.addEventListener(event, handler, options || false) :
+		target.attachEvent('on' + event, handler);
 
-	return node;
+	return target;
 }
 
 export function reach(node) {
 	node = element(node);
 
-	// TODO randomize coordinates within bounding rect.
-	// NOTE shdows increase bounding rect and make click to miss the node.
+	// TODO consider border-radius.
 
 	let rect = node.getBoundingClientRect(),
-		x = (rect.left + rect.right) / 2,
-		y = (rect.top + rect.bottom) / 2,
+		x = random(rect.left, rect.right),
+		y = random(rect.top, rect.bottom),
 		actual = document.elementFromPoint(x, y),
 		parent = actual;
 
@@ -441,7 +560,9 @@ export function reach(node) {
 	return [parent, x, y];
 }
 
-// LICENSE CC BY-SA 3.0 http://stackoverflow.com/a/987376
+/**
+ * @license CC BY-SA 3.0 http://stackoverflow.com/a/987376
+ */
 export function highlight(node) {
 	try {
 		if (document.body.createTextRange) {
@@ -508,9 +629,20 @@ export function trigger(node, type, arg, init, force) {
 		}
 	}
 
+	// WORKAROUND: text node could be already detached.
+	let parent;
+	try {
+		parent = node.parentNode;
+	} catch (thrown) {
+		parent = null;
+	}
+
 	const triggered = node.dispatchEvent ?
 		node.dispatchEvent(event) :
-		node.fireEvent('on' + arg, event);
+		node.fireEvent ?
+			node.fireEvent('on' + arg, event) :
+			parent &&
+				parent.fireEvent('on' + arg, event);
 
 	if (triggered && force && node.href) {
 		window.location = node.href;

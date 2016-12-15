@@ -10,23 +10,23 @@ describe('demo', function() {
 		reset(false);
 		ready('window', 100);
 
-		return queue();
+		return now();
 	});
 
 	it('signs user up', function() {
 		navigate('/entry.html');
-		title('Tasty demo — Signup');
-		text('Welcome!');
+		is(title('Tasty demo — Signup'));
+		is('Welcome!');
 		click('Username');
 		type(username);
 		click('Password');
 		type(password);
 		click('Sign up');
-		location('/home.html');
-		title('Tasty demo — Home');
-		text('Hi, ' + username + '!');
+		is(location('/home.html'));
+		is(title('Tasty demo — Home'));
+		is('Hi, ' + username + '!');
 
-		return queue();
+		return now();
 	});
 
 	it('logs user out', function() {
@@ -36,12 +36,12 @@ describe('demo', function() {
 		click('Password');
 		type(password);
 		click('Sign up');
-		location('/home.html');
+		is(location('/home.html'));
 		click('Log out');
-		location('/entry.html');
-		text('Welcome!');
+		is(location('/entry.html'));
+		is('Welcome!');
 
-		return queue();
+		return now();
 	});
 
 	it('remembers user', function() {
@@ -52,19 +52,19 @@ describe('demo', function() {
 		type(password);
 		click('Remember me');
 		click('Sign up');
-		location('/home.html');
-		text('Hi, ' + username + '!');
+		is(location('/home.html'));
+		is('Hi, ' + username + '!');
 		click('Log out');
-		location('/entry.html');
+		is(location('/entry.html'));
 		title('Tasty demo — Login');
-		text('Welcome back!');
-		text(username);
+		is('Welcome back!');
+		is(username);
 		click('Password');
 		type(password);
 		click('Log in');
-		location('/home.html');
-		text('Hi, ' + username + '!');
+		is(location('/home.html'));
+		is('Hi, ' + username + '!');
 
-		return queue();
+		return now();
 	});
 });

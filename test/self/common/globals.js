@@ -8,8 +8,8 @@ module.exports = [
 				name: 'are not defined before call',
 				skip: tasty.config.globals,
 				body: () => {
-					Object.keys(tasty.tool).forEach((space) => {
-						expect(global[space]).not.to.be.defined();
+					Object.keys(tasty.tool).forEach((name) => {
+						expect(global[name]).not.to.be.defined();
 					});
 				}
 			},
@@ -18,6 +18,7 @@ module.exports = [
 				skip: !global.chai,
 				body: () => {
 					expect(() => tasty.api()).to.throw(TypeError);
+					expect(() => tasty.api(null)).to.throw(TypeError);
 				}
 			},
 			{

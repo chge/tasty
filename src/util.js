@@ -35,16 +35,23 @@ export function deserialize(value) {
 		return value;
 	}
 
-	switch (value.t) {
-		case 're':
-			return new RegExp(value.v[0], value.v[1] || '');
-		default:
-			return value.v;
-	}
+	return typeof value.v === 'undefined' ?
+		{
+			type: value.t
+		} :
+		{
+			type: value.t,
+			value: isArray(value.v) ?
+				value.v[1] ?
+					new RegExp(value.v[0], value.v[1]) :
+					new RegExp(value.v[0]) :
+				value.v
+		}
 }
 
 export function escape(source, regexp) {
-	source = source.replace(/\./g, '\\.')
+	source = (source + '')
+		.replace(/\./g, '\\.')
 		.replace(/\,/g, '\\,')
 		.replace(/\*/g, '\\*')
 		.replace(/\+/g, '\\+')
@@ -81,7 +88,13 @@ export function format(value) {
 				value.outerHTML ?
 					value.outerHTML.replace(/>[\s\S]*$/m, ' />').replace(/\n/g, '') :
 					'<' + value.nodeName + ' ... />' :
-			value;
+			value && value.type ?
+				value.type === 'text' && isArray(value.value) ?
+					'{' + value.type + ' ' + new RegExp(value.value[0], value.value[1]) + '}' :
+					value.hasOwnProperty('value') ?
+						'{' + value.type + ' ' + value.value + '}' :
+						'{' + value.type + '}' :
+				value + '';
 }
 
 export function flaws(object) {
@@ -105,7 +118,7 @@ export function include(src) {
 		let script = document.createElement('script');
 		script.async = true;
 		script.src = include.url + src;
-		script.onload = script.onreadystatechange = function() {
+		script.onload = script.onreadystatechange = () => {
 			if (!script.readyState || /loaded|complete/.test(script.readyState)) {
 				script.onload = script.onreadystatechange = null;
 				script.parentNode &&
@@ -117,6 +130,12 @@ export function include(src) {
 		script.onerror = reject;
 		head.insertBefore(script, head.firstChild);
 	});
+}
+
+export function now() {
+	return Date.now ?
+		Date.now() :
+		+new Date();
 }
 
 export function parseJson(raw) {
@@ -140,7 +159,7 @@ export function reason(...args) {
 	);
 }
 
-// TODO store session in cookie?
+// TODO store session in a cookie?
 export function session(value) {
 	session.key = session.key || '__tasty';
 	session.value = arguments.length ?
@@ -160,7 +179,7 @@ export function session(value) {
  * @memberof tasty
  * @function thenable
  * @param {*|Error|Function} [value] Value/reason to resolve/reject `Promise` with, or a `Promise` executor.
- * @return {Promise}
+ * @returns {Promise}
  * @example
 tasty.thenable(); // same as Promise.resolve();
 tasty.thenable(42); // same as Promise.resolve(42);
@@ -184,7 +203,7 @@ export function thenable(value) {
  * @function filter
  * @memberof tasty
  * @param {Array} array Array.
- * @return {Array}
+ * @returns {Array}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter|MDN}
  */
 export function filter(array, callback, scope) {
@@ -219,7 +238,7 @@ export function filter(array, callback, scope) {
  * @function find
  * @memberof tasty
  * @param {Array} array Array.
- * @return {*}
+ * @returns {*}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find|MDN}
  */
 export function find(array, predicate, scope) {
@@ -286,7 +305,7 @@ export function forEach(array, callback, scope) {
  * @function isArray
  * @memberof tasty
  * @param {*} value Value to check.
- * @return {Boolean}
+ * @returns {Boolean}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray|MDN}
  */
 export function isArray(value) {
@@ -302,7 +321,7 @@ export function isArray(value) {
  * @function map
  * @memberof tasty
  * @param {Array} array Array.
- * @return {Array}
+ * @returns {Array}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map|MDN}
  */
 export function map(array, callback, scope) {
@@ -342,7 +361,7 @@ export function map(array, callback, scope) {
  * @function reduce
  * @memberof tasty
  * @param {Array} array Array.
- * @return {*}
+ * @returns {*}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce|MDN}
  */
 export function reduce(array, callback, memo) {

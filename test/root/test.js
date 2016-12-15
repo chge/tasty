@@ -25,3 +25,16 @@ window.onload = function() {
 		link.innerHTML = 'Hovered';
 	};
 };
+
+// WORKAROUND: override client ID from URL
+(function() {
+	var index = location.search.indexOf('id='),
+		id = index ?
+			parseInt(
+				location.search.substr(index + 3),
+				10
+			) :
+			null;
+	isNaN(id) ||
+		sessionStorage.setItem('__tasty', id);
+})();

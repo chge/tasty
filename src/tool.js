@@ -34,13 +34,15 @@ function tool(name, handle) {
 		};
 	}
 
-	const space = name.split('.')[0],
+	const space = name.indexOf('.') === -1 ?
+			null :
+			name.split('.')[0],
 		args = deserialize(handle);
 
 	tool.console.log('tasty', 'tool', name, args);
 
 	return hook(name, 'before.tool', args)
-		.then((result) => hook(result, 'before.' + space, args))
+		.then((result) => space ? hook(result, 'before.' + space, args) : result)
 		.then((result) => hook(result, 'before.' + name, args))
 		.then(() => {
 			if (tool[name]) {
@@ -50,7 +52,7 @@ function tool(name, handle) {
 			}
 		})
 		.then((result) => hook(result, 'after.' + name, args))
-		.then((result) => hook(result, 'after.' + space, args))
+		.then((result) => space ? hook(result, 'after.' + space, args) : result)
 		.then((result) => hook(result, 'after.tool', name, args));
 }
 
@@ -80,10 +82,10 @@ function hook(result, key, args) {
 		} else {
 			tool.console.debug('tasty', 'hook', key, listener.title || '(anonymous)', listener.once ? 'once' : '');
 
-			result = listener.apply(this, arguments);
 			if (listener.once) {
 				delete hook[key];
 			}
+			result = listener.apply(this, arguments);
 		}
 	}
 
@@ -94,112 +96,38 @@ tool('breakpoint', () => {
 	debugger; // eslint-disable-line no-debugger
 });
 
-tool('history', (value) => {
-	return thenable(() => {
-		// NOTE never resolve.
-		window.history.go(value);
-	});
-});
-
-tool('location', function(what) {
-	if (!arguments.length) {
-		return window.location.pathname;
-	}
-	// TODO smart matching.
-	what = what instanceof RegExp ?
-		what :
-		new RegExp(escape(what, true));
-
-	if (!what.test(
-			// NOTE slash is escaped.
-			what.source.indexOf('\/') === 0 ?
-				window.location.pathname :
-				window.location.href
-	)) {
-		throw reason('location', window.location.pathname, 'is not', what.source);
+tool('is', (what, where, options) => {
+	const found = search(what, where, options)
+	if (found) {
+		highlight(found);
+	} else {
+		throw reason('no', what, 'in', where);
 	}
 });
 
-tool('navigate', (url) => {
-	// TODO allow to skip navigation if url already matches.
-	return thenable(() => {
-		// NOTE never resolve.
-		// TODO close socket first.
-		window.location = url;
-	});
-});
-
-tool('reload', () => {
-	return thenable(() => {
-		// NOTE never resolve.
-		// TODO close socket first.
-		window.location.reload(true);
-	});
-});
-
-tool('reset', (url) => {
-	// NOTE session is restored in window.unload;
-	const done = () => {
-		if (typeof url === 'string') {
-			// TODO close socket first.
-			window.location = url;
-		} else {
-			url === false ||
-				// TODO close socket first.
-				window.location.reload(true);
-		}
-	};
-
-	// NOTE clear cookies.
-	forEach(
-		document.cookie.split(';'),
-		(pair) => {
-			document.cookie = pair.split('=')[0] + "=; expires=" + Date.now() + "; domain=" + document.domain + "; path=/";
-		}
-	);
-
-	// NOTE clear Storage.
-	localStorage.clear();
-	sessionStorage.clear();
-
-	// NOTE clear indexedDB.
-	let chain = thenable();
-	if (window.indexedDB && indexedDB.webkitGetDatabaseNames) {
-		let request = indexedDB.webkitGetDatabaseNames();
-		request.onsuccess = (event) => {
-			forEach(
-				event.target.result,
-				(name) => {
-					chain = chain.then(() => thenable((resolve) => {
-						request = indexedDB.deleteDatabase(name);
-						request.onsuccess = resolve;
-						request.onerror = (event) => tool.console.error('tasty', event);
-						request.onblocked = (event) => tool.console.error('tasty', event);
-					}));
-				}
-			);
-		};
-		request.onfailure = (event) => tool.console.error('tasty', event);
+tool('no', (what, where, options) => {
+	const found = search(what, where, options);
+	if (found) {
+		highlight(found);
+		throw reason('found', what, 'in', where, 'as', format(found));
 	}
-
-	chain.then(done, done);
-	// TODO other.
 });
-
-// NOTE input.
 
 tool('clear', (count) => {
 	const target = document.activeElement;
+	if (target === document.body) {
+		throw reason('clear, no active node');
+	}
 	if (!('value' in target)) {
-		throw reason('cannot clear active node', target);
+		throw reason('clear, wrong active node', target);
 	}
 	if (target.disabled) {
-		throw reason('cannot clear disabled node', target);
+		throw reason('clear, disabled active node', target);
 	}
 	if (target.readOnly) {
-		throw reason('cannot clear read-only node', target);
+		throw reason('clear, read-only active node', target);
 	}
-	tool.console.debug('tasty', 'target', target);
+	tool.console.debug('tasty', 'clear', 'target', target);
 	highlight(target);
 
 	return thenable((resolve) => {
@@ -231,27 +159,62 @@ tool('clear', (count) => {
 	});
 });
 
-tool('click', (what, selector, strict) => {
-	// TODO validate args.
+tool('click', (what, where, options) => {
+	const target = search(what, where, options);
+	if (!target) {
+		throw reason('no', what, 'in', where, 'to', 'click');
+	}
+	tool.console.debug('tasty', 'click', 'target', target);
+
+	highlight(target);
 	dom.click(
-		findNode(what, selector, strict),
+		target,
 		tool.flaws.navigation
 	);
 });
 
-tool('dblclick', (what, selector, strict) => {
-	// TODO validate args.
+tool('dblclick', (what, where, options) => {
+	const target = search(what, where, options);
+	if (!target) {
+		throw reason('no', what, 'in', where, 'to', 'dblclick');
+	}
+	tool.console.debug('tasty', 'dblclick', 'target', target);
+
+	highlight(target);
 	dom.dblclick(
-		findNode(what, selector, strict),
+		target,
 		tool.flaws.navigation
 	);
 });
 
-tool('hover', (what, selector, strict) => {
-	// TODO validate args.
-	dom.hover(
-		findNode(what, selector, strict)
-	);
+tool('history', (value) => {
+	if (value < 0 && history.length <= -value) {
+		throw reason('history', 'length', 'is', history.length);
+	}
+
+	return thenable(() => {
+		// NOTE never resolve.
+		window.history.go(value);
+	});
+});
+
+tool('hover', (what, where, options) => {
+	const target = search(what, where, options);
+	if (!target) {
+		throw reason('no', what, 'in', where, 'to', 'hover');
+	}
+	tool.console.debug('tasty', 'hover', 'target', target);
+
+	// TODO highlight target?
+	dom.hover(target);
+});
+
+tool('navigate', (url) => {
+	// TODO allow to skip navigation if url already matches.
+	return thenable(() => {
+		// NOTE never resolve.
+		window.location = url;
+	});
 });
 
 tool('paste', (text) => {
@@ -265,7 +228,7 @@ tool('paste', (text) => {
 	if (target.readOnly) {
 		throw reason('cannot paste into read-only node', target);
 	}
-	tool.console.debug('tasty', 'target', target);
+	tool.console.debug('tasty', 'paste', 'target', target);
 	highlight(target);
 
 	const value = target.value,
@@ -281,6 +244,65 @@ tool('paste', (text) => {
 		dom.trigger(target, 'Event', 'change', {cancellable: false});
 });
 
+tool('reload', () => {
+	return thenable(() => {
+		// NOTE never resolve.
+		window.location.reload(true);
+	});
+});
+
+tool('reset', (url) => {
+	// NOTE session is restored in window.unload;
+	const done = () => {
+		if (typeof url === 'string') {
+			// TODO close socket first.
+			window.location = url;
+		} else {
+			url === false ||
+				// TODO close socket first.
+				window.location.reload(true);
+		}
+	};
+
+	// NOTE clear cookies.
+	forEach(
+		document.cookie.split(';'),
+		(pair) => {
+			document.cookie = pair.split('=')[0] + "=; expires=" + util.now() + "; domain=" + document.domain + "; path=/";
+		}
+	);
+
+	// NOTE clear Storage.
+	localStorage.clear();
+	sessionStorage.clear();
+
+	// NOTE this preserves session when unload event doesn't work.
+	util.session();
+
+	// NOTE clear indexedDB.
+	let chain = thenable();
+	if (window.indexedDB && indexedDB.webkitGetDatabaseNames) {
+		let request = indexedDB.webkitGetDatabaseNames();
+		request.onsuccess = (event) => {
+			forEach(
+				event.target.result,
+				(name) => {
+					chain = chain.then(() => thenable((resolve) => {
+						request = indexedDB.deleteDatabase(name);
+						request.onsuccess = resolve;
+						request.onerror = (event) => tool.console.error('tasty', event);
+						request.onblocked = (event) => tool.console.error('tasty', event);
+					}));
+				}
+			);
+		};
+		request.onfailure = (event) => tool.console.error('tasty', event);
+	}
+
+	chain.then(done, done);
+	// TODO other.
+});
+
 tool('type', (text) => {
 	const target = document.activeElement;
 	if (!('value' in target)) {
@@ -292,7 +314,7 @@ tool('type', (text) => {
 	if (target.readOnly) {
 		throw reason('cannot type into read-only node', target);
 	}
-	tool.console.debug('tasty', 'target', target);
+	tool.console.debug('tasty', 'type', 'target', target);
 	highlight(target);
 
 	return thenable((resolve) => {
@@ -322,139 +344,146 @@ tool('type', (text) => {
 	});
 });
 
-// eslint-disable-next-line no-unused-vars
-tool('font', (family, selector) => {
-	// TODO window.getComputedStyle(selector).fontFamily, document.fonts.keys()
-	throw reason('not implemented yet, sorry');
-});
+// TODO
+function thing(type, value) {
+	type = type || 'unknown';
 
-tool('loaded', (src) => {
-	if (!src) {
-		return document.readyState === 'complete';
-	}
+	return typeof type === 'object' ?
+		type :
+		typeof value === 'undefined' ?
+			{
+				type: type
+			} :
+			{
+				type: type,
+				value: value
+			};
+}
 
-	let type = src.toLowerCase().split('.'),
-		origin = location.origin ||
-			location.protocol + '//' + location.host,
-		url = origin + src,
-		list, item, i;
-	switch (type ? type[type.length - 1] : null) {
-		case 'appcache':
-			list = [];
-			if (document.documentElement.getAttribute('manifest') === src) {
-				return format(document.documentElement);
-			}
-			break;
+/**
+ * Searches things on client.
+ * @memberof tasty
+ * @param {Thing|String|RegExp} what {@link /tasty/?api=test#Thing|Thing} to search.
+ * @param {Thing|String} [where=window] {@link /tasty/?api=test#Thing|Thing} to search in. String means {@link /tasty/?api=test#nodes|`nodes`}.
+ * @param {Object|Boolean} [options] Search options.
+ * @param {Boolean} [options.strict] Strict flag: `true` for exact match, `false` for loose search and `undefined` for default behavior.
+ */
+export function search(what, where, options) {
+	what = typeof what === 'string' ?
+		thing('text', what) :
+		thing(what);
+	where = typeof where === 'string' ?
+		thing('nodes', where) :
+		thing(where);
+	options = typeof options === 'boolean' ?
+		{strict: options} :
+		options || {};
+
+	const value = what.value,
+		regexp = value instanceof RegExp ?
+			value :
+			new RegExp(escape(value, true)),
+		source = regexp.source;
+
+	switch (what.type) {
+		case 'any':
+		case 'empty':
+		case 'image':
+		case 'node':
+		case 'nodes':
+		case 'text':
+			return dom.find(what, where, options);
 		case 'css':
-			list = document.getElementsByTagName('link');
-			break;
-		case 'js':
-			list = document.getElementsByTagName('script');
-			break;
-		case 'bmp':
-		case 'gif':
-		case 'ico':
-		case 'jpg':
-		case 'jpeg':
-		case 'png':
-			list = [];
-			forEach(
-				document.getElementsByTagName('img'),
-				(img) => list.push(img)
-			);
-			forEach(
-				document.getElementsByTagName('link'),
-				(img) => list.push(img)
-			);
-			// TODO picture, background-image, :before, :after, css states.
-			break;
-		// TODO more.
-		default:
-			list = document.getElementsByTagName('*');
-	}
+			return findInList('href', regexp, document.getElementsByTagName('link'));
+		case 'doctype': {
+			const doctype = formatDoctype(document.doctype);
+			if (!doctype) {
+				throw reason('document has no doctype');
+			}
+			if (!regexp.test(doctype)) {
+				throw reason('doctype', doctype, 'is not', regexp);
+			}
 
-	for (i = 0; i < list.length; i++) {
-		item = list[i];
-		if (item.src === url || item.href === url) {
-			// TODO try to check if loaded.
-			tool.console.debug('tasty', 'found', item);
-			highlight(item);
-
-			return format(item);
+			return doctype;
 		}
-	}
+		case 'favicon':
+			throw reason(what.type, 'is not implemented yet, sorry');
+		case 'font':
+			return where ?
+				dom.find(what, where, options) :
+				document.fonts.check(value);
+		case 'location': {
+			// NOTE slashes are escaped.
+			const location = source.indexOf('\\/') === 0 ?
+				window.location.pathname :
+				window.location.href;
+			if (!regexp.test(location)) {
+				throw reason('location', location, 'is not', value instanceof RegExp ? regexp : source);
+			}
 
-	throw reason('resource', src, 'not found');
-});
-
-tool('text', (what, selector, strict) => {
-	// TODO validate all args.
-	if (typeof strict === 'undefined' && typeof selector !== 'string') {
-		strict = selector;
-		selector = null;
-	}
-
-	findNode(what, selector, strict === true, false);
-});
-
-tool('title', (what) => {
-	// TODO validate args.
-	what = what instanceof RegExp ?
-		what :
-		new RegExp(escape(what, true));
-
-	if (!what.test(document.title)) {
-		throw reason('title', document.title, 'is not', what.source);
-	}
-});
-
-function findNode(regexp, selector, strict, enabled) {
-	if (typeof strict === 'undefined' && typeof selector !== 'string') {
-		strict = selector;
-		selector = null;
-	}
-	regexp = regexp ?
-		regexp instanceof RegExp ?
-			regexp :
-			strict === false ?
-				new RegExp(escape(regexp, true)) :
-				new RegExp('^' + escape(regexp, true) + '$') :
-		null;
-	enabled = enabled !== false;
-
-	const found = dom.element(
-		dom.find(regexp, selector, strict)
-	);
-	if (!found) {
-		throw reason(
-			selector ? 'node ' + selector + ' with text' : 'text', regexp, 'not found'
-		);
-	}
-	if (!dom.visible(found, strict === true)) {
-		throw reason(
-			'node', found, 'with text', regexp, 'is not fully visible'
-		);
-	}
-	if (enabled && !dom.enabled(found)) {
-		throw reason(
-			'node', found, 'with text', regexp, 'is disabled'
-		);
-	}
-
-	const [actual] = dom.reach(found);
-	if (strict === true && actual !== found) {
-		throw dom.visible(found) ?
-			reason(
-				'node', found, 'with text', regexp, 'is blocked by node', actual
-			) :
-			reason(
-				'node', found, 'with text', regexp, 'is hidden'
+			return location;
+		}
+		case 'manifest': {
+			let manifest = document.documentElement.getAttribute('manifest');
+			if (manifest) {
+				if (!regexp.test(manifest)) {
+					throw reason('app cache manifest', manifest, 'is not', regexp);
+				}
+				return manifest;
+			}
+			manifest = util.find(
+				dom.nodeListToArray(
+					document.getElementsByTagName('link')
+				),
+				(link) => link.rel === 'manifest'
 			);
+			if (manifest) {
+				if (!regexp.test(manifest.href)) {
+					throw reason('web app manifest', manifest.href, 'is not', regexp);
+				}
+				return manifest;
+			}
+			throw reason('document has no manifest');
+		}
+		case 'script':
+			return findInList('src', regexp, document.getElementsByTagName('script'));
+		case 'title':
+			if (!regexp.test(document.title)) {
+				throw reason('title', document.title, 'is not', regexp);
+			}
+			return document.title;
+		default:
+			throw reason(what.type, 'is not supported');
+	}
+}
+
+function findInList(key, regexp, list) {
+	return util.find(list, (item) => {
+		return regexp.test(item[key]);
+	});
+}
+
+/**
+ * @license CC BY-SA 3.0 http://stackoverflow.com/a/27838954
+ * @license CC BY-SA 3.0 http://stackoverflow.com/a/10162353
+ */
+function formatDoctype(doctype) {
+	if (!doctype) {
+		return null;
 	}
 
-	tool.console.debug('tasty', 'found', actual);
-	actual === document.body ||
-		highlight(actual);
+	// NOTE some browsers could fail to serialize doctype.
+	const serialized = 'XMLSerializer' in window ?
+		new XMLSerializer().serializeToString(doctype) :
+		null;
 
-	return actual;
+	return serialized ||
+		[
+			'<!DOCTYPE ',
+				doctype.name,
+				doctype.publicId ? ' PUBLIC "' + doctype.publicId + '"' : '',
+				!doctype.publicId && doctype.systemId ? ' SYSTEM' : '',
+				doctype.systemId ? ' "' + doctype.systemId + '"' : '',
+			'>'
+		].join('');
 }

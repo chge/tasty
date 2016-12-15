@@ -3,14 +3,14 @@
 const child = require('child_process'),
 	fs = require('fs'),
 	http = require('http'),
-	slimerjs = require('slimerjs'),
+	path = require('path'),
 	Tasty = require('../..');
 
 const URL = 'http://localhost:8765',
 	URL1 = URL + '/test.html',
 	URL2 = 'http://localhost:9876/path/path.html';
 
-describe('SlimerJS', function() {
+describe('PhantomJS', function() {
 	// WORKAROUND
 	if (process.argv.indexOf('--headful') !== -1) {
 		return it.skip('spec skipped');
@@ -18,14 +18,14 @@ describe('SlimerJS', function() {
 
 	this.timeout(60000);
 
-	let server, slimer, tasty;
+	let phantom, server, tasty;
 	beforeEach(() => {
-		teardown(server, slimer, tasty);
-		server = slimer = tasty = null;
+		teardown(phantom, server, tasty);
+		phantom = server = tasty = null;
 	});
 	afterEach(() => {
-		teardown(server, slimer, tasty);
-		server = slimer = tasty = null;
+		teardown(phantom, server, tasty);
+		phantom = server = tasty = null;
 	});
 
 	it('works with custom path', function(done) {
@@ -42,7 +42,7 @@ describe('SlimerJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				slimer = setup('path', URL2);
+				phantom = setup('path', URL2);
 			});
 	});
 
@@ -62,7 +62,7 @@ describe('SlimerJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				slimer = setup('jasmine', URL1);
+				phantom = setup('jasmine', URL1);
 			});
 	});
 
@@ -81,11 +81,10 @@ describe('SlimerJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				slimer = setup('qunit', URL1);
+				phantom = setup('qunit', URL1);
 			});
 	});
 
-	// NOTE this one produces maximum client coverage.
 	it('passes Mocha suite', function(done) {
 		this.slow(20000);
 
@@ -101,7 +100,7 @@ describe('SlimerJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				slimer = setup('mocha', URL1);
+				phantom = setup('mocha', URL1);
 			});
 	});
 });
@@ -111,13 +110,10 @@ function setup(name, url) {
 
 	return child.exec(
 		[
-			slimerjs.path,
-			process.platform === 'win32' ?
-				'-error-log-file firefox.' + name + '.error.log' :
-				'--error-log-file=firefox.' + name + '.error.log',
-			'test/slimer.js',
+			'phantomjs',
+			'test/phantom.js',
 			url,
-			'> slimer.' + name + '.log'
+			'> phantom.' + name + '.log'
 		].join(' ')
 	).on(
 		'error',
@@ -125,9 +121,9 @@ function setup(name, url) {
 	);
 }
 
-function teardown(server, slimer, tasty) {
-	slimer &&
-		slimer.kill();
+function teardown(phantom, server, tasty) {
+	phantom &&
+		phantom.kill();
 	server &&
 		server.close();
 

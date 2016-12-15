@@ -18,26 +18,36 @@ const include = util.include,
 
 tasty.connect = connect;
 tasty.delay = util.delay;
+tasty.disconnect = disconnect;
 tasty.dom = dom;
 tasty.fail = fail;
 tasty.find = dom.find;
+
 /**
  * Client flaws.
  * @memberof tasty
  * @member {Object} flaws
  * @readonly
+ * @prop {Boolean} font Client doesn't support Font Loading API. Font-related tools won't work.
+ * @prop {Boolean} history Client incorrectly reports history length. History-related tools won't work.
  * @prop {Boolean} navigation Client requires emulation of anchor navigation. Tasty will emulate navigation along with click.
  * @prop {Boolean} placeholder Client doesn't support placeholders. Search will skip input placeholders.
  * @prop {Boolean} pseudo Client can't search through pseudo-elements. Search will skip such elements, e.g. `:before` and `:after`.
  * @prop {Boolean} selector Client doesn't support Selectors API. Search with selectors won't work.
+ * @prop {Boolean} shadow Client doesn't support Shadow DOM.
+ * @prop {Boolean} validation Client doesn't support HTML5 Forms.
  * @prop {Boolean} websocket Client has unsupported WebSocket implementation. Tasty will use XHR polling, which is slower.
  */
 tasty.flaws = tool.flaws = {
+	font: !('fonts' in document),
+	history: navigator.userAgent.indexOf('PhantomJS') !== -1,
 	navigation: !('click' in document.createElement('a')),
 	placeholder: !('placeholder' in document.createElement('input')),
-	pseudo: !!window.attachEvent, // TODO better.
-	selector: !document.querySelector,
-	websocket: navigator.appVersion.indexOf('MSIE 10') !== -1 // TODO better.
+	pseudo: 'attachEvent' in window, // TODO better.
+	selector: !('querySelector' in document),
+	shadow: !('ShadowRoot' in window),
+	validation: !('validity' in document.createElement('input')),
+	websocket: !('WebSocket' in window) || navigator.appVersion.indexOf('MSIE 10') !== -1 // TODO better.
 };
 tasty.forEach = util.forEach;
 tasty.format = util.format;
@@ -49,9 +59,15 @@ tasty.parseJson = parseJson;
 tasty.thenable = thenable;
 tasty.tool = tool;
 
+dom.on(window, 'beforeunload', () => {
+	disconnect();
+});
+
 dom.on(window, 'unload', () => {
 	// NOTE this preserves session in case of app-initiated Storage.clear();
 	tasty.id();
+
+	disconnect();
 
 	// TODO configurable key.
 	const key = '__coverage__';
@@ -77,7 +93,7 @@ tasty.forEach(
  * @param {Config|String} [config] Tasty client config (or server URL).
  * @param {Boolean|Object} [config.log=true] Console logging.
  * @param {String} [config.url] Tasty server URL.
- * @return {Function} itself for chaining.
+ * @returns {Function} itself for chaining.
  * @example <!-- HTML (auto-connect) -->
 <script src="//localhost:8765/tasty.js"></script>
  * @example // ES2015
@@ -126,7 +142,9 @@ function tasty(config) {
  * @memberof tasty
  * @see {@link #tasty|examples}
  */
-function connect(_last) {
+function connect(_error) {
+	disconnect();
+
 	const config = tasty.config,
 		id = config.id || tasty.id();
 	id ?
@@ -144,16 +162,42 @@ function connect(_last) {
 		query.flaws = flaws;
 	}
 
+	connect.errors = _error ?
+		connect.errors + 1 :
+		0;
+
 	const socket = new eio(config.origin, {
 		path: config.path || '/',
 		query: query,
-		transports: window.WebSocket && !tasty.flaws.websocket ?
-			['websocket'] :
-			['polling']
+		transports: tasty.flaws.websocket ?
+			['polling'] :
+			// NOTE there could be some proxy or firewall configuration issues
+			// which Engine.IO can't automatically handle and fallbak to polling.
+			_error ?
+				['polling', 'websocket'] :
+				['websocket']
 	})
-		.once('close', _last ? reason : connect)
+		.once('close', connect.errors < 3 ? connect : reason)
 		.on('error', reason)
 		.once('open', () => onOpen(socket, !!id))
+}
+
+/**
+ * Disconnects from Tasty server.
+ * @memberof tasty
+ * @see {@link #tasty|examples}
+ */
+function disconnect() {
+	const socket = tasty.socket;
+	if (!socket) {
+		return;
+	}
+
+	socket.removeListener('close', connect);
+	socket.removeListener('error', reason);
+	socket.close();
+
+	delete tasty.socket;
 }
 
 /**
@@ -169,6 +213,7 @@ function fail(...args) {
 
 function onOpen(socket, reconnect) {
 	tasty.id(socket.id);
+	tasty.socket = socket;
 
 	tasty.console.log('tasty', reconnect ? 'reconnected' : 'connected', tasty.id());
 
@@ -234,11 +279,9 @@ function onMessage(socket, type, data) {
 		case 'end':
 			tasty.console.info('tasty', 'end');
 			tasty.id(null);
-			socket.removeListener('close', connect);
 
 			return () => {
-				socket.removeListener('error', reason);
-				socket.close();
+				disconnect();
 			};
 		case 'exec':
 			tasty.console.log('tasty', 'exec', include.url + data);

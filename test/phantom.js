@@ -1,41 +1,41 @@
-// NOTE SlimerJS script.
+// NOTE PhantomJS script.
 
 var args = require('system').args,
 	page = require('webpage').create(),
 	url = args[1];
 
-log('slimer', url);
+log('phantom', url);
 
-slimer.onError = function(message, trace) {
-	log('slimer', message);
+phantom.onError = function(message, trace) {
+	log(message);
 	trace.forEach(function(item) {
 		log('  ', item.file + ':' + item.line);
 	});
 };
 
 page.onNavigationRequested = function(url, type, allowed, main) {
-	log('slimer', 'navigate', url, allowed ? 'allow' : 'disallow', type.toLowerCase());
+	log('phantom', 'navigate', url, allowed ? 'allow' : 'disallow', type.toLowerCase());
 };
 
 page.onLoadStarted = function() {
-	log('slimer', 'loading');
+	log('phantom', 'loading');
 };
 
 page.onLoadFinished = function(status) {
-	log('slimer', 'loaded', status);
+	log('phantom', 'loaded', status);
 };
 
 page.onResourceRequested = function(request) {
-	log('slimer', 'requested', request.url);
+	log('phantom', 'requested', request.url);
 };
 
 page.onResourceReceived = function(response) {
 	response.stage === 'end' &&
-		log('slimer', 'received', response.url);
+		log('phantom', 'received', response.url);
 };
 
 page.onResourceError = function(error) {
-	log('slimer', 'resource', 'error', error.errorCode, error.errorString, error.url);
+	log('phantom', 'resource', 'error', error.errorCode, error.errorString, error.url);
 };
 
 page.onConsoleMessage = function(message, line, source) {
@@ -43,11 +43,7 @@ page.onConsoleMessage = function(message, line, source) {
 
 	// WORKAROUND
 	message === 'tasty end' &&
-		slimer.exit(0);
-
-	// WORKAROUND
-	message.startsWith('tasty Error') &&
-		screenshot(message);
+		phantom.exit(0);
 };
 
 page.onError = function(message, trace) {
@@ -55,6 +51,9 @@ page.onError = function(message, trace) {
 	trace.forEach(function(item) {
 		log('  ', item.file + ':' + item.line);
 	});
+
+	// NOTE console.error goes here.
+	screenshot(message);
 };
 
 page.clearMemoryCache &&
@@ -62,8 +61,9 @@ page.clearMemoryCache &&
 
 page.open(url, function(status) {
 	log('phantom', status);
+console.log('PAGE', page.content);
 	if (status !== 'success') {
-		return slimer.exit(1);
+		return phantom.exit(1);
 	}
 });
 
@@ -72,11 +72,11 @@ function log() {
 }
 
 function screenshot(name) {
-	name = ['slimer', name, Date.now(), 'png'].join('.')
+	name = ['phantom', name, Date.now(), 'png'].join('.')
 		.replace(/"/g, '\'')
 		.replace(/\.\./g, '.')
 		.replace(/[^a-z0-9.'()$\- ]/gi, '');
-	log('slimer', 'screenshot', name);
+	log('phantom', 'screenshot', name);
 
 	page.render(name);
 }
