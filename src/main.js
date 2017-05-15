@@ -28,8 +28,9 @@ tasty.find = dom.find;
  * @memberof tasty
  * @member {Object} flaws
  * @readonly
+ * @prop {Boolean} doctype Client doesn't properly support DOM DocumentType. History-related tools won't work.
  * @prop {Boolean} font Client doesn't support Font Loading API. Font-related tools won't work.
- * @prop {Boolean} history Client incorrectly reports history length. History-related tools won't work.
+ * @prop {Boolean} history Client doesn't fully support HTML5 History API. History-related tools won't work.
  * @prop {Boolean} navigation Client requires emulation of anchor navigation. Tasty will emulate navigation along with click.
  * @prop {Boolean} placeholder Client doesn't support placeholders. Search will skip input placeholders.
  * @prop {Boolean} pseudo Client can't search through pseudo-elements. Search will skip such elements, e.g. `:before` and `:after`.
@@ -39,15 +40,22 @@ tasty.find = dom.find;
  * @prop {Boolean} websocket Client has unsupported WebSocket implementation. Tasty will use XHR polling, which is slower.
  */
 tasty.flaws = tool.flaws = {
+	doctype: !('doctype' in document) ||
+		!document.doctype &&
+			document.documentElement.previousSibling &&
+				document.documentElement.previousSibling.nodeType === 8,
 	font: !('fonts' in document),
-	history: navigator.userAgent.indexOf('PhantomJS') !== -1,
+	history: !('pushState' in history) ||
+		// WORKAROUND: PhantomJS as of 2.1.1 incorrectly reports history length.
+		navigator.userAgent.indexOf('PhantomJS') !== -1,
 	navigation: !('click' in document.createElement('a')),
 	placeholder: !('placeholder' in document.createElement('input')),
 	pseudo: 'attachEvent' in window, // TODO better.
 	selector: !('querySelector' in document),
 	shadow: !('ShadowRoot' in window),
 	validation: !('validity' in document.createElement('input')),
-	websocket: !('WebSocket' in window) || navigator.appVersion.indexOf('MSIE 10') !== -1 // TODO better.
+	websocket: !('WebSocket' in window) ||
+		navigator.appVersion.indexOf('MSIE 10') !== -1 // TODO better.
 };
 tasty.forEach = util.forEach;
 tasty.format = util.format;

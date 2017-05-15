@@ -16,6 +16,7 @@ describe('PhantomJS', function() {
 		return it.skip('spec skipped');
 	}
 
+	this.retries(1);
 	this.timeout(60000);
 
 	let phantom, server, tasty;

@@ -17,6 +17,7 @@ module.exports = [
 				}
 			},
 			{
+				skip: tasty.flaws.doctype,
 				name: 'checks doctype',
 				time: 1000,
 				body: () => {
@@ -75,7 +76,8 @@ module.exports = [
 				}
 			},
 			{
-				skip: !global.chai,
+				skip: !global.chai ||
+					tasty.flaws.doctype,
 				name: 'fails on wrong doctype',
 				time: 1000,
 				body: () => {
