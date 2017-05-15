@@ -3,6 +3,7 @@
 module.exports = [
 	{
 		name: 'hover',
+		retry: 1,
 		timeout: 30000,
 		specs: [
 			{

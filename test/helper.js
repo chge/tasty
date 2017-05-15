@@ -52,7 +52,9 @@ function JasmineHelper(pattern) {
 
 function MochaHelper(pattern) {
 	load(pattern, (suite) => {
-		function run(fn, timeout, time) {
+		function run(fn, retry, timeout, time) {
+			retry &&
+				this.retries(retry);
 			timeout &&
 				this.timeout(timeout);
 			time &&
@@ -76,6 +78,8 @@ function MochaHelper(pattern) {
 				afterEach(function() {
 					return run.call(this, suite.afterEach, suite.timeout);
 				});
+			suite.retry &&
+				this.retries(suite.retry);
 			suite.timeout &&
 				this.timeout(suite.timeout);
 
@@ -86,7 +90,7 @@ function MochaHelper(pattern) {
 						it.only :
 						it;
 				specMethod(spec.name, function() {
-					return run.call(this, spec.body, spec.timeout, spec.time);
+					return run.call(this, spec.body, spec.retry, spec.timeout, spec.time);
 				});
 			});
 		});

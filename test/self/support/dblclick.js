@@ -3,6 +3,7 @@
 module.exports = [
 	{
 		name: 'dblclick',
+		retry: 1,
 		timeout: 30000,
 		specs: [
 			{

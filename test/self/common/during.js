@@ -3,6 +3,7 @@
 module.exports = [
 	{
 		name: 'during',
+		retry: 1,
 		timeout: 10000,
 		specs: [
 			{

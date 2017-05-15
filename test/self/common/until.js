@@ -3,6 +3,7 @@
 module.exports = [
 	{
 		name: 'until',
+		retry: 1,
 		timeout: 10000,
 		specs: [
 			{

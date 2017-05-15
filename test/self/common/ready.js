@@ -3,6 +3,7 @@
 module.exports = [
 	{
 		name: 'ready',
+		retry: 1,
 		timeout: 50000,
 		afterEach: () => {
 			reset(false);

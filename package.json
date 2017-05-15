@@ -1,6 +1,6 @@
 {
   "name": "tasty",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Integration testing helper for web",
   "main": "lib/main.js",
   "preferGlobal": true,
@@ -27,7 +27,7 @@
     "istanbul": "^0.4.5",
     "jasmine": "^2.6.0",
     "jasmine-spec-reporter": "^4.1.0",
-    "mocha": "^3.3.0",
+    "mocha": "^3.4.1",
     "nyc": "^10.3.2",
     "qunitjs": "^2.3.2",
     "rollup": "^0.41.6",

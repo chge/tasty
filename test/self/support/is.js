@@ -3,6 +3,7 @@
 module.exports = [
 	{
 		name: 'is',
+		retry: 1,
 		timeout: 30000,
 		specs: [
 			{

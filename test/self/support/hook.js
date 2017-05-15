@@ -3,6 +3,7 @@
 module.exports = [
 	{
 		name: 'hook',
+		retry: 1,
 		timeout: 30000,
 		afterEach: () => {
 			reset(false);
