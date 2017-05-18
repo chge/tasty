@@ -1,0 +1,24 @@
+engines:
+  csslint:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+        - javascript
+  eslint:
+    enabled: true
+  fixme:
+    enabled: true
+    config:
+      strings:
+        - WORKAROUND
+
+exclude_paths:
+  - docs/**/*
+  - test/**/*
+
+ratings:
+  paths:
+  - lib/**
+  - src/**

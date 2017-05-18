@@ -150,7 +150,7 @@ function tasty(config) {
  * @memberof tasty
  * @see {@link #tasty|examples}
  */
-function connect(_error) {
+function connect(_closed) {
 	disconnect();
 
 	const config = tasty.config,
@@ -170,8 +170,8 @@ function connect(_error) {
 		query.flaws = flaws;
 	}
 
-	connect.errors = _error ?
-		connect.errors + 1 :
+	connect.closed = _closed ?
+		connect.closed + 1 :
 		0;
 
 	const socket = new eio(config.origin, {
@@ -181,11 +181,11 @@ function connect(_error) {
 			['polling'] :
 			// NOTE there could be some proxy or firewall configuration issues
 			// which Engine.IO can't automatically handle and fallbak to polling.
-			_error ?
+			_closed ?
 				['polling', 'websocket'] :
 				['websocket']
 	})
-		.once('close', connect.errors < 3 ? connect : reason)
+		.once('close', connect.closed < 5 ? connect : reason)
 		.on('error', reason)
 		.once('open', () => onOpen(socket, !!id))
 }
