@@ -20,13 +20,11 @@ describe('PhantomJS', function() {
 	this.timeout(60000);
 
 	let phantom, server, tasty;
-	beforeEach(() => {
-		teardown(phantom, server, tasty);
-		phantom = server = tasty = null;
-	});
 	afterEach(() => {
-		teardown(phantom, server, tasty);
-		phantom = server = tasty = null;
+		phantom && phantom.kill();
+		server && server.close();
+
+		return tasty && tasty.stop().catch(() => {});
 	});
 
 	it('works with custom path', function(done) {
@@ -43,7 +41,7 @@ describe('PhantomJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				phantom = setup('path', URL2);
+				phantom = spawn('path', URL2);
 			});
 	});
 
@@ -63,7 +61,7 @@ describe('PhantomJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				phantom = setup('jasmine', URL1);
+				phantom = spawn('jasmine', URL1);
 			});
 	});
 
@@ -82,7 +80,7 @@ describe('PhantomJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				phantom = setup('qunit', URL1);
+				phantom = spawn('qunit', URL1);
 			});
 	});
 
@@ -101,17 +99,18 @@ describe('PhantomJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				phantom = setup('mocha', URL1);
+				phantom = spawn('mocha', URL1);
 			});
 	});
 });
 
-function setup(name, url) {
+function spawn(name, url) {
 	name = name || 'unknown';
 
 	return child.exec(
 		[
 			'phantomjs',
+			'--disk-cache=false',
 			'test/phantom.js',
 			url,
 			'> phantom.' + name + '.log'
@@ -120,15 +119,4 @@ function setup(name, url) {
 		'error',
 		(error) => console.error(error)
 	);
-}
-
-function teardown(phantom, server, tasty) {
-	phantom &&
-		phantom.kill();
-	server &&
-		server.close();
-
-	return tasty ?
-		tasty.stop() :
-		null;
 }

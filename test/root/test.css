@@ -19,3 +19,19 @@
 .none {
 	display: none;
 }
+
+.cover {
+	position: relative;
+	display: inline-block;
+	width: 5em;
+}
+
+.cover * {
+	width: 100%;
+}
+
+#upper {
+	position: absolute;
+	left: 0;
+	top: 0;
+}

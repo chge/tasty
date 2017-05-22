@@ -63,38 +63,68 @@ export function escape(source, regexp) {
 
 	return regexp ?
 		source :
-		source.replace(/\$/g, '\\$')
-			.replace(/\^/g, '\\^')
-			.replace(/\"/g, '\\"')
-			.replace(/\//g, '\\/')
-			.replace(/\r/g, '\\r')
-			.replace(/\n/g, '\\n')
-			.replace(/\t/g, '\\t');
+		desequence(
+			source.replace(/\$/g, '\\$')
+				.replace(/\^/g, '\\^')
+				.replace(/\"/g, '\\"')
+				.replace(/\//g, '\\/')
+		);
+}
+
+export function desequence(source) {
+	return source = (source + '')
+		.replace(/[\b]/g, '\\b')
+		.replace(/\f/g, '\\f')
+		.replace(/\n/g, '\\n')
+		.replace(/\r/g, '\\r')
+		.replace(/\t/g, '\\t')
+		.replace(/\v/g, '\\v')
+		.replace(/\0/g, '\\0');
 }
 
 export function format(value) {
-	return value instanceof Error ?
-		{
+	if (typeof value === 'undefined' || value === null) {
+		return value + '';
+	}
+	if (value instanceof Error) {
+		return {
 			name: value.name,
 			message: value.message,
 			stack: value.stack ?
 				value.stack
 					.replace(/\s*at Socket[\s\S]*/m, '') :
 				undefined
-		} :
-		value && value.nodeType ?
-			value.nodeType === 3 ?
-				'#text' :
-				value.outerHTML ?
-					value.outerHTML.replace(/>[\s\S]*$/m, ' />').replace(/\n/g, '') :
-					'<' + value.nodeName + ' ... />' :
-			value && value.type ?
-				value.type === 'text' && isArray(value.value) ?
-					'{' + value.type + ' ' + new RegExp(value.value[0], value.value[1]) + '}' :
-					value.hasOwnProperty('value') ?
-						'{' + value.type + ' ' + value.value + '}' :
-						'{' + value.type + '}' :
-				value + '';
+		};
+	}
+	if (value.nodeType) {
+		if (value.nodeType === 3) {
+			let text = value.textContent;
+			text = text.length > 30 ?
+				text.substr(0, 27) + '...' :
+				text;
+
+			return text.length ?
+				'#text ' + desequence(text) :
+				'empty #text';
+		}
+
+		return value.outerHTML ?
+			desequence(
+				value.outerHTML
+					.replace(/>[\s\S]*$/m, ' />')
+					.replace(/\n/g, '')
+			) :
+			'<' + value.nodeName + ' ... />';
+	}
+
+	return value.type ?
+		value.type === 'text' && isArray(value.value) ?
+			'{' + value.type + ' ' +
+				new RegExp(value.value[0], value.value[1]) + '}' :
+			value.hasOwnProperty('value') ?
+				'{' + value.type + ' ' + value.value + '}' :
+				'{' + value.type + '}' :
+		value + '';
 }
 
 export function flaws(object) {
@@ -197,6 +227,34 @@ export function thenable(value) {
 }
 
 // NOTE polyfills.
+
+/**
+ * Implementation of `Object.assign`.
+ * @function assign
+ * @memberof tasty
+ * @param {...Object}
+ * @returns {Object}
+ * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign|MDN}
+ */
+export function assign(target) {
+	if (target == null) {
+		throw new TypeError('Cannot convert undefined or null to object');
+	}
+	var to = Object(target);
+	for (var index = 1; index < arguments.length; index++) {
+		var nextSource = arguments[index];
+
+		if (nextSource != null) {
+			for (var nextKey in nextSource) {
+				if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+					to[nextKey] = nextSource[nextKey];
+				}
+			}
+		}
+	}
+
+	return to;
+}
 
 /**
  * Implementation of `Array.prototype.filter`.

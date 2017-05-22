@@ -10,6 +10,16 @@ window.onload = function() {
 		button.innerHTML = 'Pressed';
 	};
 
+	var lower = document.getElementById('lower');
+	lower.onclick = function() {
+		lower.innerHTML = lower.innerHTML.toLowerCase();
+	};
+
+	var upper = document.getElementById('upper');
+	upper.onclick = function() {
+		upper.innerHTML = upper.innerHTML.toUpperCase();
+	};
+
 	var double = document.querySelector('span');
 	double.ondblclick = function() {
 		double.innerHTML = 'Triple';

@@ -193,6 +193,27 @@ module.exports = [
 				}
 			},
 			{
+				skip: !global.chai,
+				name: 'skips covered text',
+				time: 1000,
+				body: () => {
+					navigate('/test.html');
+					now(
+						() => expect(
+							now.is(text('Lower'))
+						).to.be.eventually.rejectedWith(Error)
+					);
+				}
+			},
+			{
+				name: 'checks covered text in strict mode',
+				time: 1000,
+				body: () => {
+					navigate('/test.html');
+					is(text('Lower'), null, true);
+				}
+			},
+			{
 				name: 'checks input value',
 				time: 1000,
 				body: () => {

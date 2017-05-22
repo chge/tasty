@@ -1,6 +1,6 @@
 {
   "name": "tasty",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "Integration testing helper for web",
   "main": "lib/main.js",
   "preferGlobal": true,
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "engine.io": "^3.1.0",
-    "glob": "^7.1.1",
+    "glob": "^7.1.2",
     "minimist": "^1.2.0",
     "requireg": "^0.1.6",
     "tasty-sandbox": "^2.0.6"
@@ -21,13 +21,13 @@
     "chai-spies": "^0.7.1",
     "coveralls": "^2.13.1",
     "docma": "^1.5.1",
-    "engine.io-client": "^3.1.0",
+    "engine.io-client": "^3.1.1",
     "es6-promise": "^4.1.0",
     "eslint": "^3.19.0",
     "istanbul": "^0.4.5",
     "jasmine": "^2.6.0",
     "jasmine-spec-reporter": "^4.1.0",
-    "mocha": "^3.4.1",
+    "mocha": "^3.4.2",
     "nyc": "^10.3.2",
     "qunitjs": "^2.3.2",
     "rollup": "^0.41.6",
@@ -45,7 +45,7 @@
     "docs": "node --harmony node_modules/docma/bin/docma --config docma.json",
     "lint": "node --harmony node_modules/eslint/bin/eslint bin && node --harmony node_modules/eslint/bin/eslint lib && node --harmony node_modules/eslint/bin/eslint src",
     "prepublish": "npm run build && npm run lint && npm run docs",
-    "pretest": "node --harmony node_modules/rollup/bin/rollup -c --coverage",
+    "1pretest": "node --harmony node_modules/rollup/bin/rollup -c --coverage",
     "posttest": "node --harmony test/report **/*.info coverage.info && node --harmony node_modules/coveralls/bin/coveralls < coverage.info",
     "support": "node --harmony node_modules/mocha/bin/mocha --colors --harmony --reporter list --ui bdd test/support.js",
     "test": "node --harmony node_modules/nyc/bin/nyc --reporter lcovonly --report-dir coverage_server --temp-directory coverage_server node_modules/mocha/bin/mocha --colors --reporter list --ui bdd test/spec/*.js"

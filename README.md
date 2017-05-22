@@ -18,9 +18,11 @@ It respects [Content Security Policy](https://www.w3.org/TR/CSP/) and SSL/TLS.
 # How it works
 
 Tasty server controls connected clients to run your tests against your application.
+
 ![console](https://github.com/chge/tasty/raw/master/test/demo/console.gif)
 
 Client can emulate real user: navigate, fill forms, check content.
+
 ![browser](https://github.com/chge/tasty/raw/master/test/demo/browser.gif)
 
 1. Add `tasty.js` module to your assembly or markup.
@@ -192,6 +194,8 @@ For WebDriver clients you could [maximize window](https://www.w3.org/TR/webdrive
 
 Additionally, [Chrome DevTools](https://developer.chrome.com/devtools) could force current tab to lose focus, with the same results.
 
+Remember, you can always click on something to reset autofocus when you doesn't need to test it.
+
 ### Shadow DOM
 
 Not supported yet.
@@ -199,6 +203,16 @@ Not supported yet.
 ### Browser UI
 
 Some elements of browser itself, such as tooltips from `title` attribute or HTML5 Form validation messages, could be potentially detected, but currently aren't supported.
+
+### Arrow functions
+
+```javascript
+exec(() => {
+	...
+});
+```
+
+The lambda above will be called on the client "as is", so if it doesn't support arrow functions, the call will fail. It's more safe to always use function literals in such cases.
 
 # Tools
 
@@ -353,7 +367,11 @@ On staging or other near-production environment, Tasty can't pass (re)CAPTCHA or
 
 ### Permanent secrets
 
-Store passwords in CIS and pass credentials into command line. All arguments will be available in `tasty.config` object.
+Store passwords in your Continuous Integration tool and pass credentials into command line. All arguments will be available in `tasty.config` object.
+
+If you're automatically taking screenshots or recording videos during test run, they could potentially contain passwords (e.g. typed into wrong fields because of error) or other sensitive data.
+
+Also, tasty logs all typed/pasted text into browser console.
 
 ### One-off secrets
 

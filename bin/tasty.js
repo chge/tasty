@@ -8,12 +8,18 @@ const config = require('minimist')(process.argv.slice(2), {
 	'--': true,
 	alias: {
 		a: 'addon', b: 'bail', c: 'coverage', C: 'coverage-reporter',
-		h: 'help', o: 'runner-output', O: 'coverage-output',
+		i: 'static-index', h: 'help', o: 'runner-output', O: 'coverage-output',
 		q: 'quiet', r: 'runner', R: 'runner-reporter', s: 'static',
 		u: 'url', v: 'version', w: 'watch'
 	},
-	boolean: ['bail', 'colors', 'help', 'version', 'verbose', 'quiet', 'watch'],
-	string: ['addon', 'cert', 'coverage', 'coverage-output', 'coverage-reporter', 'key', 'passphrase', 'runner', 'runner-output', 'runner-reporter', 'slow', 'static', 'url']
+	boolean: [
+		'bail', 'colors', 'help', 'quiet', 'verbose', 'version', 'watch'
+	],
+	string: [
+		'addon', 'cert', 'coverage', 'coverage-output', 'coverage-reporter',
+		'key', 'passphrase', 'runner', 'runner-output', 'runner-reporter',
+		'slow', 'static', 'static-index', 'url'
+	]
 });
 
 const Tasty = require('../lib/main');
@@ -53,6 +59,9 @@ if (config.version) {
                          If blank, delay 500 ms.
   -s, --static <path>    Start built-in static server from path.
                          If blank, serve from CWD.
+  -i, --static-index <path>
+                         Path to static index (fallback) file.
+                         If set, respond with that file instead of 404.
   -u, --url <url>        Protocol, host, port and path for Tasty server.
                          If omitted, use http://localhost:8765/
   --verbose              Verbose Tasty-specific output.

@@ -20,13 +20,11 @@ describe('SlimerJS', function() {
 	this.timeout(60000);
 
 	let server, slimer, tasty;
-	beforeEach(() => {
-		teardown(server, slimer, tasty);
-		server = slimer = tasty = null;
-	});
 	afterEach(() => {
-		teardown(server, slimer, tasty);
-		server = slimer = tasty = null;
+		server && server.close();
+		slimer && slimer.kill();
+
+		return tasty && tasty.stop().catch(() => {});
 	});
 
 	it('works with custom path', function(done) {
@@ -43,7 +41,7 @@ describe('SlimerJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				slimer = setup('path', URL2);
+				slimer = spawn('path', URL2);
 			});
 	});
 
@@ -63,7 +61,7 @@ describe('SlimerJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				slimer = setup('jasmine', URL1);
+				slimer = spawn('jasmine', URL1);
 			});
 	});
 
@@ -82,7 +80,7 @@ describe('SlimerJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				slimer = setup('qunit', URL1);
+				slimer = spawn('qunit', URL1);
 			});
 	});
 
@@ -102,12 +100,12 @@ describe('SlimerJS', function() {
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
 			.then(() => {
-				slimer = setup('mocha', URL1);
+				slimer = spawn('mocha', URL1);
 			});
 	});
 });
 
-function setup(name, url) {
+function spawn(name, url) {
 	name = name || 'unknown';
 
 	return child.exec(
@@ -124,15 +122,4 @@ function setup(name, url) {
 		'error',
 		(error) => console.error(error)
 	);
-}
-
-function teardown(server, slimer, tasty) {
-	slimer &&
-		slimer.kill();
-	server &&
-		server.close();
-
-	return tasty ?
-		tasty.stop() :
-		null;
 }

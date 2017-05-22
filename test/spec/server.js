@@ -12,8 +12,14 @@ chai.use(require('chai-as-promised'));
 chai.use(require('chai-http'));
 
 describe('server', function() {
+	let tasty, tasty2;
+	afterEach(() => Promise.all([
+		tasty && tasty.stop().catch(() => {}),
+		tasty2 && tasty2.stop().catch(() => {})
+	]));
+
 	it('listens by default', function() {
-		const tasty = new Tasty();
+		tasty = new Tasty();
 
 		return tasty.start()
 			.then(
@@ -24,14 +30,11 @@ describe('server', function() {
 					expect(response).to.have.status(200);
 					expect(response.body).to.be.ok;
 				}
-			)
-			.then(
-				() => tasty.stop()
 			);
 	});
 
 	it('listens on given URL', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			url: URL2
 		});
 
@@ -44,14 +47,11 @@ describe('server', function() {
 					expect(response).to.have.status(200);
 					expect(response.body).to.be.ok;
 				}
-			)
-			.then(
-				() => tasty.stop()
 			);
 	});
 
 	it('listens on given URL alternatively', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			url: URL2
 		});
 
@@ -64,14 +64,11 @@ describe('server', function() {
 					expect(response).to.have.status(200);
 					expect(response.body).to.be.ok;
 				}
-			)
-			.then(
-				() => tasty.stop()
 			);
 	});
 
-	it('responds with text on root', function() {
-		const tasty = new Tasty();
+	it('responds error on root', function() {
+		tasty = new Tasty();
 
 		return tasty.start()
 			.then(
@@ -79,16 +76,13 @@ describe('server', function() {
 			)
 			.catch(
 				(response) => {
-					expect(response).to.have.status(400);
+					expect(response).to.have.status(403);
 				}
-			)
-			.then(
-				() => tasty.stop()
 			);
 	});
 
 	it('catches errors', function() {
-		const tasty = new Tasty();
+		tasty = new Tasty();
 
 		return tasty.start()
 			.then(
@@ -96,14 +90,11 @@ describe('server', function() {
 			)
 			.catch(
 				(response) => expect(response).to.have.status(404)
-			)
-			.then(
-				() => tasty.stop()
 			);
 	});
 
 	it('supports HTTPS', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			cert: 'test/localhost.cert',
 			key: 'test/localhost.key',
 			passphrase: 'WHAT DO YOU GET IF YOU MULTIPLY SIX BY NINE',
@@ -112,29 +103,23 @@ describe('server', function() {
 
 		// NOTE chai-http seems to fail on self-signed cert.
 		return expect(tasty.start())
-			.to.be.fulfilled
-			.then(
-				() => tasty.stop()
-			);
+			.to.be.fulfilled;
 	});
 
 	it('rejects to start on busy port', function() {
-		const tasty1 = new Tasty(),
-			tasty2 = new Tasty();
+		tasty = new Tasty();
+		tasty2 = new Tasty();
 
-		return tasty1.start()
+		return tasty.start()
 			.then(
 				() => expect(tasty2.start())
 					.to.be.eventually.rejectedWith(Error)
 					.and.to.have.property('code', 'EADDRINUSE')
-			)
-			.then(
-				() => tasty1.stop()
 			);
 	});
 
 	it('rejects to start HTTPS without certificate', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			url: URL3
 		});
 
@@ -144,7 +129,7 @@ describe('server', function() {
 	});
 
 	it('rejects to start HTTPS without certificate key', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			cert: 'test/localhost.cert',
 			url: URL3
 		});
@@ -155,7 +140,7 @@ describe('server', function() {
 	});
 
 	it('rejects to stop if not started', function() {
-		const tasty = new Tasty();
+		tasty = new Tasty();
 
 		return expect(tasty.stop())
 			.to.be.eventually.rejectedWith(Error);

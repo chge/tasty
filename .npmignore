@@ -3,7 +3,15 @@ coverage
 coverage_server
 docs
 node_modules
-slimer.log
+src
+test
 tmp
+
+.codeclimate.yml
+.travis.yml
+appveyor.yml
+docma.json
+README.md
+rollup.config.js
 *.info
-npm-debug.log
+*.log

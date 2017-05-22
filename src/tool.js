@@ -10,7 +10,8 @@ tool.hook = hook;
 import * as dom from './dom';
 import * as util from './util';
 
-const delay = util.delay,
+const assign = util.assign,
+	delay = util.delay,
 	deserialize = util.deserialize,
 	escape = util.escape,
 	forEach = util.forEach,
@@ -97,7 +98,7 @@ tool('breakpoint', () => {
 });
 
 tool('is', (what, where, options) => {
-	const found = search(what, where, options)
+	const found = search(what, where, options, {reachable: true});
 	if (found) {
 		highlight(found);
 	} else {
@@ -106,7 +107,7 @@ tool('is', (what, where, options) => {
 });
 
 tool('no', (what, where, options) => {
-	const found = search(what, where, options);
+	const found = search(what, where, options, {reachable: true});
 	if (found) {
 		highlight(found);
 		throw reason('found', what, 'in', where, 'as', format(found));
@@ -116,16 +117,16 @@ tool('no', (what, where, options) => {
 tool('clear', (count) => {
 	const target = document.activeElement;
 	if (target === document.body) {
-		throw reason('clear, no active node');
+		throw reason('no active node to clear');
 	}
 	if (!('value' in target)) {
-		throw reason('clear, wrong active node', target);
+		throw reason('wrong active node', target, 'to clear');
 	}
 	if (target.disabled) {
-		throw reason('clear, disabled active node', target);
+		throw reason('disabled active node', target, 'to clear');
 	}
 	if (target.readOnly) {
-		throw reason('clear, read-only active node', target);
+		throw reason('read-only active node', target, 'to clear');
 	}
 	tool.console.debug('tasty', 'clear', 'target', target);
 	highlight(target);
@@ -367,17 +368,22 @@ function thing(type, value) {
  * @param {Thing|String} [where=window] {@link /tasty/?api=test#Thing|Thing} to search in. String means {@link /tasty/?api=test#nodes|`nodes`}.
  * @param {Object|Boolean} [options] Search options.
  * @param {Boolean} [options.strict] Strict flag: `true` for exact match, `false` for loose search and `undefined` for default behavior.
+ * @param {Boolean} [options.reachable] Make sure found node is reachable: isn't covered with other nodes.
+ * @param {Object|Boolean} [defaults] Defaults for `options`.
  */
-export function search(what, where, options) {
+export function search(what, where, options, defaults) {
 	what = typeof what === 'string' ?
 		thing('text', what) :
 		thing(what);
 	where = typeof where === 'string' ?
 		thing('nodes', where) :
 		thing(where);
+	defaults = typeof defaults === 'boolean' ?
+		{reachable: defaults} :
+		defaults || {};
 	options = typeof options === 'boolean' ?
 		{strict: options} :
-		options || {};
+		assign(options || {}, defaults);
 
 	const value = what.value,
 		regexp = value instanceof RegExp ?
@@ -391,8 +397,30 @@ export function search(what, where, options) {
 		case 'image':
 		case 'node':
 		case 'nodes':
-		case 'text':
-			return dom.find(what, where, options);
+		case 'text': {
+			const found = dom.find(what, where, options);
+			if (!found) {
+				return null;
+			}
+
+			// NOTE found could be text Node, while reached is always an Element.
+			const parent = found.parentNode,
+				reached = dom.reach(found);
+			if (parent === document.body ||
+					reached === document ||
+						reached === document.documentElement ||
+							reached === document.body
+			) {
+				return found;
+			}
+			if (options.reachable && reached !== found && reached !== parent) {
+				throw reason('found', found, 'is covered by', reached);
+			}
+
+			return reached === parent ?
+				found :
+				reached;
+		}
 		case 'css':
 			return findInList('href', regexp, document.getElementsByTagName('link'));
 		case 'doctype': {

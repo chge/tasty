@@ -16,6 +16,7 @@ const include = util.include,
 	reason = util.reason,
 	thenable = util.thenable;
 
+tasty.assign = util.assign;
 tasty.connect = connect;
 tasty.delay = util.delay;
 tasty.disconnect = disconnect;
@@ -239,31 +240,31 @@ function onOpen(socket, reconnect) {
 					tool.hook(null, 'after.reconnect', null) :
 					null
 			)
-			.then(
-				() => onMessage(socket, type, data)
-			)['catch'](
-				(error) => error
-			)
-			.then((result) => {
-				if (type === 'tool') {
-					reconnect = false;
-				}
+				.then(
+					() => onMessage(socket, type, data)
+				)['catch'](
+					(error) => error
+				)
+				.then((result) => {
+					if (type === 'tool') {
+						reconnect = false;
+					}
 
-				var callback;
-				if (typeof result === 'function') {
-					callback = result;
-					result = [];
-				} else if (result instanceof Error) {
-					tasty.console.error('tasty', result);
-					result = [0, util.format(result)];
-				} else {
-					result = [result];
-				}
-				socket.send(
-					JSON.stringify([mid, 0, result]),
-					callback
-				);
-			});
+					var callback;
+					if (typeof result === 'function') {
+						callback = result;
+						result = [];
+					} else if (result instanceof Error) {
+						tasty.console.error('tasty', result);
+						result = [0, util.format(result)];
+					} else {
+						result = [result];
+					}
+					socket.send(
+						JSON.stringify([mid, 0, result]),
+						callback
+					);
+				});
 		}
 	});
 
@@ -294,7 +295,24 @@ function onMessage(socket, type, data) {
 		case 'exec':
 			tasty.console.log('tasty', 'exec', include.url + data);
 
-			return include(data);
+			return thenable((resolve, reject) => {
+				include(data)
+					.then(
+						() => {
+							const result = tasty.result;
+							delete tasty.result;
+							// NOTE prevent callback to be used as Promise executor.
+							typeof result === 'function' ?
+								resolve(result) :
+								thenable(result)
+									.then(resolve, reject);
+						},
+						(error) => {
+							delete tasty.result;
+							reject(error);
+						}
+					);
+			});
 		case 'message':
 			tasty.console.info('tasty', data);
 

@@ -38,6 +38,16 @@ module.exports = [
 				}
 			},
 			{
+				name: 'clicks on reachable node',
+				time: 1000,
+				body: () => {
+					navigate('/test.html');
+					click(text('Lower'));
+					is(text('UPPER'));
+					no(text('lower'));
+				}
+			},
+			{
 				name: 'clicks on link',
 				time: 1000,
 				body: () => {

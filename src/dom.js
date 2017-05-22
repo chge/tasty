@@ -2,19 +2,18 @@
 
 import * as polyfill from 'tasty-treewalker';
 
-import { escape, filter, find as findItem, random, reason } from './util';
+import { escape, filter, find as findItem, reason } from './util';
 
 export function click(node, force) {
 	hover(node);
+
+	const cause = disabled(node);
+	if (cause) {
+		throw reason('node', cause, 'is disabled');
+	}
 	focus(node);
 
-	if (node.disabled) {
-		throw reason('node', node, 'is disabled');
-	}
 	const parent = node.parentNode;
-	if (parent && parent.disabled) {
-		throw reason('node', parent, 'is disabled');
-	}
 	if (node.click) {
 		node.click();
 	} else if (parent && parent.click) {
@@ -30,15 +29,13 @@ export function click(node, force) {
 
 export function dblclick(node, force) {
 	hover(node);
+
+	const cause = disabled(node);
+	if (cause) {
+		throw reason('node', cause, 'is disabled');
+	}
 	focus(node);
 
-	if (node.disabled) {
-		throw reason('node', node, 'is disabled');
-	}
-	const parent = node.parentNode;
-	if (parent && parent.disabled) {
-		throw reason('node', parent, 'is disabled');
-	}
 	trigger(node, 'MouseEvent', 'mousedown', null, force);
 	trigger(node, 'MouseEvent', 'mouseup', null, force);
 	trigger(node, 'MouseEvent', 'mousedown', null, force);
@@ -67,11 +64,25 @@ export function find(what, where, options) {
 			// TODO return findByImage(what.value, where, options);
 			throw reason(what.type, 'is not implemented yet, sorry');
 		case 'node':
-		case 'nodes':
-			if (where.type) {
-				throw reason('cannot search node(s) in', where.type);
+		case 'nodes': {
+			const method = what.type === 'node' ?
+				findBySelector :
+				findAllBySelector;
+			switch (where.type) {
+				case 'node': {
+					const found = find(where, {type: 'window'}, options);
+					if (!found) {
+						throw reason('no', where, 'to find', what, 'in');
+					}
+
+					return method(what.value, found);
+				}
+				case 'window':
+					return method(what.value, document.documentElement);
+				default:
+					throw reason('cannot search', what, 'in', where);
 			}
-			return findBySelector(what.value, document.documentElement);
+		}
 		case 'text': {
 			const value = what.value,
 				regexp = value instanceof RegExp ?
@@ -89,7 +100,7 @@ function findByText(regexp, where, options) {
 	let list;
 	switch (where.type) {
 		case 'node':
-			list = findBySelector(where.value, document.documentElement);
+			list = [findBySelector(where.value, document.documentElement)];
 			break;
 		case 'nodes':
 			list = findAllBySelector(where.value, document.documentElement);
@@ -105,7 +116,7 @@ function findByText(regexp, where, options) {
 			);
 			break;
 		default:
-			throw reason('find, scope', where.type, 'is not supported');
+			throw reason('cannot search text in', where);
 	}
 
 	return findByTextInList(regexp, list, options.strict);
@@ -119,6 +130,30 @@ function findAllBySelector(selector, context) {
 	return nodeListToArray(
 		context.querySelectorAll(selector)
 	);
+}
+
+function findAllByText(regexp, context, strict) {
+	const NodeFilter = window.NodeFilter ||
+			polyfill.NodeFilter,
+		filter = (node) => node.innerText || node.textContent || node.nodeValue || node.value || node.placeholder ?
+			NodeFilter.FILTER_ACCEPT :
+			NodeFilter.FILTER_REJECT,
+		what = NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT;
+
+	filter.acceptNode = filter;
+	const walker = document.createTreeWalker ?
+			document.createTreeWalker(context, what, filter, false) :
+			polyfill.createTreeWalker(context, what, filter),
+		nodes = [];
+
+	let node = walker.nextNode();
+	while (node) {
+		matchText(regexp, node, strict) &&
+			nodes.push(node);
+		node = walker.nextNode();
+	}
+
+	return nodes;
 }
 
 function findByTextInList(regexp, list, strict) {
@@ -145,30 +180,6 @@ function findByTextInList(regexp, list, strict) {
 			filtered :
 			nodes
 	);
-}
-
-function findAllByText(regexp, context, strict) {
-	const NodeFilter = window.NodeFilter ||
-			polyfill.NodeFilter,
-		filter = (node) => node.innerText || node.textContent || node.nodeValue || node.value || node.placeholder ?
-			NodeFilter.FILTER_ACCEPT :
-			NodeFilter.FILTER_REJECT,
-		what = NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT;
-
-	filter.acceptNode = filter;
-	const walker = document.createTreeWalker ?
-			document.createTreeWalker(context, what, filter, false) :
-			polyfill.createTreeWalker(context, what, filter),
-		nodes = [];
-
-	let node = walker.nextNode();
-	while (node) {
-		matchText(regexp, node, strict) &&
-			nodes.push(node);
-		node = walker.nextNode();
-	}
-
-	return nodes;
 }
 
 function findByDepthInList(list) {
@@ -291,7 +302,9 @@ function innerText(node, strict) {
 			'value' in node ?
 				node.type === 'password' ?
 					getPassword(node, style) :
-					node.value || node.placeholder || node.textContent || node.nodeValue :
+					node.value ||
+						(document.activeElement !== node ? node.placeholder : null) ||
+							node.textContent || node.nodeValue :
 				node.textContent || node.nodeValue,
 		style,
 		strict,
@@ -320,6 +333,10 @@ function getPassword(node, style) {
 }
 
 function getStyle(node, pseudo) {
+	if (node === document || node === document.documentElement) {
+		return {};
+	}
+
 	node = element(node);
 	pseudo = pseudo || '';
 
@@ -439,27 +456,16 @@ function symbols(symbol, length) {
 	return string;
 }
 
-export function enabled(node) {
-	while (node) {
-		if (node.disabled) {
-			return false;
-		}
-		if (node === document.body) {
-			return true;
-		}
-		node = node.parentNode;
-	}
-
-	return !!node;
-}
-
 export function focus(node) {
 	const active = document.activeElement;
 	active === node ||
 		blur(active);
 
+	const parent = node.parentNode;
 	if (node.focus) {
 		node.focus();
+	} else if (parent && parent.focus) {
+		parent.focus();
 	} else {
 		trigger(node, 'FocusEvent', 'focus', {bubbles: false, cancellable: false});
 		trigger(node, 'FocusEvent', 'focusin', {cancellable: false});
@@ -469,8 +475,11 @@ export function focus(node) {
 }
 
 export function blur(node) {
+	const parent = node.parentNode;
 	if (node.blur) {
 		node.blur();
+	} else if (parent && parent.blur) {
+		parent.blur();
 	} else {
 		// TODO change event if needed.
 		trigger(node, 'FocusEvent', 'blur', {bubbles: false, cancellable: false});
@@ -511,25 +520,41 @@ export function visible(node, strict) {
 		return false;
 	}
 
-	const rect = node.getBoundingClientRect(),
+	const rect = measure(node),
 		width = window.innerWidth ||
 			document.documentElement.clientWidth,
 		height = window.innerHeight ||
 			document.documentElement.clientHeight,
 		viewport = strict ?
 			rect.left >= 0 && rect.top >= 0 && rect.right <= width && rect.bottom <= height :
-			rect.left < width && rect.top < height && rect.right > 0 && rect.bottom > 0,
-		style = strict ?
-			getStyle(node) :
-			null,
-		hidden = style ?
-			style.visibility === 'hidden' :
-			false;
+			rect.left < width && rect.top < height && rect.right > 0 && rect.bottom > 0;
 
 	// TODO check color vs background (via https://www.w3.org/TR/AERT#color-contrast).
 
 	// TODO more reliable.
-	return viewport && !hidden;
+	return viewport && !hidden(node);
+}
+
+export function hidden(node) {
+	while (node) {
+		if (getStyle(node).visibility === 'hidden') {
+			return node;
+		}
+		node = node.parentNode;
+	}
+
+	return false;
+}
+
+export function disabled(node) {
+	while (node) {
+		if (node.disabled) {
+			return node;
+		}
+		node = node.parentNode;
+	}
+
+	return false;
 }
 
 export function on(target, event, handler, options) {
@@ -541,23 +566,39 @@ export function on(target, event, handler, options) {
 }
 
 export function reach(node) {
-	node = element(node);
+	const rect = measure(node),
+		x = (rect.left + rect.right) / 2,
+		y = (rect.top + rect.bottom) / 2,
+		actual = document.elementFromPoint(x, y);
 
-	// TODO consider border-radius.
-
-	let rect = node.getBoundingClientRect(),
-		x = random(rect.left, rect.right),
-		y = random(rect.top, rect.bottom),
-		actual = document.elementFromPoint(x, y),
-		parent = actual;
-
+	let parent = actual;
 	while (parent !== node) {
 		if (!(parent = parent.parentNode)) {
-			return [actual, x, y];
+			return actual;
 		}
 	}
 
-	return [parent, x, y];
+	return parent;
+}
+
+function measure(node) {
+	// TODO consider border-radius.
+	if (node.getBoundingClientRect) {
+		return node.getBoundingClientRect();
+	}
+
+	let range;
+	if (document.body.createTextRange) {
+		range = document.body.createTextRange();
+		node.nodeType == 3 ?
+			range.moveToElementText(node.parentNode) :
+			range.moveToElementText(node);
+	} else {
+		range = document.createRange();
+		range.selectNodeContents(node);
+	}
+
+	return range.getBoundingClientRect();
 }
 
 /**
@@ -567,22 +608,17 @@ export function highlight(node) {
 	try {
 		if (document.body.createTextRange) {
 			const range = document.body.createTextRange();
-			range.moveToElementText(node);
-			if (range.execCommand) {
-				return range.execCommand('hiliteColor', false, '#ff4f00');
-			} else {
+			node.nodeType == 3 ?
+				range.moveToElementText(node.parentNode) :
+				range.moveToElementText(node);
+			range.select &&
 				range.select();
-
-				return document.execCommand('hiliteColor', false, '#ff4f00');
-			}
 		} else if (window.getSelection) {
 			const selection = window.getSelection(),
 				range = document.createRange();
 			range.selectNodeContents(node);
 			selection.removeAllRanges();
 			selection.addRange(range);
-
-			return document.execCommand('hiliteColor', false, '#ff4f00');
 		}
 	} catch (thrown) {
 		// TODO log?
@@ -629,7 +665,7 @@ export function trigger(node, type, arg, init, force) {
 		}
 	}
 
-	// WORKAROUND: text node could be already detached.
+	// WORKAROUND: text Node could be already detached.
 	let parent;
 	try {
 		parent = node.parentNode;

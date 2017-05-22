@@ -38,16 +38,15 @@ page.onResourceError = function(error) {
 	log('slimer', 'resource', 'error', error.errorCode, error.errorString, error.url);
 };
 
+var lastError;
 page.onConsoleMessage = function(message, line, source) {
 	log(message);
 
 	// WORKAROUND
+	message === 'tasty fail' &&
+		screenshot(lastError || message);
 	message === 'tasty end' &&
 		slimer.exit(0);
-
-	// WORKAROUND
-	message.startsWith('tasty Error') &&
-		screenshot(message);
 };
 
 page.onError = function(message, trace) {
@@ -55,13 +54,14 @@ page.onError = function(message, trace) {
 	trace.forEach(function(item) {
 		log('  ', item.file + ':' + item.line);
 	});
+	lastError = message;
 };
 
 page.clearMemoryCache &&
 	page.clearMemoryCache();
 
 page.open(url, function(status) {
-	log('phantom', status);
+	log('slimer', status);
 	if (status !== 'success') {
 		return slimer.exit(1);
 	}

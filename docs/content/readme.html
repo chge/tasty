@@ -13,10 +13,10 @@
 It respects <a href="https://www.w3.org/TR/CSP/">Content Security Policy</a> and SSL/TLS.</p>
 <h1 id="how-it-works">How it works</h1>
 <hr />
-<p>Tasty server controls connected clients to run your tests against your application.
-<img src="https://github.com/chge/tasty/raw/master/test/demo/console.gif" alt="console"></p>
-<p>Client can emulate real user: navigate, fill forms, check content.
-<img src="https://github.com/chge/tasty/raw/master/test/demo/browser.gif" alt="browser"></p>
+<p>Tasty server controls connected clients to run your tests against your application.</p>
+<p><img src="https://github.com/chge/tasty/raw/master/test/demo/console.gif" alt="console"></p>
+<p>Client can emulate real user: navigate, fill forms, check content.</p>
+<p><img src="https://github.com/chge/tasty/raw/master/test/demo/browser.gif" alt="browser"></p>
 <ol>
 <li>Add <code>tasty.js</code> module to your assembly or markup.</li>
 <li>Assemble and serve your application from staging server.</li>
@@ -135,10 +135,17 @@ as <a href="https://developer.chrome.com/devtools/docs/debugger-protocol">debugg
 <p>If you don't want to focus such elements explicitly (using <code>click</code> or something else), make sure that client window remain focused during tests.
 For WebDriver clients you could <a href="https://www.w3.org/TR/webdriver/#maximize-window">maximize window</a> or use <a href="http://stackoverflow.com/a/19170779"><code>alert()</code> workaround</a> to focus reliably.</p>
 <p>Additionally, <a href="https://developer.chrome.com/devtools">Chrome DevTools</a> could force current tab to lose focus, with the same results.</p>
+<p>Remember, you can always click on something to reset autofocus when you doesn't need to test it.</p>
 <h3 id="shadow-dom">Shadow DOM</h3>
 <p>Not supported yet.</p>
 <h3 id="browser-ui">Browser UI</h3>
 <p>Some elements of browser itself, such as tooltips from <code>title</code> attribute or HTML5 Form validation messages, could be potentially detected, but currently aren't supported.</p>
+<h3 id="arrow-functions">Arrow functions</h3>
+<pre><code class="lang-javascript">exec(() =&gt; {
+    ...
+});
+</code></pre>
+<p>The lambda above will be called on the client "as is", so if it doesn't support arrow functions, the call will fail. It's more safe to always use function literals in such cases.</p>
 <h1 id="tools">Tools</h1>
 <hr />
 <h3 id="queue">Queue</h3>
@@ -249,7 +256,9 @@ click('Save');
 <hr />
 <p>On staging or other near-production environment, Tasty can't pass (re)CAPTCHA or two-factor authentication for you.</p>
 <h3 id="permanent-secrets">Permanent secrets</h3>
-<p>Store passwords in CIS and pass credentials into command line. All arguments will be available in <code>tasty.config</code> object.</p>
+<p>Store passwords in your Continuous Integration tool and pass credentials into command line. All arguments will be available in <code>tasty.config</code> object.</p>
+<p>If you're automatically taking screenshots or recording videos during test run, they could potentially contain passwords (e.g. typed into wrong fields because of error) or other sensitive data.</p>
+<p>Also, tasty logs all typed/pasted text into browser console.</p>
 <h3 id="one-off-secrets">One-off secrets</h3>
 <p>Get two-factor nonces from backdoor or use paid services to mock real mobile phones.</p>
 <h3 id="-re-captcha">(re)CAPTCHA</h3>

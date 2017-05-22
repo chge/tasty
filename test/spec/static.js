@@ -10,8 +10,13 @@ const URL1 = 'http://localhost:8765',
 chai.use(require('chai-http'));
 
 describe('static', function() {
+	let tasty;
+	afterEach(
+		() => tasty && tasty.stop().catch(() => {})
+	);
+
 	it('serves by default', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			static: true
 		});
 
@@ -20,15 +25,12 @@ describe('static', function() {
 				() => chai.request(URL1).get('/')
 			)
 			.catch(
-				(response) => expect(response).to.have.status(400)
-			)
-			.then(
-				() => tasty.stop()
+				(response) => expect(response).to.have.status(403)
 			);
 	});
 
 	it('serves from CWD', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			static: true
 		});
 
@@ -42,14 +44,11 @@ describe('static', function() {
 					expect(response).to.be.json;
 					expect(response.body.name).to.equal('tasty');
 				}
-			)
-			.then(
-				() => tasty.stop()
 			);
 	});
 
 	it('serves from given root', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			static: 'test/root'
 		});
 
@@ -62,14 +61,11 @@ describe('static', function() {
 					expect(response).to.have.status(200);
 					expect(response).to.be.html;
 				}
-			)
-			.then(
-				() => tasty.stop()
 			);
 	});
 
 	it('serves on given URL', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			url: URL2,
 			static: 'test/root'
 		});
@@ -83,14 +79,11 @@ describe('static', function() {
 					expect(response).to.have.status(200);
 					expect(response).to.be.html;
 				}
-			)
-			.then(
-				() => tasty.stop()
 			);
 	});
 
 	it('allows path traversal', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			static: 'test'
 		});
 
@@ -114,14 +107,47 @@ describe('static', function() {
 							expect(response.body.name).to.equal('tasty');
 						}
 					)
+			);
+	});
+
+	it('serves index from root', function() {
+		tasty = new Tasty({
+			static: 'test/root',
+			staticIndex: 'test/root/test.html'
+		});
+
+		return tasty.start()
+			.then(
+				() => chai.request(URL1).get('/')
 			)
 			.then(
-				() => tasty.stop()
+				(response) => {
+					expect(response).to.have.status(200);
+					expect(response).to.be.html;
+				}
+			);
+	});
+
+	it('serves index instead of 404', function() {
+		tasty = new Tasty({
+			static: 'test/root',
+			staticIndex: 'test/root/test.html'
+		});
+
+		return tasty.start()
+			.then(
+				() => chai.request(URL1).get('/nonexistent')
+			)
+			.then(
+				(response) => {
+					expect(response).to.have.status(200);
+					expect(response).to.be.html;
+				}
 			);
 	});
 
 	it('catches errors', function() {
-		const tasty = new Tasty({
+		tasty = new Tasty({
 			static: true
 		});
 
@@ -131,9 +157,6 @@ describe('static', function() {
 			)
 			.catch(
 				(response) => expect(response).to.have.status(403)
-			)
-			.then(
-				() => tasty.stop()
 			);
 	});
 });

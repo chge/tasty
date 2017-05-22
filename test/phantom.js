@@ -38,10 +38,13 @@ page.onResourceError = function(error) {
 	log('phantom', 'resource', 'error', error.errorCode, error.errorString, error.url);
 };
 
+var lastError;
 page.onConsoleMessage = function(message, line, source) {
 	log(message);
 
 	// WORKAROUND
+	message === 'tasty fail' &&
+		screenshot(lastError || message);
 	message === 'tasty end' &&
 		phantom.exit(0);
 };
@@ -51,9 +54,7 @@ page.onError = function(message, trace) {
 	trace.forEach(function(item) {
 		log('  ', item.file + ':' + item.line);
 	});
-
-	// NOTE console.error goes here.
-	screenshot(message);
+	lastError = message;
 };
 
 page.clearMemoryCache &&
@@ -61,7 +62,7 @@ page.clearMemoryCache &&
 
 page.open(url, function(status) {
 	log('phantom', status);
-console.log('PAGE', page.content);
+
 	if (status !== 'success') {
 		return phantom.exit(1);
 	}

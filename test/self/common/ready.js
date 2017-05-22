@@ -6,7 +6,7 @@ module.exports = [
 		retry: 1,
 		timeout: 50000,
 		afterEach: () => {
-			reset(false);
+			reset(false, true);
 		},
 		specs: [
 			{
