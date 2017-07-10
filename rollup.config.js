@@ -40,11 +40,13 @@ if (process.argv.indexOf('--coverage') !== -1) {
 }
 
 export default {
+	amd: {
+		id: 'tasty'
+	},
 	dest: 'dist/tasty.js',
 	entry: 'src/main.js',
 	format: 'umd',
 	legacy: true,
-	moduleId: 'tasty',
 	moduleName: 'tasty',
 	plugins: plugins
 };

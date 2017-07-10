@@ -253,18 +253,6 @@ tool('reload', () => {
 });
 
 tool('reset', (url) => {
-	// NOTE session is restored in window.unload;
-	const done = () => {
-		if (typeof url === 'string') {
-			// TODO close socket first.
-			window.location = url;
-		} else {
-			url === false ||
-				// TODO close socket first.
-				window.location.reload(true);
-		}
-	};
-
 	// NOTE clear cookies.
 	forEach(
 		document.cookie.split(';'),
@@ -300,8 +288,22 @@ tool('reset', (url) => {
 		request.onfailure = (event) => tool.console.error('tasty', event);
 	}
 
-	chain.then(done, done);
-	// TODO other.
+	// TODO more?
+
+	return thenable((resolve) => {
+		// NOTE connection and session are handled in window.unload;
+		const done = () => {
+			if (typeof url === 'string') {
+				window.location = url;
+			} else if (url === true) {
+				window.location.reload(true);
+			} else {
+				resolve();
+			}
+		};
+
+		chain.then(done, done);
+	});
 });
 
 tool('type', (text) => {
@@ -371,7 +373,7 @@ function thing(type, value) {
  * @param {Boolean} [options.reachable] Make sure found node is reachable: isn't covered with other nodes.
  * @param {Object|Boolean} [defaults] Defaults for `options`.
  */
-export function search(what, where, options, defaults) {
+function search(what, where, options, defaults) {
 	what = typeof what === 'string' ?
 		thing('text', what) :
 		thing(what);
@@ -413,7 +415,7 @@ export function search(what, where, options, defaults) {
 			) {
 				return found;
 			}
-			if (options.reachable && reached !== found && reached !== parent) {
+			if (options.reachable && reached !== found && !dom.matchParent(reached, found)) {
 				throw reason('found', found, 'is covered by', reached);
 			}
 

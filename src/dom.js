@@ -211,7 +211,7 @@ function findWindowByName(name) {
 	return child;
 }
 
-function matchParent(parent, child) {
+export function matchParent(parent, child) {
 	while (child) {
 		child = child.parentNode;
 		if (child === parent) {

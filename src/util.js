@@ -52,7 +52,7 @@ export function deserialize(value) {
 export function escape(source, regexp) {
 	source = (source + '')
 		.replace(/\./g, '\\.')
-		.replace(/\,/g, '\\,')
+		.replace(/,/g, '\\,')
 		.replace(/\*/g, '\\*')
 		.replace(/\+/g, '\\+')
 		.replace(/\?/g, '\\?')
@@ -66,7 +66,7 @@ export function escape(source, regexp) {
 		desequence(
 			source.replace(/\$/g, '\\$')
 				.replace(/\^/g, '\\^')
-				.replace(/\"/g, '\\"')
+				.replace(/"/g, '\\"')
 				.replace(/\//g, '\\/')
 		);
 }
@@ -232,7 +232,8 @@ export function thenable(value) {
  * Implementation of `Object.assign`.
  * @function assign
  * @memberof tasty
- * @param {...Object}
+ * @param {Object} target Target object.
+ * @param {...Object} sources Source object(s).
  * @returns {Object}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign|MDN}
  */

@@ -16,7 +16,7 @@ const config = require('minimist')(process.argv.slice(2), {
 		'bail', 'colors', 'help', 'quiet', 'verbose', 'version', 'watch'
 	],
 	string: [
-		'addon', 'cert', 'coverage', 'coverage-output', 'coverage-reporter',
+		'addon', 'cert', 'config', 'coverage', 'coverage-output', 'coverage-reporter',
 		'key', 'passphrase', 'runner', 'runner-output', 'runner-reporter',
 		'slow', 'static', 'static-index', 'url'
 	]
@@ -38,6 +38,7 @@ if (config.version) {
   -b, --bail             Fail fast, stop test runner on first fail.
   --cert <path>          Certificate for Tasty server.
   --colors               Enable colored output, if supported by runner.
+  --config <path>        JSON config.
   -c, --coverage <name>  Module to use as coverage instrumenter.
                          Built-ins: istanbul, nyc.
   -O, --coverage-output <path>
@@ -71,15 +72,28 @@ if (config.version) {
 	);
 	process.exit(0);
 } else {
-	const tasty = new Tasty(
-		Object.assign(config, {
-			include: config._,
-			exclude: process.argv.indexOf('--') === -1 ?
-				null :
-				config['--'],
-			url: config['url'] || true
-		})
-	);
+	if (config.config) {
+		Object.assign(config, JSON.parse(
+			require('fs').readFileSync(config.config)
+		));
+	}
+	const exclude = process.argv.indexOf('--') === -1 ?
+			config.exclude || null :
+			[].concat(
+				config.exclude || [],
+				config['--'] || []
+			),
+		include = [].concat(
+			config.include || [],
+			config._ || []
+		),
+		tasty = new Tasty(
+			Object.assign(config, {
+				exclude: exclude,
+				include: include,
+				url: config.url || true
+			})
+		);
 	tasty.on('end', (token, error) => {
 		if (config.watch) {
 			tasty.log &&

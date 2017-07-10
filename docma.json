@@ -12,7 +12,9 @@
 	},
 	"src": [
 		{
-			"client": "src/**/*.js",
+			"client": [
+				"src/**/*.js"
+			],
 			"server": [
 				"lib/**/*.js",
 				"!lib/runner.js",

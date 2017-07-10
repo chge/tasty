@@ -81,20 +81,27 @@ Try not to use knowledge of your application's markup, assume you're helping a r
 <pre><code class="lang-shell">tasty test.js --username 'John Doe' --password 'secret!'
 </code></pre>
 <p>Open your application in your client. Tasty will run the test, print all output and exit.</p>
+<h1 id="configuration">Configuration</h1>
+<hr />
+<p>Either use Tasty from command line or from your code using <a href="https://chge.github.io/tasty/?api=server">API</a>.</p>
+<p>Tasty can read any <a href="https://chge.github.io/tasty/?api=server#Tasty">configuration</a> fields from JSON file provided by <code>--config &lt;path/to/config&gt;</code> flag.</p>
+<p>See <code>tasty --help</code> for more information.</p>
 <h1 id="server">Server</h1>
 <hr />
 <p>Tasty server is a bridge between the clients and the test runner, it controls each client and runs tests written using Tasty tools.</p>
 <p>Use <code>--url</code> flag to configre server's own URL.</p>
-<h1 id="client">Client</h1>
-<hr />
-<p>Tasty client is a small extendable UMD module that connects to the server and executes its commands.</p>
 <h1 id="runner">Runner</h1>
 <hr />
 <p>Tasty supports any test frameworks that support asynchronous tests.</p>
+<p>Check out the <a href="https://chge.github.io/tasty/?api=test">API available for tests</a>.</p>
 <p>There are built-in runners for <a href="https://mochajs.org/">Mocha</a>, <a href="https://jasmine.github.io/">Jasmine</a> and <a href="https://qunitjs.com/">QUnit</a>. Provide <code>--runner &lt;name&gt;</code> flag to use one of them. For other frameworks, use Tasty programmatically from your runner.</p>
 <p><a href="http://chaijs.com/">Chai</a>, its <a href="http://chaijs.com/plugins">plugins</a> and other helper libraries are supported by providing <code>--addon &lt;name&gt;,&lt;name&gt;...</code> flag.
 For example, <code>--addon chai,chai-as-promised,chai-http</code> works fine.</p>
-<p>Use <code>--watch</code> flag to watch for changes or run on several clients. See <code>tasty --help</code> for more information.</p>
+<p>Use <code>--watch</code> flag to watch for changes or run on several clients.</p>
+<h1 id="client">Client</h1>
+<hr />
+<p>Tasty client is a small extendable UMD module that connects to the server and executes its commands.</p>
+<p>It has its own <a href="https://chge.github.io/tasty/?api=client">API</a> and isolated polyfills for non-supporting browsers.</p>
 <h1 id="static-server">Static server</h1>
 <hr />
 <p>You can run built-in static server on the same URL by passing <code>--static &lt;path/to/root&gt;</code> flag.</p>
@@ -106,7 +113,7 @@ Tasty's static server has built-in support for <a href="https://gotwarlost.githu
 <hr />
 <p>For Tasty server running on <code>localhost:8765/path</code> you should add the following CSP directives for Tasty client to work properly:</p>
 <pre><code>connect-src localhost:8765/path ws://localhost:8765/path wss://localhost:8765/path
-script-src localhost:8765/path/*.js
+script-src localhost:8765/path
 </code></pre><p>Unfortunately, both <a href="https://gotwarlost.github.io/istanbul">Istanbul</a> and <a href="https://istanbul.js.org/">NYC</a> instrumenters use <code>new Function()</code> to get top-level scope.
 To use one of them, you have to add the following directive:</p>
 <pre><code>script-src 'unsafe-eval'

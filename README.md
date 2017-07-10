@@ -104,26 +104,38 @@ tasty test.js --username 'John Doe' --password 'secret!'
 
 Open your application in your client. Tasty will run the test, print all output and exit.
 
+# Configuration
+
+Either use Tasty from command line or from your code using [API](https://chge.github.io/tasty/?api=server).
+
+Tasty can read any [configuration](https://chge.github.io/tasty/?api=server#Tasty) fields from JSON file provided by `--config <path/to/config>` flag.
+
+See `tasty --help` for more information.
+
 # Server
 
 Tasty server is a bridge between the clients and the test runner, it controls each client and runs tests written using Tasty tools.
 
 Use `--url` flag to configre server's own URL.
 
-# Client
-
-Tasty client is a small extendable UMD module that connects to the server and executes its commands.
-
 # Runner
 
 Tasty supports any test frameworks that support asynchronous tests.
+
+Check out the [API available for tests](https://chge.github.io/tasty/?api=test).
 
 There are built-in runners for [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/) and [QUnit](https://qunitjs.com/). Provide `--runner <name>` flag to use one of them. For other frameworks, use Tasty programmatically from your runner.
 
 [Chai](http://chaijs.com/), its [plugins](http://chaijs.com/plugins) and other helper libraries are supported by providing `--addon <name>,<name>...` flag.
 For example, `--addon chai,chai-as-promised,chai-http` works fine.
 
-Use `--watch` flag to watch for changes or run on several clients. See `tasty --help` for more information.
+Use `--watch` flag to watch for changes or run on several clients.
+
+# Client
+
+Tasty client is a small extendable UMD module that connects to the server and executes its commands.
+
+It has its own [API](https://chge.github.io/tasty/?api=client) and isolated polyfills for non-supporting browsers.
 
 # Static server
 
@@ -140,7 +152,7 @@ For Tasty server running on `localhost:8765/path` you should add the following C
 
 ```
 connect-src localhost:8765/path ws://localhost:8765/path wss://localhost:8765/path
-script-src localhost:8765/path/*.js
+script-src localhost:8765/path
 ```
 
 Unfortunately, both [Istanbul](https://gotwarlost.github.io/istanbul) and [NYC](https://istanbul.js.org/) instrumenters use `new Function()` to get top-level scope.
