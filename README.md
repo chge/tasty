@@ -293,10 +293,10 @@ ready('window'); // 'load' aka 'complete' readyState
 ...and maybe wait a little bit.
 
 ```javascript
-ready('document', 500);
+ready('document', 300);
 ```
 ```javascript
-ready('window', 500);
+ready('window', 300);
 ```
 
 Another way is to provide some application-specific code.

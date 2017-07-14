@@ -108,7 +108,7 @@ describe('SlimerJS', function() {
 function spawn(name, url) {
 	name = name || 'unknown';
 
-	return child.exec(
+	const spawned = child.exec(
 		[
 			slimerjs.path,
 			process.platform === 'win32' ?
@@ -122,4 +122,8 @@ function spawn(name, url) {
 		'error',
 		(error) => console.error(error)
 	);
+
+	process.on('exit', () => spawned.kill());
+
+	return spawned;
 }

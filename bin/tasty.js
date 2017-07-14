@@ -27,7 +27,7 @@ const Tasty = require('../lib/main');
 if (config.version) {
 	console.log(
 		'Tasty',
-		require('../package.json').version
+		require('../package').version
 	);
 	process.exit(0);
 } else if (config.help) {
@@ -57,7 +57,7 @@ if (config.version) {
   -R, --runner-reporter <name>
                          Module to use as test reporter.
   --slow <ms>            Pause after each tool.
-                         If blank, delay 500 ms.
+                         If blank, delay 300 ms.
   -s, --static <path>    Start built-in static server from path.
                          If blank, serve from CWD.
   -i, --static-index <path>

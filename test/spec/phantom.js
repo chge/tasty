@@ -107,7 +107,7 @@ describe('PhantomJS', function() {
 function spawn(name, url) {
 	name = name || 'unknown';
 
-	return child.exec(
+	const spawned = child.exec(
 		[
 			'phantomjs',
 			'--disk-cache=false',
@@ -119,4 +119,8 @@ function spawn(name, url) {
 		'error',
 		(error) => console.error(error)
 	);
+
+	process.on('exit', () => spawned.kill());
+
+	return spawned;
 }

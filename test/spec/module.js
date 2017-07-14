@@ -19,6 +19,16 @@ describe('tasty', function() {
 		expect(Tasty).to.be.equal(Tasty.Tasty);
 	});
 
+	it('exports internal API', function() {
+		const tasty = new Tasty({
+			coverage: 'nyc'
+		});
+		expect(tasty.Context).to.be.instanceof(Function);
+		expect(tasty.Coverage).to.be.instanceof(Function);
+		expect(tasty.Runner).to.be.instanceof(Function);
+		expect(tasty.Server).to.be.instanceof(Function);
+	});
+
 	it('clones config', function() {
 		const config = {},
 			tasty = new Tasty(config);
@@ -149,15 +159,15 @@ describe('tasty', function() {
 			new Tasty({
 				coverage: 'big-kahuna-coverage'
 			});
-		}).to.throw(TypeError);
+		}).to.throw(Error);
 	});
 
 	it('throws on unknown runner toolchain', function() {
 		expect(() => {
 			new Tasty({
-				coverage: 'runner-royale'
+				runner: 'runner-royale'
 			});
-		}).to.throw(TypeError);
+		}).to.throw(Error);
 	});
 
 	it('throws on wrong runner configration', function() {

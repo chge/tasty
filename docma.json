@@ -17,11 +17,13 @@
 			],
 			"server": [
 				"lib/**/*.js",
+				"!lib/context.js",
 				"!lib/runner.js",
 				"!lib/thing.js",
 				"!lib/tool.js"
 			],
 			"test": [
+				"lib/context.js",
 				"lib/runner.js",
 				"lib/thing.js",
 				"lib/tool.js"
