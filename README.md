@@ -334,6 +334,8 @@ Note that built-in methods cannot be combined.
 
 The `now(...)` call with function(s) allows you to add some custom logic into test, but you should use `now.*` namespace for tools.
 
+The `now.smth()` is the same as just `smth()`, but runs immediately. You should use `now.*` tools inside `now(...)` call if you don't want to break execution order.
+
 ```javascript
 it('chooses', function() {
 	now(
@@ -348,17 +350,16 @@ it('chooses', function() {
 });
 ```
 
-The `now.smth()` is the same as just `smth()`, but runs immediately. You should use `now.*` tools only inside `now(...)` call if you don't want to break execution order.
+Some tools, like `during()` and `until()`, accepts functions that will be already queued, so feel free to use `now.smth()` from them.
 
 ```javascript
 it('searches', function() {
 	until(
-		now(
-			() => now.is(text('Chapter 42', 'h1'))
-				.catch(
-					() => now.click('Next')
-				)
-		)
+		() => now.is(text('Chapter 42', 'h1'))
+			.catch((error) => {
+				now.click('Next');
+				throw error;
+			})
 	);
 	click('Bookmark');
 

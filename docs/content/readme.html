@@ -224,6 +224,7 @@ click('Save');
 <p>Note that built-in methods cannot be combined.</p>
 <h3 id="custom-logic">Custom logic</h3>
 <p>The <code>now(...)</code> call with function(s) allows you to add some custom logic into test, but you should use <code>now.*</code> namespace for tools.</p>
+<p>The <code>now.smth()</code> is the same as just <code>smth()</code>, but runs immediately. You should use <code>now.*</code> tools inside <code>now(...)</code> call if you don't want to break execution order.</p>
 <pre><code class="lang-javascript">it('chooses', function() {
     now(
         () =&gt; now.is(text('Welcome back'))
@@ -236,15 +237,14 @@ click('Save');
     return now();
 });
 </code></pre>
-<p>The <code>now.smth()</code> is the same as just <code>smth()</code>, but runs immediately. You should use <code>now.*</code> tools only inside <code>now(...)</code> call if you don't want to break execution order.</p>
+<p>Some tools, like <code>during()</code> and <code>until()</code>, accepts functions that will be already queued, so feel free to use <code>now.smth()</code> from them.</p>
 <pre><code class="lang-javascript">it('searches', function() {
     until(
-        now(
-            () =&gt; now.is(text('Chapter 42', 'h1'))
-                .catch(
-                    () =&gt; now.click('Next')
-                )
-        )
+        () =&gt; now.is(text('Chapter 42', 'h1'))
+            .catch((error) =&gt; {
+                now.click('Next');
+                throw error;
+            })
     );
     click('Bookmark');
 
