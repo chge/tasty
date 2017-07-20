@@ -13,14 +13,15 @@ export function click(node, force) {
 	}
 	focus(node);
 
+	trigger(node, 'MouseEvent', 'mousedown', null, force);
+	trigger(node, 'MouseEvent', 'mouseup', null, force);
+
 	const parent = node.parentNode;
 	if (node.click) {
 		node.click();
 	} else if (parent && parent.click) {
 		parent.click();
 	} else {
-		trigger(node, 'MouseEvent', 'mousedown', null, force);
-		trigger(node, 'MouseEvent', 'mouseup', null, force);
 		trigger(node, 'MouseEvent', 'click', null, force);
 	}
 

@@ -245,6 +245,10 @@ tool('paste', (text) => {
 		dom.trigger(target, 'Event', 'change', {cancellable: false});
 });
 
+tool('ready', () => {
+	// NOTE noop: hooks should do the deal.
+});
+
 tool('reload', () => {
 	return thenable(() => {
 		// NOTE never resolve.

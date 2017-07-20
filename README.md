@@ -224,7 +224,11 @@ exec(() => {
 });
 ```
 
-The lambda above will be called on the client "as is", so if it doesn't support arrow functions, the call will fail. It's more safe to always use function literals in such cases.
+The lambda above will be called on the client "as is", so if it doesn't support arrow functions, the call will fail. It's more safe to always use `function` literals in such cases.
+
+### Console
+
+Tasty console output could be wrong or confusing if `window.console` is modified by application. If this is the case, make sure Tasty client code is runnig prior to application code.
 
 # Tools
 
@@ -384,7 +388,7 @@ Store passwords in your Continuous Integration tool and pass credentials into co
 
 If you're automatically taking screenshots or recording videos during test run, they could potentially contain passwords (e.g. typed into wrong fields because of error) or other sensitive data.
 
-Also, tasty logs all typed/pasted text into browser console.
+Also, Tasty logs all typed/pasted text into browser console.
 
 ### One-off secrets
 

@@ -152,7 +152,9 @@ For WebDriver clients you could <a href="https://www.w3.org/TR/webdriver/#maximi
     ...
 });
 </code></pre>
-<p>The lambda above will be called on the client "as is", so if it doesn't support arrow functions, the call will fail. It's more safe to always use function literals in such cases.</p>
+<p>The lambda above will be called on the client "as is", so if it doesn't support arrow functions, the call will fail. It's more safe to always use <code>function</code> literals in such cases.</p>
+<h3 id="console">Console</h3>
+<p>Tasty console output could be wrong or confusing if <code>window.console</code> is modified by application. If this is the case, make sure Tasty client code is runnig prior to application code.</p>
 <h1 id="tools">Tools</h1>
 <hr />
 <h3 id="queue">Queue</h3>
@@ -265,7 +267,7 @@ click('Save');
 <h3 id="permanent-secrets">Permanent secrets</h3>
 <p>Store passwords in your Continuous Integration tool and pass credentials into command line. All arguments will be available in <code>tasty.config</code> object.</p>
 <p>If you're automatically taking screenshots or recording videos during test run, they could potentially contain passwords (e.g. typed into wrong fields because of error) or other sensitive data.</p>
-<p>Also, tasty logs all typed/pasted text into browser console.</p>
+<p>Also, Tasty logs all typed/pasted text into browser console.</p>
 <h3 id="one-off-secrets">One-off secrets</h3>
 <p>Get two-factor nonces from backdoor or use paid services to mock real mobile phones.</p>
 <h3 id="-re-captcha">(re)CAPTCHA</h3>
