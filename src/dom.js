@@ -571,6 +571,10 @@ export function reach(node) {
 		x = (rect.left + rect.right) / 2,
 		y = (rect.top + rect.bottom) / 2,
 		actual = document.elementFromPoint(x, y);
+	// NOTE node could be outside of the viewport.
+	if (!actual) {
+		return actual;
+	}
 
 	let parent = actual;
 	while (parent !== node) {
