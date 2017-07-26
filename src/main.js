@@ -12,6 +12,7 @@ import * as dom from './dom';
 import * as util from './util';
 
 const include = util.include,
+	hook = tool.hook,
 	parseJson = util.parseJson,
 	reason = util.reason,
 	thenable = util.thenable;
@@ -22,7 +23,6 @@ tasty.delay = util.delay;
 tasty.disconnect = disconnect;
 tasty.dom = dom;
 tasty.fail = fail;
-tasty.find = dom.find;
 
 /**
  * Client flaws.
@@ -60,11 +60,13 @@ tasty.flaws = tool.flaws = {
 };
 tasty.forEach = util.forEach;
 tasty.format = util.format;
-tasty.hook = tool.hook;
+tasty.hook = hook;
 tasty.id = util.session;
 tasty.isArray = util.isArray;
+tasty.keys = util.keys;
 tasty.map = util.map;
 tasty.parseJson = parseJson;
+tasty.Promise = util.Promise;
 tasty.thenable = thenable;
 tasty.tool = tool;
 
@@ -220,11 +222,11 @@ function fail(...args) {
 	throw reason(...args);
 }
 
-function onOpen(socket, reconnect) {
+function onOpen(socket, reconnected) {
 	tasty.id(socket.id);
 	tasty.socket = socket;
 
-	tasty.console.log('tasty', reconnect ? 'reconnected' : 'connected', tasty.id());
+	tasty.console.log('tasty', reconnected ? 'reconnected' : 'connected', tasty.id());
 
 	socket.on('message', (raw) => {
 		const message = parseJson(raw);
@@ -235,36 +237,40 @@ function onOpen(socket, reconnect) {
 				type = message[1],
 				data = message[2];
 
+			hook.update &&
+				hook.update();
+
 			thenable(
-				reconnect ?
-					tool.hook(null, 'after.reconnect', null) :
+				reconnected ?
+					hook(undefined, 'after.reconnect') :
 					null
 			)
-				.then(
-					() => onMessage(socket, type, data)
-				)['catch'](
-					(error) => error
-				)
-				.then((result) => {
-					if (type === 'tool') {
-						reconnect = false;
-					}
+			.then(
+				() => onMessage(socket, type, data)
+			)['catch'](
+				(error) => error
+			)
+			.then((result) => {
+				// WORKAROUND
+				if (type === 'noop') {
+					reconnected = false;
+				}
 
-					var callback;
-					if (typeof result === 'function') {
-						callback = result;
-						result = [];
-					} else if (result instanceof Error) {
-						tasty.console.error('tasty', result);
-						result = [0, util.format(result)];
-					} else {
-						result = [result];
-					}
-					socket.send(
-						JSON.stringify([mid, 0, result]),
-						callback
-					);
-				});
+				var callback;
+				if (typeof result === 'function') {
+					callback = result;
+					result = [];
+				} else if (result instanceof Error) {
+					tasty.console.error('tasty', result);
+					result = [0, util.format(result)];
+				} else {
+					result = [result];
+				}
+				socket.send(
+					JSON.stringify([mid, 0, result]),
+					callback
+				);
+			});
 		}
 	});
 
@@ -279,53 +285,61 @@ function onOpen(socket, reconnect) {
 }
 
 function onMessage(socket, type, data) {
-	switch (type) {
-		case 'coverage':
-			data = data || '__coverage__';
-			tasty.console.log('tasty', 'coverage', data);
+	return hook(undefined, 'before.' + type)
+		.then(() => {
+			switch (type) {
+				case 'coverage':
+					data = data || '__coverage__';
+					tasty.console.log('tasty', 'coverage', data);
 
-			return thenable(window[data]);
-		case 'end':
-			tasty.console.info('tasty', 'end');
-			tasty.id(null);
+					return window[data];
+				case 'noop':
+					return;
+				case 'end':
+					tasty.console.info('tasty', 'end');
+					tasty.id(null);
 
-			return () => {
-				disconnect();
-			};
-		case 'exec':
-			tasty.console.log('tasty', 'exec', include.url + data);
+					return () => {
+						disconnect();
+					};
+				case 'exec':
+					tasty.console.log('tasty', 'exec', include.url + data);
 
-			return thenable((resolve, reject) => {
-				include(data)
-					.then(
-						() => {
-							const result = tasty.result;
-							delete tasty.result;
-							// NOTE prevent callback to be used as Promise executor.
-							typeof result === 'function' ?
-								resolve(result) :
-								thenable(result)
-									.then(resolve, reject);
-						},
-						(error) => {
-							delete tasty.result;
-							reject(error);
-						}
+					return thenable((resolve, reject) => {
+						include(data)
+							.then(
+								() => {
+									const result = tasty.result;
+									delete tasty.result;
+									// NOTE prevent callback to be used as Promise executor.
+									typeof result === 'function' ?
+										resolve(result) :
+										thenable(result)
+											.then(resolve, reject);
+								},
+								(error) => {
+									delete tasty.result;
+									reject(error);
+								}
+							);
+					});
+				case 'message':
+					tasty.console.info('tasty', data);
+
+					return;
+				case 'tool': {
+					const name = data[0],
+						args = data.slice(1);
+
+					return tool(name, args);
+				}
+				default:
+					return thenable(
+						reason('unknown message', name)
 					);
-			});
-		case 'message':
-			tasty.console.info('tasty', data);
-
-			return thenable();
-		case 'tool': {
-			const name = data[0],
-				args = data.slice(1);
-
-			return tool(name, args);
-		}
-		default:
-			return thenable(
-				reason('unknown message', name)
-			);
-	}
+			}
+		})
+		.then(
+			(result) => hook(result, 'after.' + type)
+		);
 }

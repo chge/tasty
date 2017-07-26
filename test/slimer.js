@@ -75,7 +75,7 @@ function screenshot(name) {
 	name = ['slimer', name, Date.now(), 'png'].join('.')
 		.replace(/"/g, '\'')
 		.replace(/\.\./g, '.')
-		.replace(/[^a-z0-9.'()$\- ]/gi, '');
+		.replace(/[^a-z0-9.'()$\-_ ]/gi, '');
 	log('slimer', 'screenshot', name);
 
 	page.render(name);

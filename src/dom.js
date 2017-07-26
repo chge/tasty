@@ -11,9 +11,9 @@ export function click(node, force) {
 	if (cause) {
 		throw reason('node', cause, 'is disabled');
 	}
-	focus(node);
 
 	trigger(node, 'MouseEvent', 'mousedown', null, force);
+	focus(node);
 	trigger(node, 'MouseEvent', 'mouseup', null, force);
 
 	const parent = node.parentNode;
@@ -28,6 +28,32 @@ export function click(node, force) {
 	return node;
 }
 
+/**
+ * @license CC BY-SA 3.0 https://stackoverflow.com/a/5350888
+ */
+export function commonAncestor(node1, node2) {
+	const parents = function parents(node) {
+			const nodes = [node];
+			for (; node; node = node.parentNode) {
+				nodes.unshift(node);
+			}
+
+			return nodes;
+		},
+		parents1 = parents(node1),
+		parents2 = parents(node2);
+
+	if (parents1[0] === parents2[0]) {
+		for (let i = 0; i < parents1.length; i++) {
+			if (parents1[i] != parents2[i]) {
+				return parents1[i - 1];
+			}
+		}
+	}
+
+	return null;
+}
+
 export function dblclick(node, force) {
 	hover(node);
 
@@ -35,9 +61,9 @@ export function dblclick(node, force) {
 	if (cause) {
 		throw reason('node', cause, 'is disabled');
 	}
-	focus(node);
 
 	trigger(node, 'MouseEvent', 'mousedown', null, force);
+	focus(node);
 	trigger(node, 'MouseEvent', 'mouseup', null, force);
 	trigger(node, 'MouseEvent', 'mousedown', null, force);
 	trigger(node, 'MouseEvent', 'mouseup', null, force);
@@ -53,63 +79,39 @@ export function element(node) {
 }
 
 export function find(what, where, options) {
-	switch (what.type) {
-		case 'any':
-			return findByText(/.*/, where, options);
-		case 'empty':
-			return findByText(/^\s*$/, where, options);
-		case 'font':
-			// TODO window.getComputedStyle(selector).fontFamily;
-			throw reason(what.type, 'is not implemented yet, sorry');
-		case 'image':
-			// TODO return findByImage(what.value, where, options);
-			throw reason(what.type, 'is not implemented yet, sorry');
-		case 'node':
-		case 'nodes': {
-			const method = what.type === 'node' ?
-				findBySelector :
-				findAllBySelector;
-			switch (where.type) {
-				case 'node': {
-					const found = find(where, {type: 'window'}, options);
-					if (!found) {
-						throw reason('no', where, 'to find', what, 'in');
-					}
-
-					return method(what.value, found);
-				}
-				case 'window':
-					return method(what.value, document.documentElement);
-				default:
-					throw reason('cannot search', what, 'in', where);
-			}
-		}
-		case 'text': {
-			const value = what.value,
-				regexp = value instanceof RegExp ?
-					value :
-					new RegExp(escape(value, true));
-
-			return findByText(regexp, where, options);
-		}
-		default:
-			throw reason(what.type, 'is not supported');
+	const method = find[what.type];
+	if (method) {
+		return method(what, where, options);
+	} else {
+		throw reason(what.type, 'is not supported');
 	}
 }
 
-function findByText(regexp, where, options) {
+find.any = find.empty = find.image = find.text = (what, where, options) => {
+	const value = what.value,
+		regexp = what.type === 'any' ?
+			/.*/ :
+			what.type === 'empty' ?
+				/^\s*$/ :
+				value instanceof RegExp ?
+					value :
+					options.strict ?
+						new RegExp('^' + escape(value, true) + '$') :
+						new RegExp(escape(value, true)),
+		match = what.type === 'image' ?
+			matchImage :
+			matchText;
 	let list;
 	switch (where.type) {
 		case 'node':
-			list = [findBySelector(where.value, document.documentElement)];
-			break;
 		case 'nodes':
-			list = findAllBySelector(where.value, document.documentElement);
+			list = findNodesBySelector(where.value, document.documentElement);
 			break;
 		case 'unknown':
 		case 'window':
-			list = findAllByText(
+			list = findNodesByMatchInContext(
 				regexp,
+				match,
 				where.value ?
 					findWindowByName(where.value).document.body :
 					document.body,
@@ -117,28 +119,47 @@ function findByText(regexp, where, options) {
 			);
 			break;
 		default:
-			throw reason('cannot search text in', where);
+			throw reason('cannot search', what, 'in', where);
 	}
 
-	return findByTextInList(regexp, list, options.strict);
-}
+	return findNodesByMatchInList(regexp, match, list, options.strict);
+};
 
-function findBySelector(selector, context) {
-	return context.querySelector(selector);
-}
+find.font = (what) => {
+	// TODO window.getComputedStyle(selector).fontFamily;
+	throw reason(what.type, 'is not implemented yet, sorry');
+};
 
-function findAllBySelector(selector, context) {
+find.node = find.nodes = (what, where, options) => {
+	switch (where.type) {
+		case 'node': {
+			const found = find(where, {type: 'window'}, options);
+			if (!found) {
+				throw reason('no', where, 'to find', what, 'in');
+			}
+
+			return findNodesBySelector(what.value, found);
+		}
+		case 'window':
+			return findNodesBySelector(what.value, document.documentElement);
+		default:
+			throw reason('cannot search', what, 'in', where);
+	}
+};
+
+function findNodesBySelector(selector, context) {
 	return nodeListToArray(
 		context.querySelectorAll(selector)
 	);
 }
 
-function findAllByText(regexp, context, strict) {
+function findNodesByMatchInContext(regexp, match, context, strict) {
 	const NodeFilter = window.NodeFilter ||
 			polyfill.NodeFilter,
-		filter = (node) => node.innerText || node.textContent || node.nodeValue || node.value || node.placeholder ?
-			NodeFilter.FILTER_ACCEPT :
-			NodeFilter.FILTER_REJECT,
+		filter = (node) => node.innerText || node.textContent || node.nodeValue ||
+			node.value || node.placeholder || node.href || node.src ?
+				NodeFilter.FILTER_ACCEPT :
+				NodeFilter.FILTER_REJECT,
 		what = NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT;
 
 	filter.acceptNode = filter;
@@ -149,7 +170,7 @@ function findAllByText(regexp, context, strict) {
 
 	let node = walker.nextNode();
 	while (node) {
-		matchText(regexp, node, strict) &&
+		match(regexp, node, strict) &&
 			nodes.push(node);
 		node = walker.nextNode();
 	}
@@ -157,14 +178,14 @@ function findAllByText(regexp, context, strict) {
 	return nodes;
 }
 
-function findByTextInList(regexp, list, strict) {
+function findNodesByMatchInList(regexp, match, list, strict) {
 	// TODO optimize by number of iterations.
 	let nodes;
 	if (regexp) {
 		nodes = [];
 		for (let i = 0; i < list.length; i++) {
 			let node = list[i];
-			matchText(regexp, node, strict) &&
+			match(regexp, node, strict) &&
 				nodes.push(node);
 		}
 	} else {
@@ -176,27 +197,15 @@ function findByTextInList(regexp, list, strict) {
 		(node) => visible(node, strict)
 	);
 
-	return findByDepthInList(
+	return filter(
 		filtered.length ?
 			filtered :
-			nodes
-	);
-}
-
-function findByDepthInList(list) {
-	if (list.length < 2) {
-		return list[0];
-	}
-
-	const deep = filter(
-		list,
+			nodes,
 		(parent) => !findItem(
 			list,
 			(child) => matchParent(parent, child)
 		)
 	);
-
-	return deep[0];
 }
 
 function findWindowByName(name) {
@@ -210,6 +219,15 @@ function findWindowByName(name) {
 	}
 
 	return child;
+}
+
+function matchImage(regexp, node, strict) {
+	// TODO support pictures.
+	// TODO support border images.
+	// TODO support multiple backgrounds.
+	return regexp.test(innerImage(node, strict)) ||
+		regexp.test(beforeImage(node, strict)) ||
+			regexp.test(afterImage(node, strict));
 }
 
 export function matchParent(parent, child) {
@@ -248,11 +266,17 @@ function matchText(regexp, node, strict) {
 	);
 }
 
-function afterText(node, strict) {
-	if (!node) {
+function afterImage(node) {
+	if (!node || node.nodeType === 3) {
 		return null;
 	}
-	if (node.nodeType === 3) {
+	const style = getStyle(node, ':after');
+
+	return getUrl(style.backgroundImage);
+}
+
+function afterText(node, strict) {
+	if (!node || node.nodeType === 3) {
 		return null;
 	}
 	const style = getStyle(node, ':after');
@@ -265,11 +289,17 @@ function afterText(node, strict) {
 	);
 }
 
-function beforeText(node, strict) {
-	if (!node) {
+function beforeImage(node) {
+	if (!node || node.nodeType === 3) {
 		return null;
 	}
-	if (node.nodeType === 3) {
+	const style = getStyle(node, ':before');
+
+	return getUrl(style.backgroundImage);
+}
+
+function beforeText(node, strict) {
+	if (!node || node.nodeType === 3) {
 		return null;
 	}
 	const style = getStyle(node, ':before');
@@ -280,6 +310,18 @@ function beforeText(node, strict) {
 		strict
 		// NOTE :before is never fragment.
 	);
+}
+
+function innerImage(node) {
+	if (!node || node.nodeType === 3) {
+		return null;
+	}
+	if (node.src) {
+		return node.src;
+	}
+	const style = getStyle(node);
+
+	return getUrl(style.backgroundImage);
 }
 
 function innerText(node, strict) {
@@ -305,12 +347,18 @@ function innerText(node, strict) {
 					getPassword(node, style) :
 					node.value ||
 						(document.activeElement !== node ? node.placeholder : null) ||
-							node.textContent || node.nodeValue :
-				node.textContent || node.nodeValue,
+							node.textContent || node.nodeValue || '' :
+				node.textContent || node.nodeValue || '',
 		style,
 		strict,
 		true
 	);
+}
+
+function getUrl(string) {
+	string = /url\(['"]*(.*?)['"]*\)/.exec(string);
+
+	return string ? string[1] : null;
 }
 
 function getPassword(node, style) {
@@ -338,15 +386,10 @@ function getStyle(node, pseudo) {
 		return {};
 	}
 
-	node = element(node);
-	pseudo = pseudo || '';
-
-	const key = pseudo ?
-		'style' + pseudo :
-		'style';
-
-	return getData(node, key) ||
-		setData(node, key, computeStyle(node, pseudo));
+	return computeStyle(
+		element(node),
+		pseudo || ''
+	);
 }
 
 function computeStyle(node, pseudo) {
@@ -401,16 +444,8 @@ function capitalize(text) {
 	);
 }
 
-function getData(node, name) {
-	node = element(node);
-
-	return node && node.__tasty ?
-		node.__tasty[name] :
-		undefined;
-}
-
 export function nodeListToArray(list) {
-	// NOTE [].slice not always works.
+	// NOTE Array.prototype.slice not always works.
 
 	const array = [];
 	for (let i = 0; i < list.length; i++) {
@@ -420,31 +455,6 @@ export function nodeListToArray(list) {
 	}
 
 	return array;
-}
-
-function setData(node, name, value) {
-	node = element(node);
-
-	if (!node) {
-		return;
-	}
-	if (!node.__tasty) {
-		node.__tasty = {};
-	}
-	node.__tasty[name] = value;
-
-	return value;
-}
-
-// eslint-disable-next-line no-unused-vars
-function removeData(node) {
-	node = element(node);
-
-	if (node) {
-		delete node.__tasty;
-	}
-
-	return node;
 }
 
 function symbols(symbol, length) {

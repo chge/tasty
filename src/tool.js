@@ -6,6 +6,7 @@
 export default tool;
 
 tool.hook = hook;
+tool.find = find;
 
 import * as dom from './dom';
 import * as util from './util';
@@ -14,6 +15,7 @@ const assign = util.assign,
 	delay = util.delay,
 	deserialize = util.deserialize,
 	escape = util.escape,
+	findItem = util.find,
 	forEach = util.forEach,
 	format = util.format,
 	highlight = dom.highlight,
@@ -40,10 +42,10 @@ function tool(name, handle) {
 			name.split('.')[0],
 		args = deserialize(handle);
 
-	tool.console.log('tasty', 'tool', name, args);
+	tool.console.log.apply(tool.console, ['tasty', 'tool', name].concat(args));
 
-	return hook(name, 'before.tool', args)
-		.then((result) => space ? hook(result, 'before.' + space, args) : result)
+	return thenable()
+		.then((result) => space ? hook(result, 'before.' + space, name, args) : result)
 		.then((result) => hook(result, 'before.' + name, args))
 		.then(() => {
 			if (tool[name]) {
@@ -53,12 +55,18 @@ function tool(name, handle) {
 			}
 		})
 		.then((result) => hook(result, 'after.' + name, args))
-		.then((result) => space ? hook(result, 'after.' + space, args) : result)
-		.then((result) => hook(result, 'after.tool', name, args));
+		.then((result) => space ? hook(result, 'after.' + space, name, args) : result)
+		.then((result) => {
+			// NOTE we should clear hooks here.
+			name === 'reset' &&
+				hook('*', null);
+
+			return result;
+		})
 }
 
 function hook(result, key, args) {
-	if (typeof key === 'function') {
+	if (key === null || typeof key === 'function') {
 		let keys = result,
 			listener = key,
 			title = args;
@@ -66,10 +74,24 @@ function hook(result, key, args) {
 		keys = util.isArray(keys) ?
 			keys :
 			[keys];
-		listener.title = title;
-		forEach(keys, (k) => {
-			hook[k] = listener;
-		});
+		keys = keys[0] === '*' ?
+			util.keys(hook) :
+			keys;
+
+		// NOTE protect current hook chain from changes.
+		hook.update = () => {
+			delete hook.update;
+			if (listener === null) {
+				forEach(keys, (k) => {
+					delete hook[k];
+				});
+			} else {
+				listener.title = title;
+				forEach(keys, (k) => {
+					hook[k] = listener;
+				});
+			}
+		};
 
 		return listener;
 	}
@@ -98,7 +120,7 @@ tool('breakpoint', () => {
 });
 
 tool('is', (what, where, options) => {
-	const found = search(what, where, options, {reachable: true});
+	const found = find(what, where, options, {reachable: true});
 	if (found) {
 		highlight(found);
 	} else {
@@ -107,7 +129,7 @@ tool('is', (what, where, options) => {
 });
 
 tool('no', (what, where, options) => {
-	const found = search(what, where, options, {reachable: true});
+	const found = find(what, where, options, {reachable: true});
 	if (found) {
 		highlight(found);
 		throw reason('found', what, 'in', where, 'as', format(found));
@@ -128,7 +150,7 @@ tool('clear', (count) => {
 	if (target.readOnly) {
 		throw reason('read-only active node', target, 'to clear');
 	}
-	tool.console.debug('tasty', 'clear', 'target', target);
+	tool.console.debug('tasty', 'clear', target);
 	highlight(target);
 
 	return thenable((resolve) => {
@@ -161,29 +183,29 @@ tool('clear', (count) => {
 });
 
 tool('click', (what, where, options) => {
-	const target = search(what, where, options);
-	if (!target) {
+	const found = find(what, where, options);
+	if (!found) {
 		throw reason('no', what, 'in', where, 'to', 'click');
 	}
-	tool.console.debug('tasty', 'click', 'target', target);
+	tool.console.debug('tasty', 'click', found);
 
-	highlight(target);
+	highlight(found);
 	dom.click(
-		target,
+		found,
 		tool.flaws.navigation
 	);
 });
 
 tool('dblclick', (what, where, options) => {
-	const target = search(what, where, options);
-	if (!target) {
+	const found = find(what, where, options);
+	if (!found) {
 		throw reason('no', what, 'in', where, 'to', 'dblclick');
 	}
-	tool.console.debug('tasty', 'dblclick', 'target', target);
+	tool.console.debug('tasty', 'dblclick', found);
 
-	highlight(target);
+	highlight(found);
 	dom.dblclick(
-		target,
+		found,
 		tool.flaws.navigation
 	);
 });
@@ -200,14 +222,14 @@ tool('history', (value) => {
 });
 
 tool('hover', (what, where, options) => {
-	const target = search(what, where, options);
-	if (!target) {
+	const found = find(what, where, options);
+	if (!found) {
 		throw reason('no', what, 'in', where, 'to', 'hover');
 	}
-	tool.console.debug('tasty', 'hover', 'target', target);
+	tool.console.debug('tasty', 'hover', found);
 
-	// TODO highlight target?
-	dom.hover(target);
+	// TODO highlight?
+	dom.hover(found);
 });
 
 tool('navigate', (url) => {
@@ -229,7 +251,7 @@ tool('paste', (text) => {
 	if (target.readOnly) {
 		throw reason('cannot paste into read-only node', target);
 	}
-	tool.console.debug('tasty', 'paste', 'target', target);
+	tool.console.debug('tasty', 'paste', target);
 	highlight(target);
 
 	const value = target.value,
@@ -321,7 +343,7 @@ tool('type', (text) => {
 	if (target.readOnly) {
 		throw reason('cannot type into read-only node', target);
 	}
-	tool.console.debug('tasty', 'type', 'target', target);
+	tool.console.debug('tasty', 'type', target);
 	highlight(target);
 
 	return thenable((resolve) => {
@@ -377,7 +399,7 @@ function thing(type, value) {
  * @param {Boolean} [options.reachable] Make sure found node is reachable: isn't covered with other nodes.
  * @param {Object|Boolean} [defaults] Defaults for `options`.
  */
-function search(what, where, options, defaults) {
+function find(what, where, options, defaults) {
 	what = typeof what === 'string' ?
 		thing('text', what) :
 		thing(what);
@@ -392,109 +414,133 @@ function search(what, where, options, defaults) {
 		assign(options || {}, defaults);
 
 	const value = what.value,
+		method = find[what.type],
 		regexp = value instanceof RegExp ?
 			value :
-			new RegExp(escape(value, true)),
-		source = regexp.source;
-
-	switch (what.type) {
-		case 'any':
-		case 'empty':
-		case 'image':
-		case 'node':
-		case 'nodes':
-		case 'text': {
-			const found = dom.find(what, where, options);
-			if (!found) {
-				return null;
-			}
-
-			// NOTE found could be text Node, while reached is always an Element.
-			const parent = found.parentNode,
-				reached = dom.reach(found);
-			if (parent === document.body ||
-					reached === document ||
-						reached === document.documentElement ||
-							reached === document.body
-			) {
-				return found;
-			}
-			if (options.reachable && reached !== found && !dom.matchParent(reached, found)) {
-				throw reason('found', found, 'is covered by', reached);
-			}
-
-			return reached === parent ?
-				found :
-				reached;
-		}
-		case 'css':
-			return findInList('href', regexp, document.getElementsByTagName('link'));
-		case 'doctype': {
-			const doctype = formatDoctype(document.doctype);
-			if (!doctype) {
-				throw reason('document has no doctype');
-			}
-			if (!regexp.test(doctype)) {
-				throw reason('doctype', doctype, 'is not', regexp);
-			}
-
-			return doctype;
-		}
-		case 'favicon':
-			throw reason(what.type, 'is not implemented yet, sorry');
-		case 'font':
-			return where ?
-				dom.find(what, where, options) :
-				document.fonts.check(value);
-		case 'location': {
-			// NOTE slashes are escaped.
-			const location = source.indexOf('\\/') === 0 ?
-				window.location.pathname :
-				window.location.href;
-			if (!regexp.test(location)) {
-				throw reason('location', location, 'is not', value instanceof RegExp ? regexp : source);
-			}
-
-			return location;
-		}
-		case 'manifest': {
-			let manifest = document.documentElement.getAttribute('manifest');
-			if (manifest) {
-				if (!regexp.test(manifest)) {
-					throw reason('app cache manifest', manifest, 'is not', regexp);
-				}
-				return manifest;
-			}
-			manifest = util.find(
-				dom.nodeListToArray(
-					document.getElementsByTagName('link')
-				),
-				(link) => link.rel === 'manifest'
-			);
-			if (manifest) {
-				if (!regexp.test(manifest.href)) {
-					throw reason('web app manifest', manifest.href, 'is not', regexp);
-				}
-				return manifest;
-			}
-			throw reason('document has no manifest');
-		}
-		case 'script':
-			return findInList('src', regexp, document.getElementsByTagName('script'));
-		case 'title':
-			if (!regexp.test(document.title)) {
-				throw reason('title', document.title, 'is not', regexp);
-			}
-			return document.title;
-		default:
-			throw reason(what.type, 'is not supported');
+			new RegExp(escape(value, true));
+	if (method) {
+		return method(what, where, options, regexp);
+	} else {
+		throw reason(what.type, 'is not supported');
 	}
 }
 
+find.any = find.empty = find.image = find.node = find.nodes = find.text = (what, where, options) => {
+	const found = dom.find(what, where, options),
+		first = found[0];
+	if (!first) {
+		return null;
+	}
+	// TODO better?
+
+	// NOTE any found could be text Node, while reached is always an Element.
+	const parent = first.parentNode,
+		reached = dom.reach(first);
+	if (reached === first || reached === parent || reached === document ||
+			reached === document.documentElement || reached === document.body
+	) {
+		return first;
+	}
+
+	if (options.reachable) {
+		if (found.length > 1) {
+			const other = findItem(found, (node) => {
+				const common = dom.commonAncestor(reached, node);
+
+				return common && common !== document &&
+					common !== document.documentElement && common !== document.body;
+			});
+			if (other) {
+				return other;
+			}
+		}
+
+		throw reason('found', first, 'is covered by', reached);
+	}
+
+	return reached;
+};
+
+find.css = (what, where, options, regexp) => {
+	return findInList('href', regexp, document.getElementsByTagName('link'));
+};
+
+find.doctype = (what, where, options, regexp) => {
+	const doctype = formatDoctype(document.doctype);
+	if (!doctype) {
+		throw reason('document has no doctype');
+	}
+	if (!regexp.test(doctype)) {
+		throw reason('doctype', doctype, 'is not', regexp);
+	}
+
+	return doctype;
+};
+
+find.favicon = (what) => {
+	throw reason(what.type, 'is not implemented yet, sorry');
+};
+
+find.font = (what, where, options) => {
+	return where ?
+		dom.find(what, where, options)[0] :
+		document.fonts.check(what.value);
+};
+
+find.location = (what, where, options, regexp) => {
+	// NOTE slashes are escaped.
+	const source = regexp.source,
+		location = source.indexOf('\\/') === 0 ?
+			window.location.pathname :
+			window.location.href;
+	if (!regexp.test(location)) {
+		throw reason('location', location, 'is not', what.value instanceof RegExp ? regexp : source);
+	}
+
+	return location;
+};
+
+find.manifest = (what, where, options, regexp) => {
+	let manifest = document.documentElement.getAttribute('manifest');
+	if (manifest) {
+		if (!regexp.test(manifest)) {
+			throw reason('app cache manifest', manifest, 'is not', regexp);
+		}
+		return manifest;
+	}
+	manifest = findItem(
+		dom.nodeListToArray(
+			document.getElementsByTagName('link')
+		),
+		(link) => link.rel === 'manifest'
+	);
+	if (manifest) {
+		if (!regexp.test(manifest.href)) {
+			throw reason('web app manifest', manifest.href, 'is not', regexp);
+		}
+		return manifest;
+	}
+
+	throw reason('document has no manifest');
+};
+
+find.script = (what, where, options, regexp) => {
+	return findInList('src', regexp, document.getElementsByTagName('script'));
+};
+
+find.title = (what, where, options, regexp) => {
+	if (!regexp.test(document.title)) {
+		throw reason('title', document.title, 'is not', regexp);
+	}
+
+	return document.title;
+};
+
 function findInList(key, regexp, list) {
-	return util.find(list, (item) => {
-		return regexp.test(item[key]);
-	});
+	return findItem(
+		list,
+		(item) => regexp.test(item[key])
+	);
 }
 
 /**

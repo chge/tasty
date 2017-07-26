@@ -42,7 +42,7 @@ module.exports = [
 				name: 'supports exec',
 				time: 500 + 100,
 				body: () => {
-					ready('exec', function(tasty) {
+					ready('exec', function() {
 						return tasty.thenable(function(resolve) {
 							setTimeout(resolve, 500);
 						});
@@ -79,6 +79,20 @@ module.exports = [
 				body: () => {
 					ready('window', 500);
 					navigate('/async.html');
+					is('Async');
+				}
+			},
+			{
+				name: 'runs without arguments',
+				time: 500 + 100,
+				body: () => {
+					navigate('/async.html');
+					// WORKAROUND: hooks are executed after reconnection,
+					// so we need to run any tool to reset reconnection flag.
+					is('Test');
+					ready('window', 500);
+					is('Test');
+					ready();
 					is('Async');
 				}
 			},

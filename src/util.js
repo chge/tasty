@@ -4,6 +4,8 @@
 
 import Promise from 'es6-promise';
 
+export { Promise };
+
 /**
  * Returns `Promise` that will resolve/reject after delay.
  * @memberof tasty
@@ -59,14 +61,14 @@ export function escape(source, regexp) {
 		.replace(/\(/g, '\\(')
 		.replace(/\)/g, '\\)')
 		.replace(/\[/g, '\\[')
-		.replace(/\]/g, '\\]');
+		.replace(/\]/g, '\\]')
+		.replace(/\$/g, '\\$')
+		.replace(/\^/g, '\\^');
 
 	return regexp ?
 		source :
 		desequence(
-			source.replace(/\$/g, '\\$')
-				.replace(/\^/g, '\\^')
-				.replace(/"/g, '\\"')
+			source.replace(/"/g, '\\"')
 				.replace(/\//g, '\\/')
 		);
 }
@@ -373,6 +375,48 @@ export function isArray(value) {
 	}
 
 	return Object.prototype.toString.call(value) === '[object Array]';
+}
+
+/**
+ * Implementation of `Object.keys`.
+ * @function keys
+ * @memberof tasty
+ * @param {Object} value Value to check.
+ * @returns {Boolean}
+ * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Object/keys|MDN}
+ */
+const hasOwnProperty = Object.prototype.hasOwnProperty,
+	hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+	dontEnums = [
+		'toString',
+		'toLocaleString',
+		'valueOf',
+		'hasOwnProperty',
+		'isPrototypeOf',
+		'propertyIsEnumerable',
+		'constructor'
+	],
+	dontEnumsLength = dontEnums.length;
+
+export function keys(obj) {
+	if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+		throw new TypeError('Object.keys called on non-object');
+	}
+	var result = [], prop, i;
+	for (prop in obj) {
+		if (hasOwnProperty.call(obj, prop)) {
+			result.push(prop);
+		}
+	}
+	if (hasDontEnumBug) {
+		for (i = 0; i < dontEnumsLength; i++) {
+			if (hasOwnProperty.call(obj, dontEnums[i])) {
+				result.push(dontEnums[i]);
+			}
+		}
+	}
+
+	return result;
 }
 
 /**

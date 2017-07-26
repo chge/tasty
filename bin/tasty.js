@@ -73,27 +73,24 @@ if (config.version) {
 	process.exit(0);
 } else {
 	if (config.config) {
-		Object.assign(config, JSON.parse(
-			require('fs').readFileSync(config.config)
-		));
-	}
-	const exclude = process.argv.indexOf('--') === -1 ?
-			config.exclude || null :
-			[].concat(
-				config.exclude || [],
-				config['--'] || []
-			),
-		include = [].concat(
-			config.include || [],
-			config._ || []
-		),
-		tasty = new Tasty(
-			Object.assign(config, {
-				exclude: exclude,
-				include: include,
-				url: config.url || true
-			})
+		Object.assign(
+			config,
+			JSON.parse(
+				require('fs').readFileSync(config.config)
+			)
 		);
+	}
+	config.exclude = process.argv.indexOf('--') === -1 ?
+		config.exclude || null :
+		[].concat(
+			config.exclude || [],
+			config['--'] || []
+		);
+	config.include = [].concat(
+		config.include || [],
+		config._ || []
+	);
+	const tasty = new Tasty(config);
 	tasty.on('end', (token, error) => {
 		if (config.watch) {
 			tasty.log &&
