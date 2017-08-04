@@ -1,16 +1,17 @@
-'use strict';
-
-// NOTE user must inject format.console;
-
 import Promise from 'es6-promise';
 
 export { Promise };
 
 /**
+ * Utility functions.
+ * @member {Object} Tasty#utils
+ */
+
+/**
  * Returns `Promise` that will resolve/reject after delay.
- * @memberof tasty
+ * @memberof Tasty#utils
  * @function delay
- * @param {Number} ms Pause in milliseconds.
+ * @param {number} ms Pause in milliseconds.
  * @param {*} [value] Value/reason to resolve/reject `Promise` with.
  * @example
  * .then(() => tasty.delay(42))
@@ -129,18 +130,6 @@ export function format(value) {
 		value + '';
 }
 
-export function flaws(object) {
-	const array = [];
-	for (let key in object) {
-		object.hasOwnProperty(key) &&
-			object[key] &&
-				array.push(key);
-	}
-
-	return array.toString();
-}
-
-// NOTE user must inject include.url;
 export function include(src) {
 	return thenable((resolve, reject) => {
 		// LICENSE MIT jQuery Core 1.12.4
@@ -149,7 +138,7 @@ export function include(src) {
 					document.documentElement;
 		let script = document.createElement('script');
 		script.async = true;
-		script.src = include.url + src;
+		script.src = src;
 		script.onload = script.onreadystatechange = () => {
 			if (!script.readyState || /loaded|complete/.test(script.readyState)) {
 				script.onload = script.onreadystatechange = null;
@@ -183,43 +172,12 @@ export function random(min, max) {
 }
 
 export function reason(...args) {
-	reason.console.warn('tasty', ...args);
-
 	return new Error(
 		map(args, format)
 			.join(' ')
 	);
 }
 
-// TODO store session in a cookie?
-export function session(value) {
-	session.key = session.key || '__tasty';
-	session.value = arguments.length ?
-		value :
-		session.value ||
-			sessionStorage.getItem(session.key);
-
-	session.value ?
-		sessionStorage.setItem(session.key, session.value) :
-		sessionStorage.removeItem(session.key);
-
-	return session.value;
-}
-
-/**
- * Implementation of `Promise` for non-supporting clients.
- * @memberof tasty
- * @function thenable
- * @param {*|Error|Function} [value] Value/reason to resolve/reject `Promise` with, or a `Promise` executor.
- * @returns {Promise}
- * @example
-tasty.thenable(); // same as Promise.resolve();
-tasty.thenable(42); // same as Promise.resolve(42);
- * @example
-tasty.thenable(new Error()); // same as Promise.reject(new Error());
- * @example
-tasty.thenable((resolve, reject) => {}); // same as new Promise((resolve, reject) => {});
- */
 export function thenable(value) {
 	return value instanceof Promise ?
 		value :
@@ -233,7 +191,7 @@ export function thenable(value) {
 /**
  * Implementation of `Object.assign`.
  * @function assign
- * @memberof tasty
+ * @memberof Tasty#utils
  * @param {Object} target Target object.
  * @param {...Object} sources Source object(s).
  * @returns {Object}
@@ -262,7 +220,7 @@ export function assign(target) {
 /**
  * Implementation of `Array.prototype.filter`.
  * @function filter
- * @memberof tasty
+ * @memberof Tasty#utils
  * @param {Array} array Array.
  * @returns {Array}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter|MDN}
@@ -297,7 +255,7 @@ export function filter(array, callback, scope) {
 /**
  * Implementation of `Array.prototype.find`.
  * @function find
- * @memberof tasty
+ * @memberof Tasty#utils
  * @param {Array} array Array.
  * @returns {*}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find|MDN}
@@ -329,7 +287,7 @@ export function find(array, predicate, scope) {
 /**
  * Implementation of `Array.prototype.forEach`.
  * @function forEach
- * @memberof tasty
+ * @memberof Tasty#utils
  * @param {Array} array Array.
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach|MDN}
  */
@@ -364,9 +322,9 @@ export function forEach(array, callback, scope) {
 /**
  * Implementation of `Array.isArray`.
  * @function isArray
- * @memberof tasty
+ * @memberof Tasty#utils
  * @param {*} value Value to check.
- * @returns {Boolean}
+ * @returns {boolean}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray|MDN}
  */
 export function isArray(value) {
@@ -380,9 +338,9 @@ export function isArray(value) {
 /**
  * Implementation of `Object.keys`.
  * @function keys
- * @memberof tasty
+ * @memberof Tasty#utils
  * @param {Object} value Value to check.
- * @returns {Boolean}
+ * @returns {boolean}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Object/keys|MDN}
  */
 const hasOwnProperty = Object.prototype.hasOwnProperty,
@@ -422,7 +380,7 @@ export function keys(obj) {
 /**
  * Implementation of `Array.prototype.map`.
  * @function map
- * @memberof tasty
+ * @memberof Tasty#utils
  * @param {Array} array Array.
  * @returns {Array}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map|MDN}
@@ -462,7 +420,7 @@ export function map(array, callback, scope) {
 /**
  * Implementation of `Array.prototype.reduce`.
  * @function reduce
- * @memberof tasty
+ * @memberof Tasty#utils
  * @param {Array} array Array.
  * @returns {*}
  * @license CC-BY-SA v2.5 {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce|MDN}
@@ -497,4 +455,24 @@ export function reduce(array, callback, memo) {
 	}
 
 	return value;
+}
+
+/**
+ * Trims given `string`.
+ * @memberof Tasty#utils
+ * @function trim
+ * @param {string} string String to trim.
+ * @returns {string}
+ * @license Copyright Steven Levithan {@link http://blog.stevenlevithan.com/archives/faster-trim-javascript}
+ */
+export function trim(string) {
+	string = string.replace(/^\s\s*/, '');
+	let space = /\s/,
+		index = string.length;
+
+	while (space.test(
+		string.charAt(--index)
+	));
+
+	return string.slice(0, index + 1);
 }

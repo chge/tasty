@@ -1,9 +1,19 @@
-'use strict';
-
 import * as polyfill from 'tasty-treewalker';
 
-import { escape, filter, find as findItem, reason } from './util';
+import { escape, filter, find as findItem, reason, trim } from './utils';
 
+/**
+ * DOM helpers.
+ * @member {Object} Tasty#dom
+ */
+
+/**
+ * Clicks on given `node`.
+ * @function click
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {Node} `node`
+ */
 export function click(node, force) {
 	hover(node);
 
@@ -29,6 +39,12 @@ export function click(node, force) {
 }
 
 /**
+ * Returns deepest common ancestor of two given nodes.
+ * @function commonAncestor
+ * @memberof Tasty#dom
+ * @param {Node} node1
+ * @param {Node} node2
+ * @returns {Node|null}
  * @license CC BY-SA 3.0 https://stackoverflow.com/a/5350888
  */
 export function commonAncestor(node1, node2) {
@@ -54,6 +70,13 @@ export function commonAncestor(node1, node2) {
 	return null;
 }
 
+/**
+ * Double-clicks on given `node`.
+ * @function dblclick
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {Node} `node`
+ */
 export function dblclick(node, force) {
 	hover(node);
 
@@ -72,13 +95,30 @@ export function dblclick(node, force) {
 	return node;
 }
 
+/**
+ * Returns element from given `node` (itself or its parent).
+ * @function element
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {HTMLElement|null}
+ */
 export function element(node) {
 	return node && node.nodeType === 3 ?
 		node.parentNode :
 		node;
 }
 
+/**
+ * Finds Nodes.
+ * @function find
+ * @memberof Tasty#dom
+ * @param {Thing} what
+ * @param {Thing} where
+ * @param {Object} options
+ * @returns {Node[]}
+ */
 export function find(what, where, options) {
+	options = options || {};
 	const method = find[what.type];
 	if (method) {
 		return method(what, where, options);
@@ -467,6 +507,13 @@ function symbols(symbol, length) {
 	return string;
 }
 
+/**
+ * Focuses given `node`.
+ * @function focus
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {Node} `node`
+ */
 export function focus(node) {
 	const active = document.activeElement;
 	active === node ||
@@ -485,6 +532,13 @@ export function focus(node) {
 	return node;
 }
 
+/**
+ * Resets focus state of given `node`.
+ * @function blur
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {Node} `node`
+ */
 export function blur(node) {
 	const parent = node.parentNode;
 	if (node.blur) {
@@ -500,6 +554,13 @@ export function blur(node) {
 	return node;
 }
 
+/**
+ * Hovers given `node`.
+ * @function hover
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {Node} `node`
+ */
 export function hover(node) {
 	const hovered = hover.node;
 	hovered && hovered !== node &&
@@ -513,6 +574,13 @@ export function hover(node) {
 	return node;
 }
 
+/**
+ * Resets hover state of given `node`.
+ * @function rest
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {Node} `node`
+ */
 export function rest(node) {
 	trigger(node, 'MouseEvent', 'mouseleave');
 	trigger(node, 'MouseEvent', 'mouseout');
@@ -522,6 +590,14 @@ export function rest(node) {
 	return node;
 }
 
+/**
+ * Checks if given `node` is visible in the viewport.
+ * @function visible
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @param {boolean} strict
+ * @returns {boolean}
+ */
 export function visible(node, strict) {
 	node = element(node);
 
@@ -546,6 +622,13 @@ export function visible(node, strict) {
 	return viewport && !hidden(node);
 }
 
+/**
+ * Checks if given `node` is hidden.
+ * @function hidden
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {boolean}
+ */
 export function hidden(node) {
 	while (node) {
 		if (getStyle(node).visibility === 'hidden') {
@@ -557,6 +640,13 @@ export function hidden(node) {
 	return false;
 }
 
+/**
+ * Checks if given `node` is disabled.
+ * @function disabled
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {boolean}
+ */
 export function disabled(node) {
 	while (node) {
 		if (node.disabled) {
@@ -568,14 +658,31 @@ export function disabled(node) {
 	return false;
 }
 
-export function on(target, event, handler, options) {
-	target.addEventListener ?
-		target.addEventListener(event, handler, options || false) :
-		target.attachEvent('on' + event, handler);
+/**
+ * Adds event handler to given `node`.
+ * @function on
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @param {string} name
+ * @param {Function} handler
+ * @param {Object} [options]
+ * @returns {Node} `node`
+ */
+export function on(node, name, handler, options) {
+	node && node.addEventListener ?
+		node.addEventListener(name, handler, options || false) :
+		node.attachEvent('on' + name, handler);
 
-	return target;
+	return node;
 }
 
+/**
+ * Tries to reach given `node` by its coordinates on the screen.
+ * @function reach
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {Node} Actually reached Node.
+ */
 export function reach(node) {
 	const rect = measure(node),
 		x = (rect.left + rect.right) / 2,
@@ -596,7 +703,14 @@ export function reach(node) {
 	return parent;
 }
 
-function measure(node) {
+/**
+ * Measures given `node`.
+ * @function measure
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {DOMRect}
+ */
+export function measure(node) {
 	// TODO consider border-radius.
 	if (node.getBoundingClientRect) {
 		return node.getBoundingClientRect();
@@ -617,7 +731,11 @@ function measure(node) {
 }
 
 /**
- * @license CC BY-SA 3.0 http://stackoverflow.com/a/987376
+ * Highlights (selects) given `node`.
+ * @function highlight
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {Node} `node`
  */
 export function highlight(node) {
 	try {
@@ -639,9 +757,19 @@ export function highlight(node) {
 		// TODO log?
 	}
 
-	return false;
+	return node;
 }
 
+/**
+ * Triggers event on given `node`.
+ * @function trigger
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @param {string} type
+ * @param {string} arg
+ * @param {Object} init
+ * @returns {Event}
+ */
 export function trigger(node, type, arg, init, force) {
 	type = type || 'Event';
 	init = init || {};
@@ -706,17 +834,4 @@ function createEvent(type) {
 	return document.createEvent ?
 		document.createEvent(type) :
 		document.createEventObject(type);
-}
-
-/**
- * @license Copyright Steven Levithan {@link http://blog.stevenlevithan.com/archives/faster-trim-javascript}
- */
-function trim(str) {
-	str = str.replace(/^\s\s*/, '');
-	let ws = /\s/,
-		i = str.length;
-
-	while (ws.test(str.charAt(--i)));
-
-	return str.slice(0, i + 1);
 }

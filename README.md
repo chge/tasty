@@ -321,8 +321,8 @@ ready(
 	'exec',
 	// This function is executed on client, test will continue when promise will be resolved.
 	function(tasty) {
-		// tasty.thenable is a built-in Promise for non-supporting browsers.
-		return tasty.thenable(
+		// utils.Promise is a built-in implementation for non-supporting browsers.
+		return new this.utils.Promise(
 			function(resolve, reject) {
 				...
 			}

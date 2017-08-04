@@ -47,6 +47,6 @@ export default {
 	entry: 'src/main.js',
 	format: 'umd',
 	legacy: true,
-	moduleName: 'tasty',
+	moduleName: 'Tasty',
 	plugins: plugins
 };

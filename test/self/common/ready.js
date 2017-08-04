@@ -43,7 +43,7 @@ module.exports = [
 				time: 500 + 100,
 				body: () => {
 					ready('exec', function() {
-						return tasty.thenable(function(resolve) {
+						return this.utils.thenable(function(resolve) {
 							setTimeout(resolve, 500);
 						});
 					});

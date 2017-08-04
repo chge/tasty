@@ -1,345 +1,365 @@
 'use strict';
 
-// TODO exposable API?
-
-export default tasty;
+export default Tasty;
 
 import eio from 'engine.io-client';
 
-import log from './log';
-import tool from './tool';
+import Flaws from './flaws';
+import Hooks from './hooks';
+import Logger from './logger';
+import Tools from './tools';
+
 import * as dom from './dom';
-import * as util from './util';
+import * as utils from './utils';
 
-const include = util.include,
-	hook = tool.hook,
-	parseJson = util.parseJson,
-	reason = util.reason,
-	thenable = util.thenable;
-
-tasty.assign = util.assign;
-tasty.connect = connect;
-tasty.delay = util.delay;
-tasty.disconnect = disconnect;
-tasty.dom = dom;
-tasty.fail = fail;
+const reason = utils.reason,
+	thenable = utils.thenable;
 
 /**
- * Client flaws.
- * @memberof tasty
- * @member {Object} flaws
- * @readonly
- * @prop {Boolean} doctype Client doesn't properly support DOM DocumentType. History-related tools won't work.
- * @prop {Boolean} font Client doesn't support Font Loading API. Font-related tools won't work.
- * @prop {Boolean} history Client doesn't fully support HTML5 History API. History-related tools won't work.
- * @prop {Boolean} navigation Client requires emulation of anchor navigation. Tasty will emulate navigation along with click.
- * @prop {Boolean} placeholder Client doesn't support placeholders. Search will skip input placeholders.
- * @prop {Boolean} pseudo Client can't search through pseudo-elements. Search will skip such elements, e.g. `:before` and `:after`.
- * @prop {Boolean} selector Client doesn't support Selectors API. Search with selectors won't work.
- * @prop {Boolean} shadow Client doesn't support Shadow DOM.
- * @prop {Boolean} validation Client doesn't support HTML5 Forms.
- * @prop {Boolean} websocket Client has unsupported WebSocket implementation. Tasty will use XHR polling, which is slower.
+ * Tasty client.
+ * @example <!-- HTML (auto-connect) -->
+<script src="//localhost:8765/tasty.js"></script>
+ * @example <!-- HTML (auto-connect) -->
+<script src="//localhost:8765/tasty.js" data-url="localhost:5678"></script>
+ * @example <!-- HTML (manual mode) -->
+<script src="//localhost:8765/tasty.js" data-manual></script>
+<script>
+	new Tasty('localhost:5678').connect();
+</script>
+ * @example // ES2015
+import Tasty from 'tasty';
+new Tasty('localhost:8765').connect();
+ * @example // AMD
+define(['tasty'], (Tasty) => {
+	new Tasty('localhost:8765').connect();
+});
+ * @example // CommonJS
+const Tasty = require('tasty');
+new Tasty('localhost:8765').connect();
  */
-tasty.flaws = tool.flaws = {
-	doctype: !('doctype' in document) ||
-		!document.doctype &&
-			document.documentElement.previousSibling &&
-				document.documentElement.previousSibling.nodeType === 8,
-	font: !('fonts' in document),
-	history: !('pushState' in history) ||
-		// WORKAROUND: PhantomJS as of 2.1.1 incorrectly reports history length.
-		navigator.userAgent.indexOf('PhantomJS') !== -1,
-	navigation: !('click' in document.createElement('a')),
-	placeholder: !('placeholder' in document.createElement('input')),
-	pseudo: 'attachEvent' in window, // TODO better.
-	selector: !('querySelector' in document),
-	shadow: !('ShadowRoot' in window),
-	validation: !('validity' in document.createElement('input')),
-	websocket: !('WebSocket' in window) ||
-		navigator.appVersion.indexOf('MSIE 10') !== -1 // TODO better.
-};
-tasty.forEach = util.forEach;
-tasty.format = util.format;
-tasty.hook = hook;
-tasty.id = util.session;
-tasty.isArray = util.isArray;
-tasty.keys = util.keys;
-tasty.map = util.map;
-tasty.parseJson = parseJson;
-tasty.Promise = util.Promise;
-tasty.thenable = thenable;
-tasty.tool = tool;
+class Tasty {
+	/**
+	 * Tasty instance is available inside {@link /tasty/?api=test#exec|exec} calls as `this`.
+	 * @param {Object|string} [config] Tasty client config (or server URL).
+	 * @param {Logger} [config.logger] {@link #Logger|Logger} instance.
+	 * @param {string} [config.url] Tasty server URL.
+	 */
+	constructor(config) {
+		config = config ?
+			typeof config === 'string' ?
+				{url: config} :
+				config :
+			{};
 
-dom.on(window, 'beforeunload', () => {
-	disconnect();
-});
+		// WORKAROUND: built-in URL parser.
+		let link = document.createElement('a');
+		link.href = config.url || '';
+		config.coverage = config.coverage || '__coverage__';
+		config.path = link.pathname,
+		config.origin = link.origin ||
+			link.protocol + '//' + link.host;
+		config.url = link.href;
+		link = null;
 
-dom.on(window, 'unload', () => {
-	// NOTE this preserves session in case of app-initiated Storage.clear();
-	tasty.id();
+		dom.on(window, 'beforeunload', this.onBeforeUnload.bind(this));
+		dom.on(window, 'unload', this.onUnload.bind(this));
 
-	disconnect();
+		this.config = config;
+		this.dom = dom;
+		this.flaws = new Flaws();
+		this.hooks = new Hooks(this);
+		this.logger = config.logger || new Logger();
+		this.tools = new Tools(this);
+		this.utils = utils;
 
-	// TODO configurable key.
-	const key = '__coverage__';
-	key in window &&
-		sessionStorage.setItem(key, JSON.stringify(window[key]));
-});
+		this.Promise = utils.Promise;
 
-tasty.forEach(
-	document.scripts || document.getElementsByTagName('script'),
+		// WORKAROUND for EIO EventEmitter.
+		this.connect = this.connect.bind(this);
+	}
+
+	/**
+	 * Connects to Tasty server.
+	 */
+	connect() {
+		this.disconnect();
+
+		const config = this.config,
+			id = config.id || this.id(),
+			logger = this.logger;
+		id ?
+			logger.debug('server', config.url) :
+			logger.info('server', config.url);
+
+		const flaws = Flaws.format(this.flaws),
+			query = {};
+		if (id) {
+			query.id = id;
+		}
+		if (flaws) {
+			id ||
+				logger.warn('client', 'flaws', flaws);
+			query.flaws = flaws;
+		}
+
+		const socket = new eio(config.origin, {
+			path: config.path || '/',
+			query: query,
+			transports: this.flaws.websocket ?
+				['polling'] :
+				// NOTE there could be some proxy or firewall configuration issues
+				// which Engine.IO can't automatically handle and fallbak to polling.
+				this.closed ?
+					['polling', 'websocket'] :
+					['websocket']
+		}).once(
+			'close',
+			this.closed < 5 ?
+				this.connect :
+				reason
+		).once(
+			'open',
+			() => this.onOpen(socket)
+		).on(
+			'error',
+			reason
+		);
+
+		this.closed = this.closed ?
+			this.closed + 1 :
+			0;
+
+		return this;
+	}
+
+	/**
+	 * Disconnects from Tasty server.
+	 */
+	disconnect() {
+		const socket = this.socket;
+		if (socket) {
+			socket.removeListener('close', this.connect);
+			socket.removeListener('error', reason);
+			socket.close();
+		}
+		delete this.socket;
+
+		return this;
+	}
+
+	/**
+	 * Returns client ID.
+	 * @function Tasty#id
+	 * @return {string|null} Current ID.
+	 */
+	/**
+	 * (Re)sets client ID.
+	 * @param {string} id
+	 * @return {string|null} Previous ID.
+	 */
+	id(next) {
+		// TODO store ID in a cookie?
+		const key = this.config.session,
+			prev = this._id ||
+				sessionStorage.getItem(key);
+		next = arguments.length ? next : prev;
+
+		this._id = next;
+		next ?
+			sessionStorage.setItem(key, next) :
+			sessionStorage.removeItem(key);
+
+		return prev;
+	}
+
+	onOpen(socket) {
+		this.reconnected = !!this.id(socket.id);
+		this.socket = socket;
+
+		this.logger.log(this.reconnected ? 'reconnected' : 'connected', this.id());
+
+		socket.on('message', this.onMessage.bind(this));
+
+		const key = this.config.coverage,
+			coverage = sessionStorage.getItem(key);
+		coverage &&
+			socket.send(
+				JSON.stringify([0, 'coverage', JSON.parse(coverage)]),
+				() => sessionStorage.removeItem(key)
+			);
+	}
+
+	onMessage(raw) {
+		const message = utils.parseJson(raw),
+			logger = this.logger;
+		if (message instanceof Error) {
+			logger.warn(message);
+
+			return;
+		}
+		const hooks = this.hooks,
+			mid = message[0],
+			type = message[1],
+			data = message[2];
+
+		hooks.update &&
+			hooks.update();
+
+		thenable(
+			this.reconnected ?
+				hooks.use(undefined, 'after.reconnect') :
+				null
+		).then(
+			() => hooks.use(undefined, 'before.' + type)
+				.then(() => {
+					switch (type) {
+						case 'coverage':
+							return this.onCoverage(data);
+						case 'noop':
+							return this.onNoop();
+						case 'end':
+							return this.onEnd();
+						case 'exec':
+							return this.onExec(data);
+						case 'log':
+							return this.onLog(data);
+						case 'tool':
+							return this.onTool(data);
+						default:
+							return this.onUnknown(name, data);
+					}
+				})
+				.then(
+					(result) => hooks.use(result, 'after.' + type)
+				)
+		)['catch'](
+			(error) => error
+		).then((result) => {
+			// WORKAROUND
+			if (type === 'noop') {
+				this.reconnected = false;
+			}
+
+			var callback;
+			if (typeof result === 'function') {
+				callback = result;
+				result = [];
+			} else if (result instanceof Error) {
+				logger.error(result);
+				result = [0, utils.format(result)];
+			} else {
+				result = [result];
+			}
+			this.socket.send(
+				JSON.stringify([mid, 0, result]),
+				callback
+			);
+		});
+	}
+
+	onCoverage(name) {
+		name = name || '__coverage__';
+		this.logger.log('coverage', name);
+
+		return window[name];
+	}
+
+	onEnd() {
+		this.logger.info('end');
+		this.id(null);
+
+		return () => {
+			this.disconnect();
+		};
+	}
+
+	onExec(path) {
+		const url = this.config.origin + path;
+		this.logger.log('exec', url);
+
+		window[path] = this;
+
+		return utils.include(url).then(
+			() => {
+				const result = window[path];
+				delete window[path];
+
+				// NOTE prevent callback to be used as Promise executor.
+				return typeof result === 'function' ?
+					result :
+					thenable(result);
+			},
+			(error) => {
+				delete window[path];
+
+				throw error;
+			}
+		);
+	}
+
+	onLog(text) {
+		this.logger.info(text);
+	}
+
+	onNoop() {}
+
+	onTool(data) {
+		const name = data[0],
+			args = data.slice(1);
+
+		return this.tools.use(name, args);
+	}
+
+	onUnknown(name) {
+		return thenable(
+			reason('unknown message', name)
+		);
+	}
+
+	onBeforeUnload() {
+		this.disconnect();
+	}
+
+	onUnload() {
+		// NOTE preserve ID in case of app-initiated Storage.clear();
+		this.id();
+
+		this.disconnect();
+
+		const key = this.config.coverage;
+		key in window &&
+			sessionStorage.setItem(key, JSON.stringify(window[key]));
+	}
+}
+
+/**
+ * Reference to {@link #Hooks|Hooks} class.
+ */
+Tasty.Hooks = Hooks;
+
+/**
+ * Reference to {@link #Tasty|Tasty} class.
+ */
+Tasty.Tasty = Tasty;
+
+/**
+ * Reference to {@link #Tools|Tools} class.
+ */
+Tasty.Tools = Tools;
+
+// NOTE autoconnect.
+utils.forEach(
+	document.scripts ||
+		document.getElementsByTagName('script'),
 	(script) => {
 		if (script.src.indexOf('/tasty.js') !== -1) {
-			const url = script.getAttribute('data-url') ||
-				script.src.split('tasty.js')[0];
-			url &&
-				tasty(url).connect();
+			const manual = script.hasAttribute('data-manual') ||
+					script.src.indexOf('manual') !== -1,
+				url = script.getAttribute('data-url') ||
+					script.src.split('tasty.js')[0];
+			if (url && !manual) {
+				new Tasty(url).connect();
+			}
 		}
 	}
 );
-
-/**
- * Client-side API available in browser environment.
- * @function tasty
- * @param {Config|String} [config] Tasty client config (or server URL).
- * @param {Boolean|Object} [config.log=true] Console logging.
- * @param {String} [config.url] Tasty server URL.
- * @returns {Function} itself for chaining.
- * @example <!-- HTML (auto-connect) -->
-<script src="//localhost:8765/tasty.js"></script>
- * @example // ES2015
-import tasty from 'tasty';
-tasty('//localhost:8765/').connect();
- * @example // AMD
-define(['tasty'], (tasty) => {
-	tasty('//localhost:8765/').connect();
-});
- * @example // CommonJS
-require('tasty')('//localhost:8765/').connect();
- */
-function tasty(config) {
-	config = config ?
-		typeof config === 'string' ?
-			{url: config} :
-			config :
-		{};
-
-	// WORKAROUND: built-in URL parser.
-	let link = document.createElement('a');
-	link.href = config.url || '';
-	config.path = link.pathname,
-	config.origin = link.origin ||
-		link.protocol + '//' + link.host;
-	config.url = link.href;
-	link = null;
-
-	tasty.config = config;
-
-	include.url = config.url;
-
-	reason.console = tasty.console = tool.console = log(
-		config.hasOwnProperty('log') ?
-			config.log === true ?
-				window.console :
-				config.log :
-			window.console
-	);
-
-	return tasty;
-}
-
-/**
- * Connects to Tasty server configured in {@link #tasty|`tasty()`} call.
- * @memberof tasty
- * @see {@link #tasty|examples}
- */
-function connect(_closed) {
-	disconnect();
-
-	const config = tasty.config,
-		id = config.id || tasty.id();
-	id ?
-		tasty.console.debug('tasty', 'server', config.url) :
-		tasty.console.info('tasty', 'server', config.url);
-
-	const flaws = util.flaws(tasty.flaws),
-		query = {};
-	if (id) {
-		query.id = id;
-	}
-	if (flaws) {
-		id ||
-			tasty.console.warn('tasty', 'client', 'flaws', flaws);
-		query.flaws = flaws;
-	}
-
-	connect.closed = _closed ?
-		connect.closed + 1 :
-		0;
-
-	const socket = new eio(config.origin, {
-		path: config.path || '/',
-		query: query,
-		transports: tasty.flaws.websocket ?
-			['polling'] :
-			// NOTE there could be some proxy or firewall configuration issues
-			// which Engine.IO can't automatically handle and fallbak to polling.
-			_closed ?
-				['polling', 'websocket'] :
-				['websocket']
-	})
-		.once('close', connect.closed < 5 ? connect : reason)
-		.on('error', reason)
-		.once('open', () => onOpen(socket, !!id))
-}
-
-/**
- * Disconnects from Tasty server.
- * @memberof tasty
- * @see {@link #tasty|examples}
- */
-function disconnect() {
-	const socket = tasty.socket;
-	if (!socket) {
-		return;
-	}
-
-	socket.removeListener('close', connect);
-	socket.removeListener('error', reason);
-	socket.close();
-
-	delete tasty.socket;
-}
-
-/**
- * Fails current hook/tool.
- * @memberof tasty
- * @method fail
- * @param {...*} args Values to log.
- * @throws {Error}
- */
-function fail(...args) {
-	throw reason(...args);
-}
-
-function onOpen(socket, reconnected) {
-	tasty.id(socket.id);
-	tasty.socket = socket;
-
-	tasty.console.log('tasty', reconnected ? 'reconnected' : 'connected', tasty.id());
-
-	socket.on('message', (raw) => {
-		const message = parseJson(raw);
-		if (message instanceof Error) {
-			tasty.console.warn('tasty', message);
-		} else {
-			const mid = message[0],
-				type = message[1],
-				data = message[2];
-
-			hook.update &&
-				hook.update();
-
-			thenable(
-				reconnected ?
-					hook(undefined, 'after.reconnect') :
-					null
-			)
-			.then(
-				() => onMessage(socket, type, data)
-			)['catch'](
-				(error) => error
-			)
-			.then((result) => {
-				// WORKAROUND
-				if (type === 'noop') {
-					reconnected = false;
-				}
-
-				var callback;
-				if (typeof result === 'function') {
-					callback = result;
-					result = [];
-				} else if (result instanceof Error) {
-					tasty.console.error('tasty', result);
-					result = [0, util.format(result)];
-				} else {
-					result = [result];
-				}
-				socket.send(
-					JSON.stringify([mid, 0, result]),
-					callback
-				);
-			});
-		}
-	});
-
-	// TODO configurable key.
-	const key = '__coverage__',
-		coverage = sessionStorage.getItem(key);
-	coverage &&
-		socket.send(
-			JSON.stringify([0, 'coverage', JSON.parse(coverage)]),
-			() => sessionStorage.removeItem(key)
-		);
-}
-
-function onMessage(socket, type, data) {
-	return hook(undefined, 'before.' + type)
-		.then(() => {
-			switch (type) {
-				case 'coverage':
-					data = data || '__coverage__';
-					tasty.console.log('tasty', 'coverage', data);
-
-					return window[data];
-				case 'noop':
-					return;
-				case 'end':
-					tasty.console.info('tasty', 'end');
-					tasty.id(null);
-
-					return () => {
-						disconnect();
-					};
-				case 'exec':
-					tasty.console.log('tasty', 'exec', include.url + data);
-
-					return thenable((resolve, reject) => {
-						include(data)
-							.then(
-								() => {
-									const result = tasty.result;
-									delete tasty.result;
-									// NOTE prevent callback to be used as Promise executor.
-									typeof result === 'function' ?
-										resolve(result) :
-										thenable(result)
-											.then(resolve, reject);
-								},
-								(error) => {
-									delete tasty.result;
-									reject(error);
-								}
-							);
-					});
-				case 'message':
-					tasty.console.info('tasty', data);
-
-					return;
-				case 'tool': {
-					const name = data[0],
-						args = data.slice(1);
-
-					return tool(name, args);
-				}
-				default:
-					return thenable(
-						reason('unknown message', name)
-					);
-			}
-		})
-		.then(
-			(result) => hook(result, 'after.' + type)
-		);
-}

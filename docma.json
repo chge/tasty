@@ -48,7 +48,7 @@
 				{
 					"label": "Server API",
 					"href": "/tasty/?api=server",
-					"iconClass": "ico-md ico-terminal"
+					"iconClass": "ico-md ico-file-code-o"
 				},
 				{
 					"label": "Test API",
