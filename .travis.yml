@@ -6,14 +6,15 @@ language: node_js
 matrix:
   fast_finish: true
   include:
-    - node_js: "node"
+    - node_js: "lts/*"
       addons: &firefox
         firefox: "52.0"
       script: &test
         - phantomjs --version
         - export DISPLAY=:99.0 && sh -e /etc/init.d/xvfb start && sleep 3
         - npm test
-    - { node_js: "lts/*", addons: *firefox, script: *test }
+    - { node_js: "node", addons: *firefox, script: *test }
+    - { node_js: "8.3", addons: *firefox, script: *test }
     - { node_js: "8.2", addons: *firefox, script: *test }
     - { node_js: "8.1", addons: *firefox, script: *test }
     - { node_js: "8.0", addons: *firefox, script: *test }
@@ -33,7 +34,7 @@ matrix:
     - { node_js: "4.7", addons: *firefox, script: *test }
     - { node_js: "4.4", addons: *firefox, script: *test }
     - { node_js: "4.3", addons: *firefox, script: *test }
-    - node_js: "node"
+    - node_js: "lts/*"
       addons: &sauce
         jwt:
           secure: xKrWkJu58y5lmkZzpPr5bGt0TAkFo2053Pw4BPU9x8vAFINGeUAvj8VEIyQn5MMstntG1xO96ih/WAq0OhHCxwZgWLpUNxmzC1kJC93eyMHIlxttPL90lQIBOTtGzGLTkQe3HuGRwDmXZPehURkElPwWPUvPVyQHgyxLX78T2/ktBkElm/wp7MTSe2j0Adzo4Wt3Aga3WzTRde9gW5IH+/U/JXtpj247/AQCvMH2wmQSRP2XqrqAPF1y6jA3CECiTLpX0zVPnup62/S3QL5WTQspB37E7qNutruewlItxqy+vWJ40zredXIiZKDoXq6IA6h8SYktzXNPGMo/5fBP1gEEBKkgPG0A6vT/CaUvSyShx3zwMMT8WnPNyOVpNDxXw2JAP3ru9kj717cJxswIWvzLfc+MEX5kdOwHtB/zTz3xBYbgpjJ/SbJ3l0XdVQ5owxU1OCBVgwarYFXRFpORctGtE9BIgns5r8ukmQCvZGGG3UUCQxiOKwdIYZh1YZ4JJpvdQMHs0RESoRSWQoQiwWwfkbseCC7uSROtojgQp05x6qUHPA4VdoN9MGx+PDLItlhb/VB7T6YuVPPnkB2a6rfrw3XC7eZidCgXK9mKG2k4cnfPQ9KfaS5zefo39ghgFAsKc1xbPk/ldGfKVoNkNTSTLA0gYnLn5o2ALJJS8u4=
@@ -45,7 +46,8 @@ matrix:
       script: &support
         - export DEBUG=tasty* DEBUG_COLORS=true
         - npm run support
-    - { node_js: "lts/*", addons: *sauce, script: *support }
+    - { node_js: "node", addons: *sauce, script: *support }
+    - { node_js: "8.3.0", addons: *sauce, script: *support }
     - { node_js: "8.2.1", addons: *sauce, script: *support }
     - { node_js: "8.2.1", addons: *sauce, script: *support }
     - { node_js: "8.2.0", addons: *sauce, script: *support }
@@ -58,13 +60,18 @@ matrix:
     - { node_js: "8.1.2", addons: *sauce, script: *support }
     - { node_js: "8.1.1", addons: *sauce, script: *support }
     - { node_js: "8.1.1", addons: *sauce, script: *support }
-    - { node_js: "8.1.0", addons: *sauce, script: *support }
     - { node_js: "8.1.0", addons: *sauce, script: *support }
     - { node_js: "8.0.0", addons: *sauce, script: *support }
+    - { node_js: "8.0.0", addons: *sauce, script: *support }
+    - { node_js: "7.10.1", addons: *sauce, script: *support }
     - { node_js: "7.10.1", addons: *sauce, script: *support }
     - { node_js: "7.10.0", addons: *sauce, script: *support }
+    - { node_js: "7.10.0", addons: *sauce, script: *support }
+    - { node_js: "7.9.0", addons: *sauce, script: *support }
     - { node_js: "7.9.0", addons: *sauce, script: *support }
     - { node_js: "7.8.0", addons: *sauce, script: *support }
+    - { node_js: "7.8.0", addons: *sauce, script: *support }
+    - { node_js: "7.7.4", addons: *sauce, script: *support }
     - { node_js: "7.7.4", addons: *sauce, script: *support }
     - { node_js: "7.7.3", addons: *sauce, script: *support }
     - { node_js: "7.7.2", addons: *sauce, script: *support }

@@ -61,8 +61,8 @@ class Tasty {
 		config.url = link.href;
 		link = null;
 
-		dom.on(window, 'beforeunload', this.onBeforeUnload.bind(this));
-		dom.on(window, 'unload', this.onUnload.bind(this));
+		dom.on(window, 'beforeunload', () => this.onBeforeUnload());
+		dom.on(window, 'unload', () => this.onUnload());
 
 		this.config = config;
 		this.dom = dom;
@@ -75,7 +75,7 @@ class Tasty {
 		this.Promise = utils.Promise;
 
 		// WORKAROUND for EIO EventEmitter.
-		this.connect = this.connect.bind(this);
+		this.onClosed = () => this.onClosed();
 	}
 
 	/**
@@ -114,9 +114,7 @@ class Tasty {
 					['websocket']
 		}).once(
 			'close',
-			this.closed < 5 ?
-				this.connect :
-				reason
+			this.onClosed
 		).once(
 			'open',
 			() => this.onOpen(socket)
@@ -124,10 +122,6 @@ class Tasty {
 			'error',
 			reason
 		);
-
-		this.closed = this.closed ?
-			this.closed + 1 :
-			0;
 
 		return this;
 	}
@@ -138,7 +132,7 @@ class Tasty {
 	disconnect() {
 		const socket = this.socket;
 		if (socket) {
-			socket.removeListener('close', this.connect);
+			socket.removeListener('close', this.onClosed);
 			socket.removeListener('error', reason);
 			socket.close();
 		}
@@ -178,7 +172,7 @@ class Tasty {
 
 		this.logger.log(this.reconnected ? 'reconnected' : 'connected', this.id());
 
-		socket.on('message', this.onMessage.bind(this));
+		socket.on('message', (raw) => this.onMessage(raw));
 
 		const key = this.config.coverage,
 			coverage = sessionStorage.getItem(key);
@@ -187,6 +181,13 @@ class Tasty {
 				JSON.stringify([0, 'coverage', JSON.parse(coverage)]),
 				() => sessionStorage.removeItem(key)
 			);
+	}
+
+	onClosed() {
+		this.closed = (this.closed | 0) + 1;
+
+		this.closed < 5 &&
+			this.connect();
 	}
 
 	onMessage(raw) {

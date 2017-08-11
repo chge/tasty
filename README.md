@@ -191,15 +191,17 @@ Currently Tasty can't find text `+1 123 456-78-90` in the following case:
 
 In other words, it's too hard to join text fragments of `textContent`, `value/placeholder`, `:before/:after` etc.
 
-### Images
+Also, search cannot detect text from `alt` attribute yet.
 
-Work is in progress.
+### Media
 
-Search cannot detect text from `alt` attribute yet.
+Border images are currently skipped.
+
+Also, `<audio />`, `<video />`, `<picture />`, `<object />` and `<embed />` are not supported out-of-the-box.
 
 ### Auto-focus elements
 
-When using auto-focus elements (such as `input`), you could encounter `cannot type into active node <body />` error when window loses its focus, which causes `type` and `paste` tools to fail.
+When using auto-focus elements (such as `<input />`), you could encounter `cannot type into active node <body />` error when window loses its focus, which causes `type` and `paste` tools to fail.
 
 If you don't want to focus such elements explicitly (using `click` or something else), make sure that client window remain focused during tests.
 For WebDriver clients you could [maximize window](https://www.w3.org/TR/webdriver/#maximize-window) or use [`alert()` workaround](http://stackoverflow.com/a/19170779) to focus reliably.

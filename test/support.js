@@ -35,13 +35,22 @@ const CHROME = 'chrome',
 	SAFARI = 'safari';
 // NOTE Caps <= Travis Node versions.
 const CAPS = [
+	{browserName: ANDROID, platformVersion: '7.1', platform: LINUX, deviceName: 'Android GoogleAPI Emulator', deviceOrientation: 'portrait', title: 'Browser'},
+	{browserName: ANDROID, platformVersion: '7.0', platform: LINUX, deviceName: 'Android GoogleAPI Emulator', deviceOrientation: 'portrait', title: 'Browser'},
+	{platformName: ANDROID, platformVersion: '6.0', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
+	{platformName: ANDROID, platformVersion: '5.1', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
+	{platformName: ANDROID, platformVersion: '5.0', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
+	{platformName: ANDROID, platformVersion: '4.4', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
 	{browserName: CHROME, version: 'dev', platform: WINDOWS10},
 	{browserName: CHROME, version: 'beta', platform: OSX12},
 	{browserName: CHROME, version: '60.0', platform: OSX11},
-	{browserName: CHROME, version: '50.0', platform: WINDOWS81},
-	{browserName: CHROME, version: '40.0', platform: WINDOWS8},
-	{browserName: CHROME, version: '30.0', platform: WINDOWS7},
+	{browserName: CHROME, version: '55.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '50.0', platform: WINDOWS8},
 	{browserName: CHROME, version: '49.0', platform: WINDOWSXP}, // NOTE max on XP
+	{browserName: CHROME, version: '48.0', platform: LINUX}, // NOTE max on Linux
+	{browserName: CHROME, version: '40.0', platform: WINDOWS7},
+	{browserName: CHROME, version: '35.0', platform: LINUX},
+	{browserName: CHROME, version: '30.0', platform: WINDOWSXP},
 	{browserName: CHROME, version: '26.0', platform: LINUX}, // NOTE min
 	{browserName: EDGE, version: '15', platform: WINDOWS10},
 	{browserName: EDGE, version: '14', platform: WINDOWS10},
@@ -53,26 +62,14 @@ const CAPS = [
 	{browserName: FIREFOX, version: 'dev', platform: WINDOWS10},
 	{browserName: FIREFOX, version: 'beta', platform: OSX12},
 	{browserName: FIREFOX, version: '54.0', platform: OSX11},
+	{browserName: FIREFOX, version: '52.0', platform: WINDOWS7}, // NOTE max on Vista
 	{browserName: FIREFOX, version: '40.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '45.0', platform: WINDOWSXP}, // NOTE max on XP
+	{browserName: FIREFOX, version: '35.0', platform: LINUX},
 	{browserName: FIREFOX, version: '30.0', platform: WINDOWS8},
+	{browserName: FIREFOX, version: '25.0', platform: LINUX},
 	{browserName: FIREFOX, version: '20.0', platform: WINDOWS7},
-	{browserName: FIREFOX, version: '52.0', platform: WINDOWSXP}, // NOTE max on XP
 	{browserName: FIREFOX, version: '4.0', platform: LINUX}, // NOTE min
-	{browserName: OPERA, version: '12.15', platform: LINUX},
-	{browserName: OPERA, version: '12.12', platform: WINDOWSXP},
-	{browserName: OPERA, version: '11.64', platform: WINDOWSXP},
-	{browserName: SAFARI, version: '10.0', platform: OSX12},
-	{browserName: SAFARI, version: '9.0', platform: OSX11},
-	{browserName: SAFARI, version: '8.0', platform: OSX10},
-	{browserName: SAFARI, version: '7.0', platform: OSX9},
-	{browserName: SAFARI, version: '6.0', platform: OSX8},
-	{browserName: SAFARI, version: '5.1', platform: WINDOWS7},
-	{platformName: ANDROID, platformVersion: '7.1', browserName: 'Browser', deviceName: 'Android GoogleAPI Emulator', deviceOrientation: 'portrait'},
-	{platformName: ANDROID, platformVersion: '7.0', browserName: 'Browser', deviceName: 'Android GoogleAPI Emulator', deviceOrientation: 'portrait'},
-	{platformName: ANDROID, platformVersion: '6.0', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
-	{platformName: ANDROID, platformVersion: '5.1', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
-	{platformName: ANDROID, platformVersion: '5.0', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
-	{platformName: ANDROID, platformVersion: '4.4', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '10.3', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '10.2', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '10.0', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
@@ -95,6 +92,15 @@ const CAPS = [
 	{platformName: IOS, platformVersion: '8.3', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '8.2', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '8.1', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
+	{browserName: OPERA, version: '12.15', platform: LINUX},
+	{browserName: OPERA, version: '12.12', platform: WINDOWSXP},
+	{browserName: OPERA, version: '11.64', platform: WINDOWSXP},
+	{browserName: SAFARI, version: '10.0', platform: OSX12},
+	{browserName: SAFARI, version: '9.0', platform: OSX11},
+	{browserName: SAFARI, version: '8.0', platform: OSX10},
+	{browserName: SAFARI, version: '7.0', platform: OSX9},
+	{browserName: SAFARI, version: '6.0', platform: OSX8},
+	{browserName: SAFARI, version: '5.1', platform: WINDOWS7},
 ];
 
 describe(clientName(INDEX), function() {
@@ -129,9 +135,6 @@ function setup(caps) {
 		// NOTE seconds.
 		commandTimeout: 300,
 		idleTimeout: 300,
-		loggingPrefs: {
-			'browser': 'DEBUG'
-		},
 		maxDuration: 300,
 		name: clientName(caps),
 		recordScreenshots: false,
@@ -228,7 +231,9 @@ function clientName(index) {
 		device === platform ?
 			null :
 			device,
-		platform,
+		device === browser ?
+			null :
+			platform,
 		caps.platformVersion
 	].filter(
 		(item) => !!item
