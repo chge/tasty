@@ -67,8 +67,8 @@ const CAPS = [
 	{browserName: FIREFOX, version: '45.0', platform: WINDOWSXP}, // NOTE max on XP
 	{browserName: FIREFOX, version: '35.0', platform: LINUX},
 	{browserName: FIREFOX, version: '30.0', platform: WINDOWS8},
-	{browserName: FIREFOX, version: '25.0', platform: LINUX},
-	{browserName: FIREFOX, version: '20.0', platform: WINDOWS7},
+	{browserName: FIREFOX, version: '20.0', platform: LINUX},
+	{browserName: FIREFOX, version: '10.0', platform: WINDOWS7},
 	{browserName: FIREFOX, version: '4.0', platform: LINUX}, // NOTE min
 	{platformName: IOS, platformVersion: '10.3', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '10.2', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},

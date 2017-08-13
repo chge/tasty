@@ -2,6 +2,7 @@ import buble from 'rollup-plugin-buble';
 import commonjs from 'rollup-plugin-commonjs';
 import istanbul from 'rollup-plugin-istanbul';
 import resolve from 'rollup-plugin-node-resolve';
+import uglify from 'rollup-plugin-uglify';
 
 import NYC from 'nyc';
 
@@ -39,7 +40,7 @@ if (process.argv.indexOf('--coverage') !== -1) {
 	);
 }
 
-export default {
+const bundle = {
 	amd: {
 		id: 'tasty'
 	},
@@ -50,3 +51,22 @@ export default {
 	moduleName: 'Tasty',
 	plugins: plugins
 };
+
+export default [
+	bundle,
+	Object.assign({}, bundle, {
+		dest: 'dist/tasty.min.js',
+		plugins: plugins.concat(
+			uglify({
+				ie8: true,
+				compress: {
+					dead_code: true,
+					drop_console: true,
+					global_defs: {
+						console: undefined
+					}
+				}
+			})
+		)
+	})
+];

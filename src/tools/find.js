@@ -5,7 +5,7 @@ import { assign, escape, find as arrayFind, reason } from '../utils';
 /**
  * Searches things on client.
  * @function find
- * @memberof Tasty#tools
+ * @memberof Tools#all
  * @param {Thing|string|RegExp} what {@link /tasty/?api=test#Thing|Thing} to search.
  * @param {Thing|string} [where=window] {@link /tasty/?api=test#Thing|Thing} to search in. String means {@link /tasty/?api=test#nodes|`nodes`}.
  * @param {Object|boolean} [options] Search options.

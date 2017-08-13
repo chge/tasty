@@ -22,6 +22,14 @@ import type from './tools/type';
  * All client tools.
  * @member {Tools} Tasty#tools
  * @see {@link #Tools|Tools}
+ * @example
+exec(
+	function(...) {
+		this.tools.use('toolName', [...]); // returns Promise
+		this.tools.all.toolName(...); // returns result, throws Error
+	},
+	[...]
+);
  */
 
 /**
@@ -34,7 +42,13 @@ class Tools {
 	 */
 	constructor(tasty) {
 		this.tasty = tasty;
-		this.tools = {};
+
+		/**
+		 * All tools.
+		 * @member {Object} Tools#all
+		 * @protected
+		 */
+		this.all = {};
 
 		// NOTE Rollup could change function name.
 		this.add('breakpoint', breakpoint);
@@ -72,7 +86,7 @@ class Tools {
 			throw reason('invalid tool', handle);
 		}
 
-		return this.tools[name] = handle;
+		return this.all[name] = handle;
 	}
 
 	/**
@@ -90,15 +104,15 @@ class Tools {
 		logger.log.apply(logger, ['tool', name].concat(args));
 
 		return thenable()
-			.then((result) => hooks.use(result, 'before.' + name, args))
+			.then((result) => hooks.run(result, 'before.' + name, args))
 			.then(() => {
-				const tool = this.tools[name];
+				const tool = this.all[name];
 				if (tool) {
 					return tool.apply(tasty, args);
 				} else {
 					throw reason('no such tool', name);
 				}
 			})
-			.then((result) => hooks.use(result, 'after.' + name, args));
+			.then((result) => hooks.run(result, 'after.' + name, args));
 	}
 }

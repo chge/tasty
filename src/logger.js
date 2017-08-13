@@ -17,11 +17,15 @@ class Logger {
 	 * @param {Tasty} tasty {@link #Tasty|Tasty} instance.
 	 */
 	constructor() {
-		this.debug = wrap(console, 'debug', 'log');
-		this.log = wrap(console, 'log', 'log');
-		this.info = wrap(console, 'info', 'log');
-		this.warn = wrap(console, 'warn', 'log');
-		this.error = wrap(console, 'error', 'log');
+		if (typeof console === 'undefined') {
+			this.debug = this.log = this.info = this.warn = this.error = function() {};
+		} else {
+			this.debug = wrap(console, 'debug', 'log');
+			this.log = wrap(console, 'log', 'log');
+			this.info = wrap(console, 'info', 'log');
+			this.warn = wrap(console, 'warn', 'log');
+			this.error = wrap(console, 'error', 'log');
+		}
 	}
 }
 
@@ -37,11 +41,22 @@ function wrap(api, name, fallback) {
 				(arg) => fixed.push(' ', arg)
 			);
 
-			return Function.prototype.apply.call(api[name], api, fixed);
+			return Function.prototype.apply.call(
+				api[name],
+				api,
+				fixed
+			);
 		};
 	}
 
+	// NOTE don't use bind();
 	return function() {
-		return Function.prototype.apply.call(api[name], api, arguments);
+		return Function.prototype.apply.call(
+			api[name],
+			api,
+			['tasty'].concat(
+				Array.prototype.slice.call(arguments)
+			)
+		);
 	};
 }

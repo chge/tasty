@@ -17,7 +17,7 @@ class Hooks {
 	 * @param {Tasty} tasty {@link #Tasty|Tasty} instance.
 	 */
 	constructor(tasty) {
-		this.hooks = {};
+		this.all = {};
 		this.tasty = tasty;
 	}
 
@@ -36,7 +36,7 @@ class Hooks {
 			filter :
 			[filter];
 		filter = filter[0] === '*' ?
-			keys(this.hooks) :
+			keys(this.all) :
 			filter;
 
 		// NOTE protect current hook chain from changes.
@@ -44,14 +44,14 @@ class Hooks {
 			() => {
 				delete this.update;
 				forEach(filter, (key) => {
-					delete this.hooks[key];
+					delete this.all[key];
 				});
 			} :
 			() => {
 				delete this.update;
 				hook.title = title;
 				forEach(filter, (key) => {
-					this.hooks[key] = hook;
+					this.all[key] = hook;
 				});
 			};
 
@@ -65,8 +65,8 @@ class Hooks {
 	 * @param {array} args Hook arguments.
 	 * @returns {Promise}
 	 */
-	use(result, key, args) {
-		const hook = this.hooks[key],
+	run(result, key, args) {
+		const hook = this.all[key],
 			tasty = this.tasty;
 		if (hook) {
 			const debug = tasty.logger.debug;
@@ -78,7 +78,7 @@ class Hooks {
 				debug('hook', key, hook.title || '(anonymous)', hook.once ? 'once' : '');
 
 				if (hook.once) {
-					delete this.hooks[key];
+					delete this.all[key];
 				}
 				result = hook.call(tasty, result, key, args);
 			}

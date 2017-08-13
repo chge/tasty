@@ -45,6 +45,7 @@ The main purposes are:
 
 1. Emulate real user experience.
 2. Support any client without WebDriver.
+3. Keep test scripts as simple as possible.
 
 
 Tasty gives you only high-level tools to help treat your application as a black box, just like real user does.
@@ -137,6 +138,8 @@ Tasty client is a small extendable UMD module that connects to the server and ex
 
 It has its own [API](https://chge.github.io/tasty/?api=client) and isolated polyfills for non-supporting browsers.
 
+Use `tasty.min.js` if you don't need to debug your tests.
+
 # Static server
 
 You can run built-in static server on the same URL by passing `--static <path/to/root>` flag.
@@ -208,7 +211,7 @@ For WebDriver clients you could [maximize window](https://www.w3.org/TR/webdrive
 
 Additionally, [Chrome DevTools](https://developer.chrome.com/devtools) could force current tab to lose focus, with the same results.
 
-Remember, you can always click on something to reset autofocus when you doesn't need to test it.
+Remember, you can always click on something to reset autofocus when you don't need to test it.
 
 ### Shadow DOM
 
@@ -267,18 +270,16 @@ it('works', function(done) {
 
 For testing SPA (or rich MPA) you can provide a method for Tasty to ensure that client is ready for the next action.
 
-The simpliest way is to just wait after using some tools.
+The simpliest way is to just wait before or after using some tools.
 
 ```javascript
 ready('delay', 1000);
 ```
 
-You may override the list of tools to wait after.
+You may override the list of tools to wait before and after.
 
 ```javascript
-ready('delay', 1000, [
-	'click'
-]);
+ready('delay', 1000, ['exec'], ['click']);
 ```
 
 You always can manually add a delay into queue.
@@ -314,7 +315,7 @@ ready(
 	function() {
 		return !document.getElementsByClassName('progress').length;
 	},
-	[...]
+	...
 );
 ```
 
@@ -330,11 +331,21 @@ ready(
 			}
 		);
 	},
-	[...]
+	...
 );
 ```
 
-Note that built-in methods cannot be combined.
+Call without arguments simply executes `ready` logic, which is useful in some cases.
+
+```javascript
+ready('exec', ...);
+click('Start');
+is('Loading...');
+ready();
+is('Done');
+```
+
+Note that ready methods cannot be combined.
 
 ### Custom logic
 

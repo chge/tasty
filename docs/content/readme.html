@@ -36,6 +36,7 @@ It respects <a href="https://www.w3.org/TR/CSP/">Content Security Policy</a> and
 <ol>
 <li>Emulate real user experience.</li>
 <li>Support any client without WebDriver.</li>
+<li>Keep test scripts as simple as possible.</li>
 </ol>
 <p>Tasty gives you only high-level tools to help treat your application as a black box, just like real user does.
 Interact with text and graphics, not with heartless HTML elements.
@@ -102,6 +103,7 @@ For example, <code>--addon chai,chai-as-promised,chai-http</code> works fine.</p
 <hr />
 <p>Tasty client is a small extendable UMD module that connects to the server and executes its commands.</p>
 <p>It has its own <a href="https://chge.github.io/tasty/?api=client">API</a> and isolated polyfills for non-supporting browsers.</p>
+<p>Use <code>tasty.min.js</code> if you don't need to debug your tests.</p>
 <h1 id="static-server">Static server</h1>
 <hr />
 <p>You can run built-in static server on the same URL by passing <code>--static &lt;path/to/root&gt;</code> flag.</p>
@@ -143,7 +145,7 @@ as <a href="https://developer.chrome.com/devtools/docs/debugger-protocol">debugg
 <p>If you don't want to focus such elements explicitly (using <code>click</code> or something else), make sure that client window remain focused during tests.
 For WebDriver clients you could <a href="https://www.w3.org/TR/webdriver/#maximize-window">maximize window</a> or use <a href="http://stackoverflow.com/a/19170779"><code>alert()</code> workaround</a> to focus reliably.</p>
 <p>Additionally, <a href="https://developer.chrome.com/devtools">Chrome DevTools</a> could force current tab to lose focus, with the same results.</p>
-<p>Remember, you can always click on something to reset autofocus when you doesn't need to test it.</p>
+<p>Remember, you can always click on something to reset autofocus when you don't need to test it.</p>
 <h3 id="shadow-dom">Shadow DOM</h3>
 <p>Not supported yet.</p>
 <h3 id="browser-ui">Browser UI</h3>
@@ -179,13 +181,11 @@ click('Save');
 </code></pre>
 <h3 id="ready-state">Ready state</h3>
 <p>For testing SPA (or rich MPA) you can provide a method for Tasty to ensure that client is ready for the next action.</p>
-<p>The simpliest way is to just wait after using some tools.</p>
+<p>The simpliest way is to just wait before or after using some tools.</p>
 <pre><code class="lang-javascript">ready('delay', 1000);
 </code></pre>
-<p>You may override the list of tools to wait after.</p>
-<pre><code class="lang-javascript">ready('delay', 1000, [
-    'click'
-]);
+<p>You may override the list of tools to wait before and after.</p>
+<pre><code class="lang-javascript">ready('delay', 1000, ['exec'], ['click']);
 </code></pre>
 <p>You always can manually add a delay into queue.</p>
 <pre><code class="lang-javascript">delay(1000);
@@ -207,7 +207,7 @@ click('Save');
     function() {
         return !document.getElementsByClassName('progress').length;
     },
-    [...]
+    ...
 );
 </code></pre>
 <pre><code class="lang-javascript">ready(
@@ -221,10 +221,17 @@ click('Save');
             }
         );
     },
-    [...]
+    ...
 );
 </code></pre>
-<p>Note that built-in methods cannot be combined.</p>
+<p>Call without arguments simply executes <code>ready</code> logic, which is useful in some cases.</p>
+<pre><code class="lang-javascript">ready('exec', ...);
+click('Start');
+is('Loading...');
+ready();
+is('Done');
+</code></pre>
+<p>Note that ready methods cannot be combined.</p>
 <h3 id="custom-logic">Custom logic</h3>
 <p>The <code>now(...)</code> call with function(s) allows you to add some custom logic into test, but you should use <code>now.*</code> namespace for tools.</p>
 <p>The <code>now.smth()</code> is the same as just <code>smth()</code>, but runs immediately. You should use <code>now.*</code> tools inside <code>now(...)</code> call if you don't want to break execution order.</p>

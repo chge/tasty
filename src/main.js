@@ -215,10 +215,10 @@ class Tasty {
 
 		thenable(
 			this.reconnected ?
-				hooks.use(undefined, 'after.reconnect') :
+				hooks.run(undefined, 'after.reconnect') :
 				null
 		).then(
-			() => hooks.use(undefined, 'before.' + type)
+			() => hooks.run(undefined, 'before.' + type)
 				.then(() => {
 					switch (type) {
 						case 'coverage':
@@ -238,7 +238,7 @@ class Tasty {
 					}
 				})
 				.then(
-					(result) => hooks.use(result, 'after.' + type)
+					(result) => hooks.run(result, 'after.' + type)
 				)
 		)['catch'](
 			(error) => error

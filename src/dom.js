@@ -677,11 +677,11 @@ export function on(node, name, handler, options) {
 }
 
 /**
- * Tries to reach given `node` by its coordinates on the screen.
+ * Tries to reach given `node` by its position in the viewport.
  * @function reach
  * @memberof Tasty#dom
  * @param {Node} node
- * @returns {Node} Actually reached Node.
+ * @returns {Node|null} Actually reached Node or `null` if given `node` isn't in the viewport.
  */
 export function reach(node) {
 	const rect = measure(node),
@@ -690,7 +690,7 @@ export function reach(node) {
 		actual = document.elementFromPoint(x, y);
 	// NOTE node could be outside of the viewport.
 	if (!actual) {
-		return actual;
+		return null;
 	}
 
 	let parent = actual;
