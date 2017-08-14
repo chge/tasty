@@ -61,6 +61,7 @@ class Tasty {
 		config.url = link.href;
 		link = null;
 
+		// NOTE don't use bind();
 		dom.on(window, 'beforeunload', () => this.onBeforeUnload());
 		dom.on(window, 'unload', () => this.onUnload());
 
@@ -75,7 +76,8 @@ class Tasty {
 		this.Promise = utils.Promise;
 
 		// WORKAROUND for EIO EventEmitter.
-		this.onClosed = () => this.onClosed();
+		// NOTE don't use bind();
+		this.onClosedBound = () => this.onClosed();
 	}
 
 	/**
@@ -114,7 +116,7 @@ class Tasty {
 					['websocket']
 		}).once(
 			'close',
-			this.onClosed
+			this.onClosedBound
 		).once(
 			'open',
 			() => this.onOpen(socket)
@@ -132,7 +134,7 @@ class Tasty {
 	disconnect() {
 		const socket = this.socket;
 		if (socket) {
-			socket.removeListener('close', this.onClosed);
+			socket.removeListener('close', this.onClosedBound);
 			socket.removeListener('error', reason);
 			socket.close();
 		}
