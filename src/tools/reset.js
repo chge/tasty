@@ -16,8 +16,10 @@ export default function reset(url) {
 	);
 
 	// NOTE clear Storage.
-	localStorage.clear();
-	sessionStorage.clear();
+	window.localStorage &&
+		localStorage.clear();
+	window.sessionStorage &&
+		window.sessionStorage.clear();
 
 	// NOTE preserve ID when unload event handler doesn't work.
 	tasty.id();

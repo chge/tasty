@@ -134,11 +134,12 @@ as <a href="https://developer.chrome.com/devtools/docs/debugger-protocol">debugg
 <pre><code class="lang-html">+1 &lt;input type="tel" placeholder="123 456-78-90" /&gt;
 </code></pre>
 <p>In other words, it's too hard to join text fragments of <code>textContent</code>, <code>value/placeholder</code>, <code>:before/:after</code> etc.</p>
-<h3 id="images">Images</h3>
-<p>Work is in progress.</p>
-<p>Search cannot detect text from <code>alt</code> attribute yet.</p>
+<p>Also, search cannot detect text from <code>alt</code> attribute yet.</p>
+<h3 id="media">Media</h3>
+<p>Border images are currently skipped.</p>
+<p>Also, <code>&lt;audio /&gt;</code>, <code>&lt;video /&gt;</code>, <code>&lt;picture /&gt;</code>, <code>&lt;object /&gt;</code> and <code>&lt;embed /&gt;</code> are not supported out-of-the-box.</p>
 <h3 id="auto-focus-elements">Auto-focus elements</h3>
-<p>When using auto-focus elements (such as <code>input</code>), you could encounter <code>cannot type into active node &lt;body /&gt;</code> error when window loses its focus, which causes <code>type</code> and <code>paste</code> tools to fail.</p>
+<p>When using auto-focus elements (such as <code>&lt;input /&gt;</code>), you could encounter <code>cannot type into active node &lt;body /&gt;</code> error when window loses its focus, which causes <code>type</code> and <code>paste</code> tools to fail.</p>
 <p>If you don't want to focus such elements explicitly (using <code>click</code> or something else), make sure that client window remain focused during tests.
 For WebDriver clients you could <a href="https://www.w3.org/TR/webdriver/#maximize-window">maximize window</a> or use <a href="http://stackoverflow.com/a/19170779"><code>alert()</code> workaround</a> to focus reliably.</p>
 <p>Additionally, <a href="https://developer.chrome.com/devtools">Chrome DevTools</a> could force current tab to lose focus, with the same results.</p>

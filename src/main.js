@@ -155,13 +155,16 @@ class Tasty {
 		// TODO store ID in a cookie?
 		const key = this.config.session,
 			prev = this._id ||
-				sessionStorage.getItem(key);
+				window.sessionStorage &&
+					window.sessionStorage.getItem(key);
 		next = arguments.length ? next : prev;
 
 		this._id = next;
 		next ?
-			sessionStorage.setItem(key, next) :
-			sessionStorage.removeItem(key);
+			window.sessionStorage &&
+				window.sessionStorage.setItem(key, next) :
+			window.sessionStorage &&
+				window.sessionStorage.removeItem(key);
 
 		return prev;
 	}
@@ -175,11 +178,13 @@ class Tasty {
 		socket.on('message', (raw) => this.onMessage(raw));
 
 		const key = this.config.coverage,
-			coverage = sessionStorage.getItem(key);
+			coverage = window.sessionStorage &&
+				window.sessionStorage.getItem(key);
 		coverage &&
 			socket.send(
 				JSON.stringify([0, 'coverage', JSON.parse(coverage)]),
-				() => sessionStorage.removeItem(key)
+				() => window.sessionStorage &&
+					window.sessionStorage.removeItem(key)
 			);
 	}
 
@@ -329,7 +334,8 @@ class Tasty {
 
 		const key = this.config.coverage;
 		key in window &&
-			sessionStorage.setItem(key, JSON.stringify(window[key]));
+			window.sessionStorage &&
+				window.sessionStorage.setItem(key, JSON.stringify(window[key]));
 	}
 }
 
