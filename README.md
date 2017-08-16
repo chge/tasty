@@ -235,6 +235,10 @@ The lambda above will be called on the client "as is", so if it doesn't support 
 
 Tasty console output could be wrong or confusing if `window.console` is modified by application. If this is the case, make sure Tasty client code is runnig prior to application code.
 
+### HTTP + HTTPS on the same port
+
+Not supported yet.
+
 # Tools
 
 ### Queue

@@ -35,8 +35,8 @@ const CHROME = 'chrome',
 	SAFARI = 'safari';
 // NOTE Caps <= Travis Node versions.
 const CAPS = [
-	{browserName: ANDROID, platformVersion: '7.1', platform: LINUX, deviceName: 'Android GoogleAPI Emulator', deviceOrientation: 'portrait', title: 'Browser'},
-	{browserName: ANDROID, platformVersion: '7.0', platform: LINUX, deviceName: 'Android GoogleAPI Emulator', deviceOrientation: 'portrait', title: 'Browser'},
+	{browserName: ANDROID, version: '7.1', platform: LINUX, deviceName: 'Android GoogleAPI Emulator', deviceOrientation: 'portrait', title: 'Browser'},
+	{browserName: ANDROID, version: '7.0', platform: LINUX, deviceName: 'Android GoogleAPI Emulator', deviceOrientation: 'portrait', title: 'Browser'},
 	{platformName: ANDROID, platformVersion: '6.0', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
 	{platformName: ANDROID, platformVersion: '5.1', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
 	{platformName: ANDROID, platformVersion: '5.0', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
@@ -133,9 +133,9 @@ function setup(caps) {
 	caps = Object.assign({
 		build: VERSION,
 		// NOTE seconds.
-		commandTimeout: 300,
-		idleTimeout: 300,
-		maxDuration: 300,
+		commandTimeout: 330,
+		idleTimeout: 330,
+		maxDuration: 330,
 		name: clientName(caps),
 		recordScreenshots: false,
 		'tunnel-identifier': JOB
@@ -226,7 +226,9 @@ function clientName(index) {
 
 	return [
 		caps.title || browser,
-		caps.version,
+		caps.title ?
+			null :
+			caps.version,
 		'on',
 		device === platform ?
 			null :
@@ -234,7 +236,8 @@ function clientName(index) {
 		device === browser ?
 			null :
 			platform,
-		caps.platformVersion
+		caps.platformVersion ||
+			caps.version
 	].filter(
 		(item) => !!item
 	).join(' ');

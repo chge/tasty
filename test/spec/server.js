@@ -76,7 +76,7 @@ describe('server', function() {
 			)
 			.catch(
 				(response) => {
-					expect(response).to.have.status(403);
+					expect(response).to.have.status(400);
 				}
 			);
 	});

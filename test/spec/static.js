@@ -25,7 +25,7 @@ describe('static', function() {
 				() => chai.request(URL1).get('/')
 			)
 			.catch(
-				(response) => expect(response).to.have.status(403)
+				(response) => expect(response).to.have.status(400)
 			);
 	});
 
