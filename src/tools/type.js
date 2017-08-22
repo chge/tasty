@@ -3,6 +3,9 @@ import { delay, Promise, random, reason, reduce } from '../utils';
 
 export default function type(text) {
 	const target = document.activeElement;
+	if (!target) {
+		throw reason('no active node to type into');
+	}
 	if (!('value' in target)) {
 		throw reason('cannot type into active node', target);
 	}
@@ -24,6 +27,7 @@ export default function type(text) {
 					const value = target.value,
 						start = target.selectionStart || value.length,
 						end = target.selectionEnd || value.length;
+					delete target.value;
 					target.value = value.substr(0, start) +
 						char +
 						value.substr(end, value.length);

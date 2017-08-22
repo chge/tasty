@@ -3,6 +3,9 @@ import { reason } from '../utils';
 
 export default function paste(text) {
 	const target = document.activeElement;
+	if (!target) {
+		throw reason('no active node to paste into');
+	}
 	if (!('value' in target)) {
 		throw reason('cannot paste into active node', target);
 	}
@@ -18,6 +21,7 @@ export default function paste(text) {
 	const value = target.value,
 		start = target.selectionStart || value.length,
 		end = target.selectionEnd || value.length;
+	delete target.value;
 	target.value = value.substr(0, start) +
 		text +
 		value.substr(end, value.length);
