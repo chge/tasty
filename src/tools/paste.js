@@ -2,32 +2,36 @@ import { highlight, trigger } from '../dom';
 import { reason } from '../utils';
 
 export default function paste(text) {
-	const target = document.activeElement;
-	if (!target) {
+	const node = document.activeElement;
+	if (!node) {
 		throw reason('no active node to paste into');
 	}
-	if (!('value' in target)) {
-		throw reason('cannot paste into active node', target);
+	if (!('value' in node)) {
+		throw reason('cannot paste into active node', node);
 	}
-	if (target.disabled) {
-		throw reason('cannot paste into disabled node', target);
+	if (node.disabled) {
+		throw reason('cannot paste into disabled node', node);
 	}
-	if (target.readOnly) {
-		throw reason('cannot paste into read-only node', target);
+	if (node.readOnly) {
+		throw reason('cannot paste into read-only node', node);
 	}
-	this.logger.debug('paste', target);
-	highlight(target);
+	this.logger.debug('paste', node);
+	highlight(node);
 
-	const value = target.value,
-		start = target.selectionStart || value.length,
-		end = target.selectionEnd || value.length;
-	delete target.value;
-	target.value = value.substr(0, start) +
+	const value = node.value,
+		start = node.selectionStart || value.length,
+		end = node.selectionEnd || value.length;
+	try {
+		delete node.value;
+	} catch (thrown) {
+		// NOTE noop
+	}
+	node.value = value.substr(0, start) +
 		text +
 		value.substr(end, value.length);
 
-	trigger(target, 'ClipboardEvent', 'paste');
+	trigger(node, 'ClipboardEvent', 'paste');
 	'oninput' in window ?
-		trigger(target, 'Event', 'input', {cancellable: false}) :
-		trigger(target, 'Event', 'change', {cancellable: false});
+		trigger(node, 'Event', 'input', {cancellable: false}) :
+		trigger(node, 'Event', 'change', {cancellable: false});
 }

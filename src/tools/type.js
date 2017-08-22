@@ -2,21 +2,21 @@ import { highlight, trigger } from '../dom';
 import { delay, Promise, random, reason, reduce } from '../utils';
 
 export default function type(text) {
-	const target = document.activeElement;
-	if (!target) {
+	const node = document.activeElement;
+	if (!node) {
 		throw reason('no active node to type into');
 	}
-	if (!('value' in target)) {
-		throw reason('cannot type into active node', target);
+	if (!('value' in node)) {
+		throw reason('cannot type into active node', node);
 	}
-	if (target.disabled) {
-		throw reason('cannot type into disabled node', target);
+	if (node.disabled) {
+		throw reason('cannot type into disabled node', node);
 	}
-	if (target.readOnly) {
-		throw reason('cannot type into read-only node', target);
+	if (node.readOnly) {
+		throw reason('cannot type into read-only node', node);
 	}
-	this.logger.debug('type', target);
-	highlight(target);
+	this.logger.debug('type', node);
+	highlight(node);
 
 	return reduce(
 		text.split(''),
@@ -24,17 +24,21 @@ export default function type(text) {
 				() => i && delay(random(1, 100))
 			).then(
 				() => {
-					const value = target.value,
-						start = target.selectionStart || value.length,
-						end = target.selectionEnd || value.length;
-					delete target.value;
-					target.value = value.substr(0, start) +
+					const value = node.value,
+						start = node.selectionStart || value.length,
+						end = node.selectionEnd || value.length;
+					try {
+						delete node.value;
+					} catch (thrown) {
+						// NOTE noop
+					}
+					node.value = value.substr(0, start) +
 						char +
 						value.substr(end, value.length);
 
 					'oninput' in window ?
-						trigger(target, 'Event', 'input', {cancellable: false}) :
-						trigger(target, 'Event', 'change', {cancellable: false});
+						trigger(node, 'Event', 'input', {cancellable: false}) :
+						trigger(node, 'Event', 'change', {cancellable: false});
 				}
 			),
 		Promise.resolve()

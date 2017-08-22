@@ -15,13 +15,12 @@ module.exports = [
 				body: () => {
 					navigate('/other.html');
 					hook(
-						'before',
+						['before.navigate'],
 						function(text) {
 							document.body.innerHTML.indexOf(text) === -1 &&
 								tasty.fail('hook', 'before', 'navigate');
 						},
-						['Other'],
-						['navigate']
+						['Other']
 					);
 					navigate('/test.html');
 				}
@@ -31,16 +30,13 @@ module.exports = [
 				time: 1000,
 				body: () => {
 					navigate('/other.html');
-					// NOTE currently reconnect flag is being reset after first tool.
-					is('Other');
 					hook(
-						'after',
+						['after.reconnect'],
 						function(text) {
 							document.body.innerHTML.indexOf(text) === -1 ||
 								tasty.fail('hook', 'after', 'reconnect');
 						},
-						['Other'],
-						['reconnect']
+						['Other']
 					);
 					navigate('/test.html');
 				}
