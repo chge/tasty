@@ -44,18 +44,23 @@ const bundle = {
 	amd: {
 		id: 'tasty'
 	},
-	dest: 'dist/tasty.js',
-	entry: 'src/main.js',
-	format: 'umd',
+	input: 'src/main.js',
 	legacy: true,
-	moduleName: 'Tasty',
+	name: 'Tasty',
+	output: {
+		file: 'dist/tasty.js',
+		format: 'umd'
+	},
 	plugins: plugins
 };
 
 export default [
 	bundle,
 	Object.assign({}, bundle, {
-		dest: 'dist/tasty.min.js',
+		output: {
+			file: 'dist/tasty.min.js',
+			format: 'umd'
+		},
 		plugins: plugins.concat(
 			uglify({
 				ie8: true,

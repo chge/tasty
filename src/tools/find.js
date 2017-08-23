@@ -57,7 +57,7 @@ function common(what, where, options) {
 	}
 	// TODO better?
 
-	// NOTE any found could be text Node, while reached is always an Element.
+	// NOTE any found could be text Node, while reached is always an Element (or null).
 	const parent = first.parentNode,
 		reached = dom.reach(first);
 	if (reached === first || reached === parent || reached === document ||
@@ -67,7 +67,7 @@ function common(what, where, options) {
 	}
 
 	if (options.reachable) {
-		if (found.length > 1) {
+		if (reached && found.length > 1) {
 			const other = arrayFind(found, (node) => {
 				const common = dom.commonAncestor(reached, node);
 
@@ -79,7 +79,9 @@ function common(what, where, options) {
 			}
 		}
 
-		throw reason('found', first, 'is covered by', reached);
+		throw reached ?
+			reason('found', first, 'is covered by', reached) :
+			reason('found', first, 'is not reachable');
 	}
 
 	return reached;
