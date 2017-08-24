@@ -1,8 +1,13 @@
 import { highlight, trigger } from '../dom';
 import { delay, Promise, random, reason, reduce } from '../utils';
 
+const BACKSPACE = 8,
+	NEWLINE = 10,
+	ENTER = 13;
+
 export default function type(text) {
-	const node = document.activeElement;
+	const node = document.activeElement ||
+		document.querySelector(':focus');
 	if (!node) {
 		throw reason('no active node to type into');
 	}
@@ -22,25 +27,51 @@ export default function type(text) {
 		text.split(''),
 		(chain, char, i) => chain.then(
 				() => i && delay(random(1, 100))
-			).then(
-				() => {
-					const value = node.value,
-						start = node.selectionStart || value.length,
-						end = node.selectionEnd || value.length;
-					try {
-						delete node.value;
-					} catch (thrown) {
-						// NOTE noop
+			).then(() => {
+				switch (char.charCodeAt(0)) {
+					case BACKSPACE: {
+						const init = {
+							key: 'Backspace',
+							charCode: 8
+						};
+						trigger(node, 'KeyboardEvent', 'keydown', init);
+						trigger(node, 'KeyboardEvent', 'keypress', init);
+						trigger(node, 'KeyboardEvent', 'keyup', init);
+						break;
 					}
-					node.value = value.substr(0, start) +
-						char +
-						value.substr(end, value.length);
+					case ENTER:
+					case NEWLINE: {
+						const init = {
+							key: 'Enter',
+							charCode: 13
+						};
+						trigger(node, 'KeyboardEvent', 'keydown', init);
+						trigger(node, 'KeyboardEvent', 'keypress', init);
+						trigger(node, 'KeyboardEvent', 'keyup', init);
+						break;
+					}
+					default: {
+						const value = node.value,
+							start = node.selectionStart || value.length,
+							end = node.selectionEnd || value.length;
+						try {
+							delete node.value;
+						} catch (thrown) {
+							// NOTE noop
+						}
+						node.value = value.substr(0, start) +
+							char +
+							value.substr(end, value.length);
 
-					'oninput' in window ?
-						trigger(node, 'Event', 'input', {cancellable: false}) :
-						trigger(node, 'Event', 'change', {cancellable: false});
+						'oninput' in window ?
+							trigger(node, 'Event', 'input', {cancellable: false}) :
+							trigger(node, 'Event', 'change', {cancellable: false});
+					}
 				}
-			),
+			}),
 		Promise.resolve()
 	);
 }
+
+type.ENTER = ENTER;
+type.NEWLINE = NEWLINE;

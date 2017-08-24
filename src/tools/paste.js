@@ -2,7 +2,8 @@ import { highlight, trigger } from '../dom';
 import { reason } from '../utils';
 
 export default function paste(text) {
-	const node = document.activeElement;
+	const node = document.activeElement ||
+		document.querySelector(':focus');
 	if (!node) {
 		throw reason('no active node to paste into');
 	}

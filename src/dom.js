@@ -787,16 +787,31 @@ export function trigger(node, type, arg, init, force) {
 
 	if (!event) {
 		const bubbles = init.bubbles,
-			cancellable = init.cancellable;
+			cancellable = init.cancellable,
+			view = document.defaultView;
 		switch (type) {
 			case 'MouseEvent': {
 				event = createEvent('MouseEvents');
 				// TODO pass other values from init object.
 				const detail = arg === 'click' ? 1 : arg === 'dblclick' ? 2 : 0;
 				if (event.initMouseEvent) {
-					event.initMouseEvent(arg, bubbles, cancellable, window, detail, 0, 0, 0, 0, false, false, false, false, 0, null);
+					event.initMouseEvent(arg, bubbles, cancellable, view, detail, 0, 0, 0, 0, false, false, false, false, 0, null);
 				} else if (event.initEvent) {
-					event.initEvent(arg, bubbles, cancellable, window, detail);
+					event.initEvent(arg, bubbles, cancellable, view, detail);
+				}
+				break;
+			}
+			case 'KeyboardEvent': {
+				event = createEvent('KeyboardEvent');
+				// TODO pass other values from init object.
+				const keyCode = init.keyCode | 0,
+					charCode = init.charCode | 0;
+				if (event.initKeyboardEvent) {
+					event.initKeyboardEvent(arg, bubbles, cancellable, view, false, false, false, false, keyCode, charCode);
+				} else if (event.initKeyEvent) {
+					event.initKeyEvent(arg, bubbles, cancellable, view, charCode, keyCode);
+				} else if (event.initEvent) {
+					event.initEvent(arg, bubbles, cancellable, view, keyCode);
 				}
 				break;
 			}
@@ -804,7 +819,7 @@ export function trigger(node, type, arg, init, force) {
 				event = createEvent('HTMLEvents');
 				// TODO pass other values from init object.
 				event.initEvent &&
-					event.initEvent(arg, bubbles, cancellable, window);
+					event.initEvent(arg, bubbles, cancellable, view);
 		}
 	}
 
