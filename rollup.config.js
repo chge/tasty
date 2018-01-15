@@ -1,77 +1,86 @@
 import buble from 'rollup-plugin-buble';
+import builtins from 'rollup-plugin-node-builtins';
 import commonjs from 'rollup-plugin-commonjs';
+import globals from 'rollup-plugin-node-globals';
 import istanbul from 'rollup-plugin-istanbul';
 import resolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 
 import NYC from 'nyc';
 
+const COVERAGE = process.argv.indexOf('--coverage') !== -1,
+	MINIFY = process.argv.indexOf('--minify') !== -1;
+
 const plugins = [
 	buble(),
+	builtins(),
 	commonjs(),
+	globals(),
 	resolve({
+		browser: true,
 		jsnext: true,
 		main: true,
-		browser: true
+		module: true
 	}),
-	// WORKAROUND: rollup-plugin-commonjs makes conditional require() useless for https://github.com/socketio/engine.io-parser/pull/58
+/*	{
+		transform: (source, id) => '// ' + id + '\n' + source
+	},
 	{
-		transformBundle: (code) => code.replace(
-			'var lookup = new Uint8Array(256);',
-			"var lookup = typeof Uint8Array === 'undefined' ? [] : new Uint8Array(256);"
-		)
-	}
+		// WORKAROUND for bare-required shims in sockjs-client.
+		transform: (source, id) => id.substr(-8) === 'shims.js' ?
+			source.replace('import * as shims from', 'import') :
+			source,
+		transformBundle: (source) => source
+			// WORKAROUND for rollup-plugin-commonjs and sockjs-client.
+			.replace("( shims && shims['default'] ) || shims;", '')
+			// WORKAROUND for rollup-plugin-node-globals.
+			.replace(
+				/process\.env\.([A-Z_]+)/g,
+				(match, p1) => process.env[p1]
+			)
+			// WORKAROUND for rollup-plugin-node-globals.
+			.replace(/global\./g, 'window.')
+			// WORKAROUND for rollup-plugin-node-globals.
+			.replace(/process\.version/g, "'" + process.version + "'")
+	}*/
 ];
 
-if (process.argv.indexOf('--coverage') !== -1) {
-	const nyc = new NYC(),
-		istanbul2 = new nyc._instrumenterLib.istanbul();
-
+COVERAGE &&
 	plugins.push(
 		istanbul({
 			exclude: [
 				'node_modules/**/*.*'
 			],
-			// WORKAROUND: plugin uses obsolete API.
-			instrumenter: {
-				Instrumenter: istanbul2.createInstrumenter
+			instrumenter: new NYC().createInstrumenter
+		})
+	);
+
+MINIFY &&
+	plugins.push(
+		uglify({
+			ie8: true,
+			compress: {
+				dead_code: true,
+				drop_console: true,
+				global_defs: {
+					console: undefined
+				}
 			}
 		})
 	);
-}
 
-const bundle = {
+export default {
 	amd: {
 		id: 'tasty'
 	},
 	input: 'src/main.js',
 	legacy: true,
-	name: 'Tasty',
 	output: {
-		file: 'dist/tasty.js',
+		name: 'Tasty',
+		file: MINIFY ?
+			'dist/tasty.min.js' :
+			'dist/tasty.js',
 		format: 'umd'
 	},
 	plugins: plugins
 };
-
-export default [
-	bundle,
-	Object.assign({}, bundle, {
-		output: {
-			file: 'dist/tasty.min.js',
-			format: 'umd'
-		},
-		plugins: plugins.concat(
-			uglify({
-				ie8: true,
-				compress: {
-					dead_code: true,
-					drop_console: true,
-					global_defs: {
-						console: undefined
-					}
-				}
-			})
-		)
-	})
-];

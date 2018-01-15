@@ -95,7 +95,7 @@ export function format(value) {
 			message: value.message,
 			stack: value.stack ?
 				value.stack
-					.replace(/\s*at Socket[\s\S]*/m, '') :
+					.replace(/\s*at Socket[\s\S]*/m, '') : // WORKAROUND for engine.io
 				undefined
 		};
 	}

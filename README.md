@@ -143,6 +143,7 @@ Use `tasty.min.js` if you don't need to debug your tests.
 # Static server
 
 You can run built-in static server on the same URL by passing `--static <path/to/root>` flag.
+Use `--static-index` flag for SPAs and add `--embed` flag to inject Client automatically.
 
 # Code coverage
 
@@ -154,9 +155,11 @@ Tasty's static server has built-in support for [Istanbul](https://gotwarlost.git
 For Tasty server running on `localhost:8765/path` you should add the following CSP directives for Tasty client to work properly:
 
 ```
-connect-src localhost:8765/path ws://localhost:8765/path wss://localhost:8765/path
+connect-src ws://localhost:8765/path
 script-src localhost:8765/path
 ```
+
+Change `ws` to `wss` if you serve from HTTPS.
 
 Unfortunately, both [Istanbul](https://gotwarlost.github.io/istanbul) and [NYC](https://istanbul.js.org/) instrumenters use `new Function()` to get top-level scope.
 To use one of them, you have to add the following directive:
@@ -170,6 +173,13 @@ Tasty's static server automatically injects that directive into HTML files when 
 Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.
 
 Check out a [great tool](https://report-uri.io/home/generate) for generating and validating CSP directives.
+
+# API reference
+
+* [Introduction](https://chge.github.io/tasty/)
+* [Client API](https://chge.github.io/tasty/?api=client)
+* [Server API](https://chge.github.io/tasty/?api=server)
+* [Test API](https://chge.github.io/tasty/?api=test)
 
 # Browser support
 
@@ -233,7 +243,7 @@ The lambda above will be called on the client "as is", so if it doesn't support 
 
 ### Console
 
-Tasty console output could be wrong or confusing if `window.console` is modified by application. If this is the case, make sure Tasty client code is runnig prior to application code.
+Tasty console output could be wrong or confusing if `window.console` is modified by your application. If this is the case, make sure Tasty client code is runnig prior to application code.
 
 ### HTTP + HTTPS on the same port
 
@@ -266,7 +276,7 @@ Your testing framework may prefer callback for async tests.
 ```javascript
 it('works', function(done) {
 	...
-	now().then(done, done.fail);
+	now().then(done, done);
 });
 ```
 
@@ -387,13 +397,6 @@ it('searches', function() {
 	return now();
 });
 ```
-
-# API reference
-
-* [Introduction](https://chge.github.io/tasty/)
-* [Client API](https://chge.github.io/tasty/?api=client)
-* [Server API](https://chge.github.io/tasty/?api=server)
-* [Test API](https://chge.github.io/tasty/?api=test)
 
 # Security recommendations
 

@@ -14,7 +14,6 @@ export default Flaws;
  * @prop {boolean} selector Client doesn't support Selectors API. Search with selectors won't work.
  * @prop {boolean} shadow Client doesn't support Shadow DOM.
  * @prop {boolean} validation Client doesn't support HTML5 Forms.
- * @prop {boolean} websocket Client has unsupported WebSocket implementation. Tasty will use XHR polling, which is slower.
  */
 
 class Flaws {
@@ -36,9 +35,7 @@ class Flaws {
 			pseudo: 'attachEvent' in window, // TODO better.
 			selector: !('querySelector' in document),
 			shadow: !('ShadowRoot' in window),
-			validation: !('validity' in document.createElement('input')),
-			websocket: !('WebSocket' in window) ||
-				navigator.appVersion.indexOf('MSIE 10') !== -1 // TODO better.
+			validation: !('validity' in document.createElement('input'))
 		};
 	}
 

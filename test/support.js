@@ -17,6 +17,7 @@ const Tasty = require('..'),
 const ANDROID = 'Android',
 	LINUX = 'Linux',
 	IOS = 'iOS',
+	OSX13 = 'OS X 10.13',
 	OSX12 = 'OS X 10.12',
 	OSX11 = 'OS X 10.11',
 	OSX10 = 'OS X 10.10',
@@ -25,13 +26,11 @@ const ANDROID = 'Android',
 	WINDOWS10 = 'Windows 10',
 	WINDOWS81 = 'Windows 8.1',
 	WINDOWS8 = 'Windows 8',
-	WINDOWS7 = 'Windows 7',
-	WINDOWSXP = 'Windows XP';
+	WINDOWS7 = 'Windows 7';
 const CHROME = 'chrome',
 	EDGE = 'MicrosoftEdge',
 	EXPLORER = 'internet explorer',
 	FIREFOX = 'firefox',
-	OPERA = 'opera',
 	SAFARI = 'safari';
 // NOTE Caps <= Travis Node versions.
 const CAPS = [
@@ -42,59 +41,71 @@ const CAPS = [
 	{platformName: ANDROID, platformVersion: '5.0', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
 	{platformName: ANDROID, platformVersion: '4.4', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
 	{browserName: CHROME, version: 'dev', platform: WINDOWS10},
-	{browserName: CHROME, version: 'beta', platform: OSX12},
-	{browserName: CHROME, version: '60.0', platform: OSX11},
+	{browserName: CHROME, version: 'beta', platform: OSX13},
+	{browserName: CHROME, version: '63.0', platform: OSX12},
+	{browserName: CHROME, version: '62.0', platform: OSX11},
+	{browserName: CHROME, version: '61.0', platform: OSX10},
+	{browserName: CHROME, version: '60.0', platform: WINDOWS10},
 	{browserName: CHROME, version: '55.0', platform: WINDOWS81},
 	{browserName: CHROME, version: '50.0', platform: WINDOWS8},
-	{browserName: CHROME, version: '49.0', platform: WINDOWSXP}, // NOTE max on XP
+	{browserName: CHROME, version: '49.0', platform: WINDOWS7}, // NOTE max on XP
 	{browserName: CHROME, version: '48.0', platform: LINUX}, // NOTE max on Linux
 	{browserName: CHROME, version: '40.0', platform: WINDOWS7},
 	{browserName: CHROME, version: '35.0', platform: LINUX},
-	{browserName: CHROME, version: '30.0', platform: WINDOWSXP},
+	{browserName: CHROME, version: '30.0', platform: WINDOWS7},
 	{browserName: CHROME, version: '26.0', platform: LINUX}, // NOTE min
+	{browserName: EDGE, version: '16', platform: WINDOWS10},
 	{browserName: EDGE, version: '15', platform: WINDOWS10},
 	{browserName: EDGE, version: '14', platform: WINDOWS10},
 	{browserName: EDGE, version: '13', platform: WINDOWS10},
+	{browserName: EXPLORER, version: '11.0', platform: WINDOWS10},
 	{browserName: EXPLORER, version: '11.0', platform: WINDOWS81},
+	{browserName: EXPLORER, version: '11.0', platform: WINDOWS8},
+	{browserName: EXPLORER, version: '11.0', platform: WINDOWS7},
+	{browserName: EXPLORER, version: '10.0', platform: WINDOWS10},
+	{browserName: EXPLORER, version: '10.0', platform: WINDOWS81},
 	{browserName: EXPLORER, version: '10.0', platform: WINDOWS8},
-	{browserName: EXPLORER, version: '9.0', platform: WINDOWS7},
-	{browserName: EXPLORER, version: '8.0', platform: WINDOWSXP},
+	{browserName: EXPLORER, version: '10.0', platform: WINDOWS7}, // NOTE min with WebSocket
 	{browserName: FIREFOX, version: 'dev', platform: WINDOWS10},
-	{browserName: FIREFOX, version: 'beta', platform: OSX12},
-	{browserName: FIREFOX, version: '54.0', platform: OSX11},
+	{browserName: FIREFOX, version: 'beta', platform: OSX13},
+	{browserName: FIREFOX, version: '57.0', platform: OSX12},
+	{browserName: FIREFOX, version: '56.0', platform: OSX11},
+	{browserName: FIREFOX, version: '55.0', platform: OSX10},
 	{browserName: FIREFOX, version: '52.0', platform: WINDOWS7}, // NOTE max on Vista
-	{browserName: FIREFOX, version: '40.0', platform: WINDOWS81},
-	{browserName: FIREFOX, version: '45.0', platform: WINDOWSXP}, // NOTE max on XP
+	{browserName: FIREFOX, version: '50.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '45.0', platform: WINDOWS7}, // NOTE max on XP
 	{browserName: FIREFOX, version: '35.0', platform: LINUX},
 	{browserName: FIREFOX, version: '30.0', platform: WINDOWS8},
 	{browserName: FIREFOX, version: '20.0', platform: LINUX},
 	{browserName: FIREFOX, version: '10.0', platform: WINDOWS7},
 	{browserName: FIREFOX, version: '4.0', platform: LINUX}, // NOTE min
-	{platformName: IOS, platformVersion: '10.3', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '10.2', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '10.0', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '9.3', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '9.2', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '9.1', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '9.0', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '8.4', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '8.3', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '8.2', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '8.1', browserName: 'Safari', deviceName: 'iPad Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '10.3', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '10.2', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '10.0', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '9.3', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '9.2', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '9.1', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '9.0', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '8.4', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '8.3', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '8.2', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{platformName: IOS, platformVersion: '8.1', browserName: 'Safari', deviceName: 'iPhone Simulator', deviceOrientation: 'portrait'},
-	{browserName: OPERA, version: '12.15', platform: LINUX},
-	{browserName: OPERA, version: '12.12', platform: WINDOWSXP},
-	{browserName: OPERA, version: '11.64', platform: WINDOWSXP},
+	{platformName: IOS, platformVersion: '11.1', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '11.0', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '10.3', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '10.2', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '10.0', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.3', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.2', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.1', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.0', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.4', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.3', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.2', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.1', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '11.1', deviceName: 'iPhone X Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '11.0', deviceName: 'iPhone X Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '10.3', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '10.2', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '10.0', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.3', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.2', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.1', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '9.0', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.4', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.3', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.2', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '8.1', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{browserName: SAFARI, version: '11.0', platform: OSX13},
 	{browserName: SAFARI, version: '10.0', platform: OSX12},
 	{browserName: SAFARI, version: '9.0', platform: OSX11},
 	{browserName: SAFARI, version: '8.0', platform: OSX10},
@@ -116,8 +127,9 @@ describe(clientName(INDEX), function() {
 		tasty = new Tasty({
 			addon: 'chai,chai-as-promised,chai-spies',
 			include: 'test/self/mocha/support.js',
-			static: 'test/root',
 			quiet: false,
+			static: 'test/root',
+			url: 'tasty.local:8765',
 			watch: true
 		});
 
@@ -172,7 +184,7 @@ function run(driver, tasty) {
 
 		tasty.start()
 			.then(
-				() => driver.get('http://localhost:8765/test.html')
+				() => driver.get('http://tasty.local:8765/test.html')
 			)
 			.catch(reject)
 	});
@@ -236,8 +248,9 @@ function clientName(index) {
 		device === browser ?
 			null :
 			platform,
-		caps.platformVersion ||
-			caps.version
+		caps.title ?
+			caps.version :
+			caps.platformVersion
 	].filter(
 		(item) => !!item
 	).join(' ');

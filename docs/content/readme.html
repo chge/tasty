@@ -106,7 +106,8 @@ For example, <code>--addon chai,chai-as-promised,chai-http</code> works fine.</p
 <p>Use <code>tasty.min.js</code> if you don't need to debug your tests.</p>
 <h1 id="static-server">Static server</h1>
 <hr />
-<p>You can run built-in static server on the same URL by passing <code>--static &lt;path/to/root&gt;</code> flag.</p>
+<p>You can run built-in static server on the same URL by passing <code>--static &lt;path/to/root&gt;</code> flag.
+Use <code>--static-index</code> flag for SPAs and add <code>--embed</code> flag to inject Client automatically.</p>
 <h1 id="code-coverage">Code coverage</h1>
 <hr />
 <p>When serving application from its own server, you should instrument JavaScript code for coverage by yourself.
@@ -114,14 +115,23 @@ Tasty's static server has built-in support for <a href="https://gotwarlost.githu
 <h1 id="csp">CSP</h1>
 <hr />
 <p>For Tasty server running on <code>localhost:8765/path</code> you should add the following CSP directives for Tasty client to work properly:</p>
-<pre><code>connect-src localhost:8765/path ws://localhost:8765/path wss://localhost:8765/path
+<pre><code>connect-src ws://localhost:8765/path
 script-src localhost:8765/path
-</code></pre><p>Unfortunately, both <a href="https://gotwarlost.github.io/istanbul">Istanbul</a> and <a href="https://istanbul.js.org/">NYC</a> instrumenters use <code>new Function()</code> to get top-level scope.
+</code></pre><p>Change <code>ws</code> to <code>wss</code> if you serve from HTTPS.</p>
+<p>Unfortunately, both <a href="https://gotwarlost.github.io/istanbul">Istanbul</a> and <a href="https://istanbul.js.org/">NYC</a> instrumenters use <code>new Function()</code> to get top-level scope.
 To use one of them, you have to add the following directive:</p>
 <pre><code>script-src 'unsafe-eval'
 </code></pre><p>Tasty's static server automatically injects that directive into HTML files when <code>--coverage &lt;name&gt;</code> flag is used.</p>
 <p>Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.</p>
 <p>Check out a <a href="https://report-uri.io/home/generate">great tool</a> for generating and validating CSP directives.</p>
+<h1 id="api-reference">API reference</h1>
+<hr />
+<ul>
+<li><a href="https://chge.github.io/tasty/">Introduction</a></li>
+<li><a href="https://chge.github.io/tasty/?api=client">Client API</a></li>
+<li><a href="https://chge.github.io/tasty/?api=server">Server API</a></li>
+<li><a href="https://chge.github.io/tasty/?api=test">Test API</a></li>
+</ul>
 <h1 id="browser-support">Browser support</h1>
 <hr />
 <p><a href="https://saucelabs.com/u/tasty"><img src="https://saucelabs.com/buildstatus/tasty" alt="sauce labs"></a></p>
@@ -157,7 +167,7 @@ For WebDriver clients you could <a href="https://www.w3.org/TR/webdriver/#maximi
 </code></pre>
 <p>The lambda above will be called on the client "as is", so if it doesn't support arrow functions, the call will fail. It's more safe to always use <code>function</code> literals in such cases.</p>
 <h3 id="console">Console</h3>
-<p>Tasty console output could be wrong or confusing if <code>window.console</code> is modified by application. If this is the case, make sure Tasty client code is runnig prior to application code.</p>
+<p>Tasty console output could be wrong or confusing if <code>window.console</code> is modified by your application. If this is the case, make sure Tasty client code is runnig prior to application code.</p>
 <h3 id="http-https-on-the-same-port">HTTP + HTTPS on the same port</h3>
 <p>Not supported yet.</p>
 <h1 id="tools">Tools</h1>
@@ -178,7 +188,7 @@ click('Save');
 <p>Your testing framework may prefer callback for async tests.</p>
 <pre><code class="lang-javascript">it('works', function(done) {
     ...
-    now().then(done, done.fail);
+    now().then(done, done);
 });
 </code></pre>
 <h3 id="ready-state">Ready state</h3>
@@ -263,14 +273,6 @@ is('Done');
     return now();
 });
 </code></pre>
-<h1 id="api-reference">API reference</h1>
-<hr />
-<ul>
-<li><a href="https://chge.github.io/tasty/">Introduction</a></li>
-<li><a href="https://chge.github.io/tasty/?api=client">Client API</a></li>
-<li><a href="https://chge.github.io/tasty/?api=server">Server API</a></li>
-<li><a href="https://chge.github.io/tasty/?api=test">Test API</a></li>
-</ul>
 <h1 id="security-recommendations">Security recommendations</h1>
 <hr />
 <p>On staging or other near-production environment, Tasty can't pass (re)CAPTCHA or two-factor authentication for you.</p>

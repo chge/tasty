@@ -2,8 +2,6 @@
 
 export default Tasty;
 
-import eio from 'engine.io-client';
-
 import Flaws from './flaws';
 import Hooks from './hooks';
 import Logger from './logger';
@@ -11,6 +9,8 @@ import Tools from './tools';
 
 import * as dom from './dom';
 import * as utils from './utils';
+
+const COVERAGE = '__coverage__';
 
 const reason = utils.reason,
 	thenable = utils.thenable;
@@ -54,7 +54,7 @@ class Tasty {
 		// WORKAROUND: built-in URL parser.
 		let link = document.createElement('a');
 		link.href = config.url || '';
-		config.coverage = config.coverage || '__coverage__';
+		config.coverage = config.coverage || COVERAGE;
 		config.path = link.pathname,
 		config.origin = link.origin ||
 			link.protocol + '//' + link.host;
@@ -65,6 +65,7 @@ class Tasty {
 		dom.on(window, 'beforeunload', () => this.onBeforeUnload());
 		dom.on(window, 'unload', () => this.onUnload());
 
+		this.ack = {};
 		this.config = config;
 		this.dom = dom;
 		this.flaws = new Flaws();
@@ -75,9 +76,9 @@ class Tasty {
 
 		this.Promise = utils.Promise;
 
-		// WORKAROUND for EIO EventEmitter.
-		// NOTE don't use bind();
-		this.onClosedBound = () => this.onClosed();
+		this.onOpenBound = (event) => this.onOpen(event);
+		this.onCloseBound = () => this.onClose();
+		this.onMessageBound = (event) => this.onMessage(event.data);
 	}
 
 	/**
@@ -94,36 +95,22 @@ class Tasty {
 			logger.info('server', config.url);
 
 		const flaws = Flaws.format(this.flaws),
-			query = {};
-		if (id) {
-			query.id = id;
-		}
-		if (flaws) {
-			id ||
+			query = (id ? 'id=' + id + '&' : '') +
+				(flaws ? 'flaws=' + flaws : '');
+		flaws && !id &&
 				logger.warn('client', 'flaws', flaws);
-			query.flaws = flaws;
-		}
 
-		const socket = new eio(config.origin, {
-			path: config.path || '/',
-			query: query,
-			transports: this.flaws.websocket ?
-				['polling'] :
-				// NOTE there could be some proxy or firewall configuration issues
-				// which Engine.IO can't automatically handle and fallbak to polling.
-				this.closed ?
-					['polling', 'websocket'] :
-					['websocket']
-		}).once(
-			'close',
-			this.onClosedBound
-		).once(
-			'open',
-			() => this.onOpen(socket)
-		).on(
-			'error',
-			reason
-		);
+		const WebSocket = config.WebSocket || window.WebSocket || window.MozWebSocket,
+			socket = new WebSocket(
+				'ws' + config.origin.substr(4) +
+					(query ? '?' + query : '')
+			);
+		socket.addEventListener('open', this.onOpenBound);
+		socket.addEventListener('close', this.onCloseBound);
+		socket.addEventListener('message', this.onMessageBound);
+		socket.addEventListener('error', reason);
+
+		this.socket = socket;
 
 		return this;
 	}
@@ -134,8 +121,10 @@ class Tasty {
 	disconnect() {
 		const socket = this.socket;
 		if (socket) {
-			socket.removeListener('close', this.onClosedBound);
-			socket.removeListener('error', reason);
+			socket.removeEventListener('open', this.onOpenBound);
+			socket.removeEventListener('close', this.onCloseBound);
+			socket.removeEventListener('message', this.onMessageBound);
+			socket.removeEventListener('error', reason);
 			socket.close();
 		}
 		delete this.socket;
@@ -171,30 +160,25 @@ class Tasty {
 		return prev;
 	}
 
-	onOpen(socket) {
-		this.reconnected = !!this.id(socket.id);
-		this.socket = socket;
-
-		this.logger.log(this.reconnected ? 'reconnected' : 'connected', this.id());
-
-		socket.on('message', (raw) => this.onMessage(raw));
-
-		const key = this.config.coverage,
-			coverage = window.sessionStorage &&
-				window.sessionStorage.getItem(key);
-		coverage &&
-			socket.send(
-				JSON.stringify([0, 'coverage', JSON.parse(coverage)]),
-				() => window.sessionStorage &&
-					window.sessionStorage.removeItem(key)
-			);
+	onOpen() {
+		if (window.sessionStorage) {
+			const key = this.config.coverage,
+				coverage = window.sessionStorage.getItem(key);
+			if (coverage) {
+				this.socket.send(
+					JSON.stringify([0, 'coverage', JSON.parse(coverage)])
+				);
+				window.sessionStorage.removeItem(key)
+			}
+		}
 	}
 
-	onClosed() {
+	onClose() {
 		this.closed = (this.closed | 0) + 1;
 
-		this.closed < 5 &&
-			this.connect();
+		this.closed < 5 ?
+			this.connect() :
+			this.logger.error('connect retry limit', 5, 'reached');
 	}
 
 	onMessage(raw) {
@@ -213,60 +197,71 @@ class Tasty {
 		hooks.update &&
 			hooks.update();
 
-		thenable(
-			this.reconnected ?
-				hooks.run(undefined, 'after.reconnect') :
-				null
-		).then(
-			() => hooks.run(undefined, 'before.' + type)
-				.then(() => {
-					switch (type) {
-						case 'coverage':
-							return this.onCoverage(data);
-						case 'noop':
-							return this.onNoop();
-						case 'end':
-							return this.onEnd();
-						case 'exec':
-							return this.onExec(data);
-						case 'log':
-							return this.onLog(data);
-						case 'tool':
-							return this.onTool(data);
-						default:
-							return this.onUnknown(name, data);
+		hooks.run(undefined, 'before.' + type)
+			.then(() => {
+				switch (type) {
+					case 'ack':
+						return this.onAck(mid);
+					case 'connect':
+						return this.onConnect(data);
+					case 'coverage':
+						return this.onCoverage(data);
+					case 'end':
+						return this.onEnd();
+					case 'exec':
+						return this.onExec(data);
+					case 'log':
+						return this.onLog(data);
+					case 'noop':
+						return this.onNoop();
+					case 'tool':
+						return this.onTool(data);
+					default:
+						return this.onUnknown(name, data);
+				}
+			})
+			.then(
+				(result) => hooks.run(result, 'after.' + type)
+			)['catch'](
+				(error) => error
+			).then((result) => {
+				if (typeof result === 'function') {
+					this.ack[mid] = result;
+					this.socket.send(
+						JSON.stringify([mid, 'ack', []])
+					);
+				} else {
+					if (result instanceof Error) {
+						logger.error(result);
+						result = [0, utils.format(result)];
+					} else {
+						result = [result];
 					}
-				})
-				.then(
-					(result) => hooks.run(result, 'after.' + type)
-				)
-		)['catch'](
-			(error) => error
-		).then((result) => {
-			// WORKAROUND
-			if (type === 'noop') {
-				this.reconnected = false;
-			}
+					this.socket.send(
+						JSON.stringify([mid, 0, result])
+					);
+				}
+			});
+	}
 
-			var callback;
-			if (typeof result === 'function') {
-				callback = result;
-				result = [];
-			} else if (result instanceof Error) {
-				logger.error(result);
-				result = [0, utils.format(result)];
-			} else {
-				result = [result];
-			}
-			this.socket.send(
-				JSON.stringify([mid, 0, result]),
-				callback
-			);
-		});
+	onAck(mid) {
+		const callback = this.ack[mid];
+		if (callback) {
+			delete this.ack[mid];
+
+			return callback();
+		} else {
+			this.logger.warn('no ack', mid);
+		}
+	}
+
+	onConnect(id) {
+		const prev = this.id(id);
+		this.logger.log(prev ? 'reconnected' : 'connected', id);
 	}
 
 	onCoverage(name) {
-		name = name || '__coverage__';
+		name = name || COVERAGE;
 		this.logger.log('coverage', name);
 
 		return window[name];
@@ -340,6 +335,10 @@ class Tasty {
 				window.sessionStorage.setItem(key, JSON.stringify(window[key]));
 	}
 }
+
+/**
+ */
+Tasty.COVERAGE = COVERAGE;
 
 /**
  * Reference to {@link #Hooks|Hooks} class.

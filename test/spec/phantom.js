@@ -121,6 +121,8 @@ function spawn(name, url) {
 	);
 
 	process.on('exit', () => spawned.kill());
+	process.on('SIGINT', () => spawned.kill());
+	process.on('SIGTERM', () => spawned.kill());
 
 	return spawned;
 }

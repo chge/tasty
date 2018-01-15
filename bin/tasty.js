@@ -7,13 +7,13 @@ process.title = 'Tasty';
 const config = require('minimist')(process.argv.slice(2), {
 	'--': true,
 	alias: {
-		a: 'addon', b: 'bail', c: 'coverage', C: 'coverage-reporter',
+		a: 'addon', b: 'bail', c: 'coverage', C: 'coverage-reporter', 'e': 'embed',
 		i: 'static-index', h: 'help', o: 'runner-output', O: 'coverage-output',
 		q: 'quiet', r: 'runner', R: 'runner-reporter', s: 'static',
 		u: 'url', v: 'version', w: 'watch'
 	},
 	boolean: [
-		'bail', 'colors', 'help', 'quiet', 'verbose', 'version', 'watch'
+		'bail', 'colors', 'embed', 'help', 'quiet', 'verbose', 'version', 'watch'
 	],
 	string: [
 		'addon', 'cert', 'config', 'coverage', 'coverage-output', 'coverage-reporter',
@@ -45,6 +45,7 @@ if (config.version) {
                          Output directory for coverage reporter.
   -C, --coverage-reporter <name>
                          Module to use as coverage reporter.
+  -e, --embed            Embed Tasty client automatically, if possible.
   -h, --help             Print this help and exit.
   --key <path>           Certificate key for Tasty server.
   --passphrase <string>  Certificate key passphrase for Tasty server.
