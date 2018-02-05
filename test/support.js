@@ -70,7 +70,7 @@ const CAPS = [
 	{browserName: FIREFOX, version: 'beta', platform: OSX13},
 	{browserName: FIREFOX, version: '57.0', platform: OSX12},
 	{browserName: FIREFOX, version: '56.0', platform: OSX11},
-	{browserName: FIREFOX, version: '55.0', platform: OSX10},
+	{browserName: FIREFOX, version: '55.0', platform: WINDOWS10},
 	{browserName: FIREFOX, version: '52.0', platform: WINDOWS7}, // NOTE max on Vista
 	{browserName: FIREFOX, version: '50.0', platform: WINDOWS81},
 	{browserName: FIREFOX, version: '45.0', platform: WINDOWS7}, // NOTE max on XP
