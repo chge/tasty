@@ -103,7 +103,7 @@ class Tasty {
 		const WebSocket = config.WebSocket || window.WebSocket || window.MozWebSocket,
 			socket = new WebSocket(
 				'ws' + config.origin.substr(4) +
-					(query ? '?' + query : '')
+					config.path + (query ? '?' + query : '')
 			);
 		socket.addEventListener('open', this.onOpenBound);
 		socket.addEventListener('close', this.onCloseBound);
@@ -360,11 +360,9 @@ utils.forEach(
 	document.scripts ||
 		document.getElementsByTagName('script'),
 	(script) => {
-		if (script.src.indexOf('/tasty.js') !== -1) {
-			const manual = script.hasAttribute('data-manual') ||
-					script.src.indexOf('manual') !== -1,
-				url = script.getAttribute('data-url') ||
-					script.src.split('tasty.js')[0];
+		if (script.src.indexOf('/tasty.js') !== -1 || script.src.indexOf('/tasty.min.js') !== -1) {
+			const manual = script.hasAttribute('data-manual') || script.src.indexOf('manual') !== -1,
+				url = script.getAttribute('data-url') || script.src.replace('tasty.js', '').replace('tasty.min.js', '');
 			if (url && !manual) {
 				new Tasty(url).connect();
 			}

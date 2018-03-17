@@ -13,11 +13,11 @@ const config = require('minimist')(process.argv.slice(2), {
 		u: 'url', v: 'version', w: 'watch'
 	},
 	boolean: [
-		'bail', 'colors', 'embed', 'help', 'quiet', 'verbose', 'version', 'watch'
+		'bail', 'colors', 'help', 'quiet', 'verbose', 'version', 'watch'
 	],
 	string: [
-		'addon', 'cert', 'config', 'coverage', 'coverage-output', 'coverage-reporter',
-		'key', 'passphrase', 'runner', 'runner-output', 'runner-reporter',
+		'addon', 'cert', 'config', 'coverage', 'coverage-output', 'coverage-reporter', 'embed',
+		'key', 'passphrase', 'runner', 'runner-output', 'runner-reporter', 'runner-reporter-options',
 		'slow', 'static', 'static-index', 'url'
 	]
 });
@@ -45,7 +45,7 @@ if (config.version) {
                          Output directory for coverage reporter.
   -C, --coverage-reporter <name>
                          Module to use as coverage reporter.
-  -e, --embed            Embed Tasty client automatically, if possible.
+  -e, --embed [min]      Embed Tasty client automatically, if possible.
   -h, --help             Print this help and exit.
   --key <path>           Certificate key for Tasty server.
   --passphrase <string>  Certificate key passphrase for Tasty server.
@@ -57,6 +57,8 @@ if (config.version) {
                          If omitted, report to stdout.
   -R, --runner-reporter <name>
                          Module to use as test reporter.
+  --runner-reporter-options <k1>=<v1>,<k2>=<v2>
+                         Options for test reporter.
   --slow <ms>            Pause after each tool.
                          If blank, delay 300 ms.
   -s, --static <path>    Start built-in static server from path.

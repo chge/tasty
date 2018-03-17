@@ -6,16 +6,16 @@
 <a href="https://ci.appveyor.com/project/chge/tasty"><img src="https://ci.appveyor.com/api/projects/status/github/chge/tasty?branch=master&amp;svg=true" alt="windows"></a>
 <a href="https://coveralls.io/github/chge/tasty?branch=master"><img src="https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master" alt="coverage"></a>
 <a href="https://codeclimate.com/github/chge/tasty"><img src="https://codeclimate.com/github/chge/tasty/badges/gpa.svg" alt="code climate"></a></p>
-<p>Tasty helps test fully assembled web applications in nearly-production environment on real clients as real users.</p>
+<p>Tasty helps to test fully assembled web applications in near-production environments on real web clients by emulating real users.</p>
 <pre><code class="lang-shell">npm install -g tasty
 </code></pre>
 <p>Tasty supports both multiple and single page applications (with server rendering too) and code coverage.
 It respects <a href="https://www.w3.org/TR/CSP/">Content Security Policy</a> and SSL/TLS.</p>
 <h1 id="how-it-works">How it works</h1>
 <hr />
-<p>Tasty server controls connected clients to run your tests against your application.</p>
+<p>Tasty server controls connected web clients to run your tests in runner of your choice against your application.</p>
 <p><img src="https://github.com/chge/tasty/raw/master/test/demo/console.gif" alt="console"></p>
-<p>Client can emulate real user: navigate, fill forms, check content.</p>
+<p>Client can emulate real user: navigate, fill forms, check page contents.</p>
 <p><img src="https://github.com/chge/tasty/raw/master/test/demo/browser.gif" alt="browser"></p>
 <ol>
 <li>Add <code>tasty.js</code> module to your assembly or markup.</li>
@@ -26,16 +26,16 @@ It respects <a href="https://www.w3.org/TR/CSP/">Content Security Policy</a> and
 <li>For each client Tasty will run your tests and return all output.</li>
 <li>Edit tests, Tasty will re-run them automatically, if needed.</li>
 </ol>
-<h1 id="is-selenium-https-github-com-seleniumhq-selenium-server-needed-">Is <a href="https://github.com/SeleniumHQ/selenium">Selenium</a> server needed?</h1>
+<h1 id="is-selenium-server-required-">Is <a href="https://github.com/SeleniumHQ/selenium">Selenium</a> server required?</h1>
 <hr />
-<p>No. Tasty is intended to run inside browser environment without WebDriver.</p>
-<p>However, you can use <a href="https://github.com/SeleniumHQ/selenium">Selenium</a>-driven clients and headless browsers like <a href="http://phantomjs.org/">PhantomJS</a> or <a href="https://slimerjs.org/">SlimerJS</a> to work with Tasty.</p>
+<p>No. Tasty client is intended to run inside browser environment without WebDriver.</p>
+<p>But you'll probably need <a href="https://github.com/SeleniumHQ/selenium">Selenium</a>-driven clients or tools like <a href="http://phantomjs.org/">PhantomJS</a>, <a href="https://github.com/GoogleChrome/puppeteer">Puppeteer</a> and <a href="https://slimerjs.org/">SlimerJS</a> for automation.</p>
 <h1 id="why-tasty-">Why Tasty?</h1>
 <hr />
 <p>The main purposes are:</p>
 <ol>
 <li>Emulate real user experience.</li>
-<li>Support any client without WebDriver.</li>
+<li>Support any web client without WebDriver.</li>
 <li>Keep test scripts as simple as possible.</li>
 </ol>
 <p>Tasty gives you only high-level tools to help treat your application as a black box, just like real user does.
@@ -99,15 +99,17 @@ Try not to use knowledge of your application's markup, assume you're helping a r
 <p><a href="http://chaijs.com/">Chai</a>, its <a href="http://chaijs.com/plugins">plugins</a> and other helper libraries are supported by providing <code>--addon &lt;name&gt;,&lt;name&gt;...</code> flag.
 For example, <code>--addon chai,chai-as-promised,chai-http</code> works fine.</p>
 <p>Use <code>--watch</code> flag to watch for changes or run on several clients.</p>
+<p>Tasty spawns <a href="https://www.npmjs.com/package/tasty-sandbox">sandboxed</a> runner and coverage tool for each client separately,
+so it's easy to test in parallel.</p>
 <h1 id="client">Client</h1>
 <hr />
 <p>Tasty client is a small extendable UMD module that connects to the server and executes its commands.</p>
 <p>It has its own <a href="https://chge.github.io/tasty/?api=client">API</a> and isolated polyfills for non-supporting browsers.</p>
-<p>Use <code>tasty.min.js</code> if you don't need to debug your tests.</p>
+<p>Load <code>tasty.min.js</code> or use <code>--embed min</code> if you don't need to debug your tests.</p>
 <h1 id="static-server">Static server</h1>
 <hr />
 <p>You can run built-in static server on the same URL by passing <code>--static &lt;path/to/root&gt;</code> flag.
-Use <code>--static-index</code> flag for SPAs and add <code>--embed</code> flag to inject Client automatically.</p>
+Use <code>--static-index &lt;path/to/index&gt;</code> flag for SPAs and add <code>--embed</code> flag to inject Tasty client automatically.</p>
 <h1 id="code-coverage">Code coverage</h1>
 <hr />
 <p>When serving application from its own server, you should instrument JavaScript code for coverage by yourself.
@@ -121,7 +123,7 @@ script-src localhost:8765/path
 <p>Unfortunately, both <a href="https://gotwarlost.github.io/istanbul">Istanbul</a> and <a href="https://istanbul.js.org/">NYC</a> instrumenters use <code>new Function()</code> to get top-level scope.
 To use one of them, you have to add the following directive:</p>
 <pre><code>script-src 'unsafe-eval'
-</code></pre><p>Tasty's static server automatically injects that directive into HTML files when <code>--coverage &lt;name&gt;</code> flag is used.</p>
+</code></pre><p>If you use <code>&lt;meta /&gt;</code> for CSP, Tasty's static server automatically injects that directive into HTML files when <code>--coverage &lt;name&gt;</code> flag is used.</p>
 <p>Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.</p>
 <p>Check out a <a href="https://report-uri.io/home/generate">great tool</a> for generating and validating CSP directives.</p>
 <h1 id="api-reference">API reference</h1>

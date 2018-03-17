@@ -6,7 +6,7 @@
 [![coverage](https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master)](https://coveralls.io/github/chge/tasty?branch=master)
 [![code climate](https://codeclimate.com/github/chge/tasty/badges/gpa.svg)](https://codeclimate.com/github/chge/tasty)
 
-Tasty helps test fully assembled web applications in nearly-production environment on real clients as real users.
+Tasty helps to test fully assembled web applications in near-production environments on real web clients by emulating real users.
 
 ```shell
 npm install -g tasty
@@ -17,11 +17,11 @@ It respects [Content Security Policy](https://www.w3.org/TR/CSP/) and SSL/TLS.
 
 # How it works
 
-Tasty server controls connected clients to run your tests against your application.
+Tasty server controls connected web clients to run your tests in runner of your choice against your application.
 
 ![console](https://github.com/chge/tasty/raw/master/test/demo/console.gif)
 
-Client can emulate real user: navigate, fill forms, check content.
+Client can emulate real user: navigate, fill forms, check page contents.
 
 ![browser](https://github.com/chge/tasty/raw/master/test/demo/browser.gif)
 
@@ -33,18 +33,18 @@ Client can emulate real user: navigate, fill forms, check content.
 6. For each client Tasty will run your tests and return all output.
 7. Edit tests, Tasty will re-run them automatically, if needed.
 
-# Is [Selenium](https://github.com/SeleniumHQ/selenium) server needed?
+# Is [Selenium](https://github.com/SeleniumHQ/selenium) server required?
 
-No. Tasty is intended to run inside browser environment without WebDriver.
+No. Tasty client is intended to run inside browser environment without WebDriver.
 
-However, you can use [Selenium](https://github.com/SeleniumHQ/selenium)-driven clients and headless browsers like [PhantomJS](http://phantomjs.org/) or [SlimerJS](https://slimerjs.org/) to work with Tasty.
+But you'll probably need [Selenium](https://github.com/SeleniumHQ/selenium)-driven clients or tools like [PhantomJS](http://phantomjs.org/), [Puppeteer](https://github.com/GoogleChrome/puppeteer) and [SlimerJS](https://slimerjs.org/) for automation.
 
 # Why Tasty?
 
 The main purposes are:
 
 1. Emulate real user experience.
-2. Support any client without WebDriver.
+2. Support any web client without WebDriver.
 3. Keep test scripts as simple as possible.
 
 
@@ -132,18 +132,21 @@ For example, `--addon chai,chai-as-promised,chai-http` works fine.
 
 Use `--watch` flag to watch for changes or run on several clients.
 
+Tasty spawns [sandboxed](https://www.npmjs.com/package/tasty-sandbox) runner and coverage tool for each client separately,
+so it's easy to test in parallel.
+
 # Client
 
 Tasty client is a small extendable UMD module that connects to the server and executes its commands.
 
 It has its own [API](https://chge.github.io/tasty/?api=client) and isolated polyfills for non-supporting browsers.
 
-Use `tasty.min.js` if you don't need to debug your tests.
+Load `tasty.min.js` or use `--embed min` if you don't need to debug your tests.
 
 # Static server
 
 You can run built-in static server on the same URL by passing `--static <path/to/root>` flag.
-Use `--static-index` flag for SPAs and add `--embed` flag to inject Client automatically.
+Use `--static-index <path/to/index>` flag for SPAs and add `--embed` flag to inject Tasty client automatically.
 
 # Code coverage
 
@@ -168,7 +171,7 @@ To use one of them, you have to add the following directive:
 script-src 'unsafe-eval'
 ```
 
-Tasty's static server automatically injects that directive into HTML files when `--coverage <name>` flag is used.
+If you use `<meta />` for CSP, Tasty's static server automatically injects that directive into HTML files when `--coverage <name>` flag is used.
 
 Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.
 

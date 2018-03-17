@@ -174,13 +174,6 @@ describe('tasty', function() {
 		expect(() => {
 			new Tasty({
 				bail: true,
-				runner: 'jasmine'
-			});
-		}).to.throw(TypeError);
-
-		expect(() => {
-			new Tasty({
-				bail: true,
 				runner: 'qunit'
 			});
 		}).to.throw(TypeError);

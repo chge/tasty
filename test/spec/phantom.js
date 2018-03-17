@@ -31,7 +31,7 @@ describe('PhantomJS', function() {
 		this.slow(10000);
 
 		server = http.createServer(
-			(request, response) => fs.createReadStream(__dirname + '/../root/path.html').pipe(response)
+			(request, response) => {console.log(fs.readFileSync(__dirname + '/../root/path.html').toString());fs.createReadStream(__dirname + '/../root/path.html').pipe(response);}
 		).listen(9876);
 		tasty = new Tasty({
 			quiet: false,
@@ -55,7 +55,8 @@ describe('PhantomJS', function() {
 			quiet: false,
 			runner: 'jasmine',
 			runnerReporter: 'jasmine-spec-reporter',
-			static: 'test/root'
+			static: 'test/root',
+			embed: true
 		});
 
 		tasty.once('end', (id, error) => done(error));
@@ -74,7 +75,8 @@ describe('PhantomJS', function() {
 			include: 'test/self/qunit/*.js',
 			quiet: false,
 			runner: 'qunit',
-			static: 'test/root'
+			static: 'test/root',
+			embed: true
 		});
 
 		tasty.once('end', (id, error) => done(error));
@@ -93,7 +95,8 @@ describe('PhantomJS', function() {
 			coverageReporter: 'lcovonly',
 			include: 'test/self/mocha/*.js',
 			quiet: false,
-			static: 'test/root'
+			static: 'test/root',
+			embed: true
 		});
 
 		tasty.once('end', (id, error) => done(error));

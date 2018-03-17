@@ -42,7 +42,9 @@ const CAPS = [
 	{platformName: ANDROID, platformVersion: '4.4', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
 	{browserName: CHROME, version: 'dev', platform: WINDOWS10},
 	{browserName: CHROME, version: 'beta', platform: OSX13},
-	{browserName: CHROME, version: '63.0', platform: OSX12},
+	{browserName: CHROME, version: '65.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '64.0', platform: OSX12},
+	{browserName: CHROME, version: '63.0', platform: WINDOWS8},
 	{browserName: CHROME, version: '62.0', platform: OSX11},
 	{browserName: CHROME, version: '61.0', platform: OSX10},
 	{browserName: CHROME, version: '60.0', platform: WINDOWS10},
@@ -50,7 +52,9 @@ const CAPS = [
 	{browserName: CHROME, version: '50.0', platform: WINDOWS8},
 	{browserName: CHROME, version: '49.0', platform: WINDOWS7}, // NOTE max on XP
 	{browserName: CHROME, version: '48.0', platform: LINUX}, // NOTE max on Linux
-	{browserName: CHROME, version: '40.0', platform: WINDOWS7},
+	{browserName: CHROME, version: '45.0', platform: WINDOWS10},
+	{browserName: CHROME, version: '42.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '40.0', platform: WINDOWS8},
 	{browserName: CHROME, version: '35.0', platform: LINUX},
 	{browserName: CHROME, version: '30.0', platform: WINDOWS7},
 	{browserName: CHROME, version: '26.0', platform: LINUX}, // NOTE min
@@ -68,14 +72,19 @@ const CAPS = [
 	{browserName: EXPLORER, version: '10.0', platform: WINDOWS7}, // NOTE min with WebSocket
 	{browserName: FIREFOX, version: 'dev', platform: WINDOWS10},
 	{browserName: FIREFOX, version: 'beta', platform: OSX13},
-	{browserName: FIREFOX, version: '57.0', platform: OSX12},
+	{browserName: FIREFOX, version: '59.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '58.0', platform: OSX12},
+	{browserName: FIREFOX, version: '57.0', platform: WINDOWS8},
 	{browserName: FIREFOX, version: '56.0', platform: OSX11},
 	{browserName: FIREFOX, version: '55.0', platform: WINDOWS10},
 	{browserName: FIREFOX, version: '52.0', platform: WINDOWS7}, // NOTE max on Vista
-	{browserName: FIREFOX, version: '50.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '51.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '50.0', platform: WINDOWS8},
 	{browserName: FIREFOX, version: '45.0', platform: WINDOWS7}, // NOTE max on XP
-	{browserName: FIREFOX, version: '35.0', platform: LINUX},
-	{browserName: FIREFOX, version: '30.0', platform: WINDOWS8},
+	{browserName: FIREFOX, version: '40.0', platform: LINUX},
+	{browserName: FIREFOX, version: '35.0', platform: WINDOWS10},
+	{browserName: FIREFOX, version: '30.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '25.0', platform: WINDOWS8},
 	{browserName: FIREFOX, version: '20.0', platform: LINUX},
 	{browserName: FIREFOX, version: '10.0', platform: WINDOWS7},
 	{browserName: FIREFOX, version: '4.0', platform: LINUX}, // NOTE min
@@ -126,6 +135,7 @@ describe(clientName(INDEX), function() {
 
 		tasty = new Tasty({
 			addon: 'chai,chai-as-promised,chai-spies',
+			embed: 'min',
 			include: 'test/self/mocha/support.js',
 			quiet: false,
 			static: 'test/root',

@@ -55,7 +55,8 @@ describe('SlimerJS', function() {
 			quiet: false,
 			runner: 'jasmine',
 			runnerReporter: 'jasmine-spec-reporter',
-			static: 'test/root'
+			static: 'test/root',
+			embed: true
 		});
 
 		tasty.once('end', (id, error) => done(error));
@@ -74,7 +75,8 @@ describe('SlimerJS', function() {
 			include: 'test/self/qunit/*.js',
 			quiet: false,
 			runner: 'qunit',
-			static: 'test/root'
+			static: 'test/root',
+			embed: true
 		});
 
 		tasty.once('end', (id, error) => done(error));
@@ -94,7 +96,8 @@ describe('SlimerJS', function() {
 			coverageReporter: 'lcovonly',
 			include: 'test/self/mocha/*.js',
 			quiet: false,
-			static: 'test/root'
+			static: 'test/root',
+			embed: true
 		});
 
 		tasty.once('end', (id, error) => done(error));
