@@ -1,6 +1,6 @@
 {
   "name": "tasty",
-  "version": "0.13.2",
+  "version": "0.13.3",
   "description": "Integration testing helper for web",
   "main": "lib/main.js",
   "preferGlobal": true,
@@ -15,6 +15,8 @@
     "!.eslintrc"
   ],
   "dependencies": {
+    "content-security-policy-builder": "^2.0.0",
+    "content-security-policy-parser": "^0.1.1",
     "debug": "^3.1.0",
     "glob": "^7.1.2",
     "minimist": "^1.2.0",
@@ -28,8 +30,6 @@
     "chai-as-promised": "^7.1.1",
     "chai-http": "^3.0.0",
     "chai-spies": "^1.0.0",
-    "content-security-policy-builder": "^2.0.0",
-    "content-security-policy-parser": "^0.1.1",
     "coveralls": "^3.0.0",
     "docma": "^1.5.3",
     "es6-promise": "^4.2.4",
@@ -46,7 +46,7 @@
     "rollup-plugin-istanbul": "^2.0.1",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.2.0",
-    "rollup-plugin-node-resolve": "^3.2.0",
+    "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-uglify": "^3.0.0",
     "selenium-webdriver": "^3.6.0",
     "slimerjs": "^0.10.3",
