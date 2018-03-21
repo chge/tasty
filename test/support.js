@@ -80,11 +80,11 @@ const CAPS = [
 	{platformName: IOS, platformVersion: '10.0', deviceName: 'iPhone SE Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '9.3', deviceName: 'iPhone Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{browserName: SAFARI, version: '11.0', platform: OSX13},
-	{browserName: SAFARI, version: '10.0', platform: OSX12},
+	{browserName: SAFARI, version: '10.1', platform: OSX12},
+	{browserName: SAFARI, version: '10.0', platform: OSX11},
 	{browserName: SAFARI, version: '9.0', platform: OSX11},
 	{browserName: SAFARI, version: '8.0', platform: OSX10},
 	{browserName: SAFARI, version: '7.0', platform: OSX9},
-	{browserName: SAFARI, version: '6.0', platform: OSX8},
 	{browserName: SAFARI, version: '5.1', platform: WINDOWS7},
 ];
 

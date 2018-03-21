@@ -145,7 +145,7 @@ find.any = find.empty = find.image = find.text = (what, where, options) => {
 	switch (where.type) {
 		case 'node':
 		case 'nodes':
-			list = findNodesBySelector(where.value, document.documentElement);
+			list = findNodesBySelector(where.value, document.documentElement, options.strict);
 			break;
 		case 'unknown':
 		case 'window':
@@ -178,18 +178,21 @@ find.node = find.nodes = (what, where, options) => {
 				throw reason('no', where, 'to find', what, 'in');
 			}
 
-			return findNodesBySelector(what.value, found);
+			return findNodesBySelector(what.value, found, options.strict);
 		}
 		case 'window':
-			return findNodesBySelector(what.value, document.documentElement);
+			return findNodesBySelector(what.value, document.documentElement, options.strict);
 		default:
 			throw reason('cannot search', what, 'in', where);
 	}
 };
 
-function findNodesBySelector(selector, context) {
-	return nodeListToArray(
-		context.querySelectorAll(selector)
+function findNodesBySelector(selector, context, strict) {
+	return filter(
+		nodeListToArray(
+			context.querySelectorAll(selector)
+		),
+		(node) => visible(node, strict)
 	);
 }
 
@@ -232,15 +235,13 @@ function findNodesByMatchInList(regexp, match, list, strict) {
 		nodes = list;
 	}
 
-	const filtered = filter(
-		nodes,
-		(node) => visible(node, strict)
-	);
-
 	return filter(
-		filtered.length ?
-			filtered :
-			nodes,
+		strict === false ?
+			nodes :
+			filter(
+				nodes,
+				(node) => visible(node, strict)
+			),
 		(parent) => !findItem(
 			list,
 			(child) => matchParent(parent, child)

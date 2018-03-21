@@ -310,6 +310,12 @@ is('Done');
 <pre><code class="lang-shell">npm test
 </code></pre>
 <p>Main tests use <a href="https://slimerjs.org/">SlimerJS</a> and <a href="http://phantomjs.org/">PhantomJS</a>. SlimerJS itself requires <a href="https://www.mozilla.org/firefox">Firefox</a> to be installed. PhantomJS suite requires <code>phantomjs</code> to be available via command prompt.</p>
+<p>Because of tests for obsolete AppCache manifest, PhantomJS could put HTML page into persistent cache and then ignore <code>clearMemoryCache</code> API calls. This may require to delete cache files manually from the following locations:</p>
+<ul>
+<li><code>%HOMEDRIVE%%HOMEPATH%\AppData\Local\Ofi Labs\PhantomJS</code></li>
+<li><code>~/Library/Caches/Ofi Labs/PhantomJS</code></li>
+<li><code>~/.local/share/Ofi Labs/PhantomJS/</code></li>
+</ul>
 <h3 id="browser-support">Browser support</h3>
 <pre><code class="lang-shell">npm run support
 </code></pre>

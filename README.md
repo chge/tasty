@@ -456,6 +456,11 @@ npm test
 
 Main tests use [SlimerJS](https://slimerjs.org/) and [PhantomJS](http://phantomjs.org/). SlimerJS itself requires [Firefox](https://www.mozilla.org/firefox) to be installed. PhantomJS suite requires `phantomjs` to be available via command prompt.
 
+Because of tests for obsolete AppCache manifest, PhantomJS could put HTML page into persistent cache and then ignore `clearMemoryCache` API calls. This may require to delete cache files manually from the following locations:
+* `%HOMEDRIVE%%HOMEPATH%\AppData\Local\Ofi Labs\PhantomJS`
+* `~/Library/Caches/Ofi Labs/PhantomJS`
+* `~/.local/share/Ofi Labs/PhantomJS/`
+
 ### Browser support
 
 ```shell

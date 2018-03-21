@@ -161,6 +161,8 @@ class Tasty {
 	}
 
 	onOpen() {
+		this.closed = 0;
+
 		if (window.sessionStorage) {
 			const key = this.config.coverage,
 				coverage = window.sessionStorage.getItem(key);
