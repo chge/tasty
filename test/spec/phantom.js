@@ -31,7 +31,7 @@ describe('PhantomJS', function() {
 		this.slow(10000);
 
 		server = http.createServer(
-			(request, response) => {console.log(fs.readFileSync(__dirname + '/../root/path.html').toString());fs.createReadStream(__dirname + '/../root/path.html').pipe(response);}
+			(request, response) => fs.createReadStream(__dirname + '/../root/path.html').pipe(response)
 		).listen(9876);
 		tasty = new Tasty({
 			quiet: false,

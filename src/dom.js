@@ -602,9 +602,7 @@ export function rest(node) {
 export function visible(node, strict) {
 	node = element(node);
 
-	const attached = !!node.offsetParent ||
-		node === document.body;
-	if (!attached || !node.offsetWidth) {
+	if (!attached(node) || !node.offsetWidth || !node.offsetHeight) {
 		return false;
 	}
 
@@ -639,6 +637,18 @@ export function hidden(node) {
 	}
 
 	return false;
+}
+
+/**
+ * Checks if given `node` is attached to the DOM.
+ * @function attached
+ * @memberof Tasty#dom
+ * @param {Node} node
+ * @returns {boolean}
+ */
+export function attached(node) {
+	return document.compareDocumentPosition(node) &
+		Node.DOCUMENT_POSITION_CONTAINED_BY;
 }
 
 /**
