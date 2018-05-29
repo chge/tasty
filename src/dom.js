@@ -602,12 +602,16 @@ export function rest(node) {
 export function visible(node, strict) {
 	node = element(node);
 
-	if (!attached(node) || !node.offsetWidth || !node.offsetHeight) {
+	if (!attached(node) || hidden(node)) {
+		return false;
+	}
+	const rect = measure(node);
+	if (!rect.width || !rect.height) {
 		return false;
 	}
 
-	const rect = measure(node),
-		width = window.innerWidth ||
+	// TODO more reliable.
+	const width = window.innerWidth ||
 			document.documentElement.clientWidth,
 		height = window.innerHeight ||
 			document.documentElement.clientHeight,
@@ -617,8 +621,7 @@ export function visible(node, strict) {
 
 	// TODO check color vs background (via https://www.w3.org/TR/AERT#color-contrast).
 
-	// TODO more reliable.
-	return viewport && !hidden(node);
+	return viewport;
 }
 
 /**
