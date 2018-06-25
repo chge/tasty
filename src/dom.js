@@ -173,12 +173,12 @@ find.font = (what) => {
 find.node = find.nodes = (what, where, options) => {
 	switch (where.type) {
 		case 'node': {
-			const found = find(where, {type: 'window'}, options);
-			if (!found) {
+			const first = find(where, {type: 'window'}, options)[0];
+			if (!first) {
 				throw reason('no', where, 'to find', what, 'in');
 			}
 
-			return findNodesBySelector(what.value, found, options.strict);
+			return findNodesBySelector(what.value, first, options.strict);
 		}
 		case 'window':
 			return findNodesBySelector(what.value, document.documentElement, options.strict);
@@ -650,8 +650,7 @@ export function hidden(node) {
  * @returns {boolean}
  */
 export function attached(node) {
-	return document.compareDocumentPosition(node) &
-		Node.DOCUMENT_POSITION_CONTAINED_BY;
+	return document.contains(node);
 }
 
 /**
@@ -683,9 +682,8 @@ export function disabled(node) {
  * @returns {Node} `node`
  */
 export function on(node, name, handler, options) {
-	node && node.addEventListener ?
-		node.addEventListener(name, handler, options || false) :
-		node.attachEvent('on' + name, handler);
+	node && node.addEventListener &&
+		node.addEventListener(name, handler, options || false);
 
 	return node;
 }

@@ -10,9 +10,12 @@ import Tools from './tools';
 import * as dom from './dom';
 import * as utils from './utils';
 
-const COVERAGE = '__coverage__';
+const COVERAGE = '__coverage__',
+	RECONNECT = 5,
+	SESSION = '__tasty';
 
-const reason = utils.reason,
+const assign = utils.assign,
+	reason = utils.reason,
 	thenable = utils.thenable;
 
 /**
@@ -40,8 +43,12 @@ new Tasty('localhost:8765').connect();
 class Tasty {
 	/**
 	 * Tasty instance is available inside {@link /tasty/?api=test#exec|exec} calls as `this`.
-	 * @param {Object|string} [config] Tasty client config (or server URL).
-	 * @param {Logger} [config.logger] {@link #Logger|Logger} instance.
+	 * @param {Object|string} [config] Tasty client config, or server URL.
+	 * @param {number} [config.coverage="__coverage__"] Key to to store raw code coverage data.
+	 * @param {Object|Logger} [config.logger] Console-like logger, or {@link #Logger|Logger} instance, or log config.
+	 * @param {boolean} [config.logger.stringify] True to stringify all arguments and join them to single string prior to logging.
+	 * @param {number} [config.reconnect=5] Maximum number of (re)connect attempts.
+	 * @param {number} [config.session="__tasty"] Key to store Tasty client ID.
 	 * @param {string} [config.url] Tasty server URL.
 	 */
 	constructor(config) {
@@ -54,31 +61,39 @@ class Tasty {
 		// WORKAROUND: built-in URL parser.
 		let link = document.createElement('a');
 		link.href = config.url || '';
-		config.coverage = config.coverage || COVERAGE;
-		config.path = link.pathname,
+		config.coverage = config.coverage ?
+			config.coverage + '' :
+			COVERAGE;
+		config.logger = config.logger || {};
 		config.origin = link.origin ||
 			link.protocol + '//' + link.host;
+		config.path = link.pathname,
+		config.reconnect = (config.reconnect | 0) || RECONNECT,
+		config.session = config.session ?
+			config.session + '' :
+			SESSION;
 		config.url = link.href;
 		link = null;
 
-		// NOTE don't use bind();
-		dom.on(window, 'beforeunload', () => this.onBeforeUnload());
-		dom.on(window, 'unload', () => this.onUnload());
+		dom.on(window, 'beforeunload', this.onBeforeUnload.bind(this));
+		dom.on(window, 'unload', this.onUnload.bind(this));
 
 		this.ack = {};
 		this.config = config;
 		this.dom = dom;
 		this.flaws = new Flaws();
 		this.hooks = new Hooks(this);
-		this.logger = config.logger || new Logger();
+		this.logger = config.logger.log ?
+			config.logger :
+			new Logger(this);
 		this.tools = new Tools(this);
 		this.utils = utils;
 
 		this.Promise = utils.Promise;
 
-		this.onOpenBound = (event) => this.onOpen(event);
-		this.onCloseBound = () => this.onClose();
-		this.onMessageBound = (event) => this.onMessage(event.data);
+		this.onOpenBound = this.onOpen.bind(this);
+		this.onCloseBound = this.onClose.bind(this);
+		this.onMessageBound = this.onMessage.bind(this);
 	}
 
 	/**
@@ -95,8 +110,13 @@ class Tasty {
 			logger.info('server', config.url);
 
 		const flaws = Flaws.format(this.flaws),
-			query = (id ? 'id=' + id + '&' : '') +
-				(flaws ? 'flaws=' + flaws : '');
+			query = utils.filter(
+				[
+					id ? 'id=' + id : null,
+					flaws ? 'flaws=' + flaws : null
+				],
+				(item) => !!item
+			).join('&');
 		flaws && !id &&
 				logger.warn('client', 'flaws', flaws);
 
@@ -177,14 +197,15 @@ class Tasty {
 
 	onClose() {
 		this.closed = (this.closed | 0) + 1;
+		const reconnect = this.config.reconnect | 0;
 
-		this.closed < 5 ?
+		this.closed < reconnect ?
 			this.connect() :
-			this.logger.error('connect retry limit', 5, 'reached');
+			this.logger.error('connect retry limit', reconnect, 'reached');
 	}
 
-	onMessage(raw) {
-		const message = utils.parseJson(raw),
+	onMessage(event) {
+		const message = utils.parseJson(event.data),
 			logger = this.logger;
 		if (message instanceof Error) {
 			logger.warn(message);
@@ -257,13 +278,15 @@ class Tasty {
 		}
 	}
 
-	onConnect(id) {
-		const prev = this.id(id);
-		this.logger.log(prev ? 'reconnected' : 'connected', id);
+	onConnect(config) {
+		const prev = this.id(config.id);
+		assign(this.config, config);
+
+		this.logger.log(prev ? 'reconnected' : 'connected', config.id);
 	}
 
 	onCoverage(name) {
-		name = name || COVERAGE;
+		name = name || this.config.coverage;
 		this.logger.log('coverage', name);
 
 		return window[name];
@@ -339,13 +362,32 @@ class Tasty {
 }
 
 /**
+ * Default key to to store raw code coverage data.
+ * @readonly
  */
 Tasty.COVERAGE = COVERAGE;
+
+/**
+ * Default maximum number of (re)connect attempts.
+ * @readonly
+ */
+Tasty.RECONNECT = RECONNECT;
+
+/**
+ * Default key to store Tasty client ID.
+ * @readonly
+ */
+Tasty.SESSION = SESSION;
 
 /**
  * Reference to {@link #Hooks|Hooks} class.
  */
 Tasty.Hooks = Hooks;
+
+/**
+ * Reference to {@link #Logger|Logger} class.
+ */
+Tasty.Logger = Logger;
 
 /**
  * Reference to {@link #Tasty|Tasty} class.
@@ -363,8 +405,10 @@ utils.forEach(
 		document.getElementsByTagName('script'),
 	(script) => {
 		if (script.src.indexOf('/tasty.js') !== -1 || script.src.indexOf('/tasty.min.js') !== -1) {
-			const manual = script.hasAttribute('data-manual') || script.src.indexOf('manual') !== -1,
-				url = script.getAttribute('data-url') || script.src.replace('tasty.js', '').replace('tasty.min.js', '');
+			const manual = script.hasAttribute('data-manual') ||
+					script.src.indexOf('manual') !== -1,
+				url = script.getAttribute('data-url') ||
+					script.src.replace('tasty.js', '').replace('tasty.min.js', '');
 			if (url && !manual) {
 				new Tasty(url).connect();
 			}

@@ -1,6 +1,6 @@
-export default  Logger;
+export default Logger;
 
-import { forEach } from './utils';
+import { forEach, format, map } from './utils';
 
 /**
  * Logger.
@@ -16,47 +16,48 @@ class Logger {
 	/**
 	 * @param {Tasty} tasty {@link #Tasty|Tasty} instance.
 	 */
-	constructor() {
-		if (typeof console === 'undefined') {
-			this.debug = this.log = this.info = this.warn = this.error = function() {};
-		} else {
-			this.debug = wrap(console, 'debug', 'log');
-			this.log = wrap(console, 'log', 'log');
-			this.info = wrap(console, 'info', 'log');
-			this.warn = wrap(console, 'warn', 'log');
-			this.error = wrap(console, 'error', 'log');
+	constructor(tasty) {
+		this.tasty = tasty;
+
+		forEach(['debug', 'log', 'info', 'warn', 'error'], (name) => {
+			this[name] = this.output.bind(this, name);
+		});
+	}
+
+	output(name) {
+		// eslint-disable-next-line no-console
+		const api = window.console;
+		if (!api) {
+			return;
 		}
+		const config = this.tasty.config,
+			stringify = config.logger ?
+				config.logger.stringify :
+				false,
+			args = ['tasty'].concat(
+				Array.prototype.slice.call(arguments, 1)
+			);
+
+		Function.prototype.apply.call(
+			api[name],
+			api,
+			stringify ?
+				[
+					map(
+						args,
+						typeof stringify === 'function' ?
+							stringify :
+							serialize
+					).join(' ')
+				] :
+				args
+		);
 	}
 }
 
-function wrap(api, name, fallback) {
-	name = api[name] ? name : fallback;
-
-	// WORKAROUND: IE8 doesn't log spaces between arguments.
-	if (window.attachEvent) {
-		return function() {
-			const fixed = ['tasty'];
-			forEach(
-				arguments,
-				(arg) => fixed.push(' ', arg)
-			);
-
-			return Function.prototype.apply.call(
-				api[name],
-				api,
-				fixed
-			);
-		};
-	}
-
-	// NOTE don't use bind();
-	return function() {
-		return Function.prototype.apply.call(
-			api[name],
-			api,
-			['tasty'].concat(
-				Array.prototype.slice.call(arguments)
-			)
-		);
-	};
+// TODO better.
+function serialize(value) {
+	return value instanceof Error ?
+		value.toString() :
+		format(value);
 }

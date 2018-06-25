@@ -9,8 +9,8 @@ export { Promise };
 
 /**
  * Returns `Promise` that will resolve/reject after delay.
- * @memberof Tasty#utils
  * @function delay
+ * @memberof Tasty#utils
  * @param {number} ms Pause in milliseconds.
  * @param {*} [value] Value/reason to resolve/reject `Promise` with.
  * @example
@@ -94,8 +94,7 @@ export function format(value) {
 			name: value.name,
 			message: value.message,
 			stack: value.stack ?
-				value.stack
-					.replace(/\s*at Socket[\s\S]*/m, '') : // WORKAROUND for engine.io
+				value.stack :
 				undefined
 		};
 	}
@@ -459,8 +458,8 @@ export function reduce(array, callback, memo) {
 
 /**
  * Trims given `string`.
- * @memberof Tasty#utils
  * @function trim
+ * @memberof Tasty#utils
  * @param {string} string String to trim.
  * @returns {string}
  * @license Copyright Steven Levithan {@link http://blog.stevenlevithan.com/archives/faster-trim-javascript}

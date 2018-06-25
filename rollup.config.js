@@ -57,7 +57,6 @@ export default [
 		},
 		plugins: plugins.concat(
 			uglify({
-				ie8: true,
 				compress: {
 					dead_code: true,
 					drop_console: true,

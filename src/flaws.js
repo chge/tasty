@@ -32,7 +32,6 @@ class Flaws {
 				navigator.userAgent.indexOf('PhantomJS') !== -1,
 			navigation: !('click' in document.createElement('a')),
 			placeholder: !('placeholder' in document.createElement('input')),
-			pseudo: 'attachEvent' in window, // TODO better.
 			selector: !('querySelector' in document),
 			shadow: !('ShadowRoot' in window),
 			validation: !('validity' in document.createElement('input'))

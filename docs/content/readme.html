@@ -1,11 +1,11 @@
 
 <html><head></head><body><h1 id="tasty">Tasty</h1>
 <hr />
-<p><a href="https://www.npmjs.com/package/tasty"><img src="https://img.shields.io/npm/v/tasty.svg" alt="npm"></a>
-<a href="https://travis-ci.org/chge/tasty"><img src="https://travis-ci.org/chge/tasty.svg?branch=master" alt="build"></a>
-<a href="https://ci.appveyor.com/project/chge/tasty"><img src="https://ci.appveyor.com/api/projects/status/github/chge/tasty?branch=master&amp;svg=true" alt="windows"></a>
-<a href="https://coveralls.io/github/chge/tasty?branch=master"><img src="https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master" alt="coverage"></a>
-<a href="https://codeclimate.com/github/chge/tasty"><img src="https://codeclimate.com/github/chge/tasty/badges/gpa.svg" alt="code climate"></a></p>
+<p><a href="https://www.npmjs.com/package/tasty"><img src="https://img.shields.io/npm/v/tasty.svg" alt="npm" style="max-width: 100%;"></a>
+<a href="https://travis-ci.org/chge/tasty"><img src="https://travis-ci.org/chge/tasty.svg?branch=master" alt="build" style="max-width: 100%;"></a>
+<a href="https://ci.appveyor.com/project/chge/tasty"><img src="https://ci.appveyor.com/api/projects/status/github/chge/tasty?branch=master&amp;svg=true" alt="windows" style="max-width: 100%;"></a>
+<a href="https://coveralls.io/github/chge/tasty?branch=master"><img src="https://coveralls.io/repos/github/chge/tasty/badge.svg?branch=master" alt="coverage" style="max-width: 100%;"></a>
+<a href="https://codeclimate.com/github/chge/tasty"><img src="https://codeclimate.com/github/chge/tasty/badges/gpa.svg" alt="code climate" style="max-width: 100%;"></a></p>
 <p>Tasty helps to test fully assembled web applications in near-production environments on real web clients by emulating real users.</p>
 <pre><code class="lang-shell">npm install -g tasty
 </code></pre>
@@ -14,9 +14,9 @@ It respects <a href="https://www.w3.org/TR/CSP/">Content Security Policy</a> and
 <h1 id="how-it-works">How it works</h1>
 <hr />
 <p>Tasty server controls connected web clients to run your tests in runner of your choice against your application.</p>
-<p><img src="https://github.com/chge/tasty/raw/master/test/demo/console.gif" alt="console"></p>
+<p><img src="https://github.com/chge/tasty/raw/master/test/demo/console.gif" alt="console" style="max-width: 100%;"></p>
 <p>Client can emulate real user: navigate, fill forms, check page contents.</p>
-<p><img src="https://github.com/chge/tasty/raw/master/test/demo/browser.gif" alt="browser"></p>
+<p><img src="https://github.com/chge/tasty/raw/master/test/demo/browser.gif" alt="browser" style="max-width: 100%;"></p>
 <ol>
 <li>Add <code>tasty.js</code> module to your assembly or markup.</li>
 <li>Assemble and serve your application from staging server.</li>
@@ -136,8 +136,8 @@ To use one of them, you have to add the following directive:</p>
 </ul>
 <h1 id="browser-support">Browser support</h1>
 <hr />
-<p><a href="https://saucelabs.com/u/tasty"><img src="https://saucelabs.com/buildstatus/tasty" alt="sauce labs"></a></p>
-<p><a href="https://saucelabs.com/u/tasty"><img src="https://saucelabs.com/browser-matrix/tasty.svg" alt="browser support"></a></p>
+<p><a href="https://saucelabs.com/u/tasty"><img src="https://saucelabs.com/buildstatus/tasty" alt="sauce labs" style="max-width: 100%;"></a></p>
+<p><a href="https://saucelabs.com/u/tasty"><img src="https://saucelabs.com/browser-matrix/tasty.svg" alt="browser support" style="max-width: 100%;"></a></p>
 <h1 id="known-issues">Known issues</h1>
 <hr />
 <h3 id="sandbox">Sandbox</h3>
@@ -170,7 +170,21 @@ For WebDriver clients you could <a href="https://www.w3.org/TR/webdriver/#maximi
 <p>The lambda above will be called on the client "as is", so if it doesn't support arrow functions, the call will fail. It's more safe to always use <code>function</code> literals in such cases.</p>
 <h3 id="console">Console</h3>
 <p>Tasty console output could be wrong or confusing if <code>window.console</code> is modified by your application. If this is the case, make sure Tasty client code is runnig prior to application code.</p>
-<h3 id="http-https-on-the-same-port">HTTP + HTTPS on the same port</h3>
+<h3 id="selenium">Selenium</h3>
+<p><a href="http://chromedriver.chromium.org/">ChromeDriver</a> has an <a href="https://bugs.chromium.org/p/chromedriver/issues/detail?id=669">ancient bug</a> that prevents logs to be fully captured. You can force Tasty client to log every message as a single string, by at least two ways.</p>
+<p>Either pass a logger configuration to the client...</p>
+<pre><code class="lang-javascript">const server = new Tasty(...);
+server.on('client', (id, client) =&gt; {
+    client.config.logger = {stringify: true};
+});
+</code></pre>
+<p>...or provide the same configuration (or even a custom logger) to the client constructor.</p>
+<pre><code class="lang-javascript">const client = new Tasty({
+    ...
+    logger: {stringify: true}
+});
+</code></pre>
+<h3 id="http---https-on-the-same-port">HTTP + HTTPS on the same port</h3>
 <p>Not supported yet.</p>
 <h1 id="tools">Tools</h1>
 <hr />
@@ -323,6 +337,6 @@ is('Done');
 which are kindly provided by <a href="https://docs.travis-ci.com/user/sauce-connect">TravisCI</a>.</p>
 <h1 id="windows">Windows</h1>
 <hr />
-<p><a href="https://ci.appveyor.com/project/chge/tasty"><img src="https://ci.appveyor.com/api/projects/status/github/chge/tasty?branch=master&amp;svg=true" alt="windows"></a></p>
+<p><a href="https://ci.appveyor.com/project/chge/tasty"><img src="https://ci.appveyor.com/api/projects/status/github/chge/tasty?branch=master&amp;svg=true" alt="windows" style="max-width: 100%;"></a></p>
 <p>Everything works fine, yay!</p>
 </body></html>

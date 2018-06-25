@@ -248,6 +248,28 @@ The lambda above will be called on the client "as is", so if it doesn't support 
 
 Tasty console output could be wrong or confusing if `window.console` is modified by your application. If this is the case, make sure Tasty client code is runnig prior to application code.
 
+### Selenium
+
+[ChromeDriver](http://chromedriver.chromium.org/) has an [ancient bug](https://bugs.chromium.org/p/chromedriver/issues/detail?id=669) that prevents logs to be fully captured. You can force Tasty client to log every message as a single string, by at least two ways.
+
+Either pass a logger configuration to the client...
+
+```javascript
+const server = new Tasty(...);
+server.on('client', (id, client) => {
+	client.config.logger = {stringify: true};
+});
+```
+
+...or provide the same configuration (or even a custom logger) to the client constructor.
+
+```javascript
+const client = new Tasty({
+	...
+	logger: {stringify: true}
+});
+```
+
 ### HTTP + HTTPS on the same port
 
 Not supported yet.

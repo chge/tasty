@@ -34,34 +34,36 @@
 	"template": {
 		"options": {
 			"title": "Tasty",
-			"navItems": [
-				{
-					"label": "Introduction",
-					"href": "/tasty/",
-					"iconClass": "ico-md ico-book"
-				},
-				{
-					"label": "Client API",
-					"href": "/tasty/?api=client",
-					"iconClass": "ico-md ico-mouse-pointer"
-				},
-				{
-					"label": "Server API",
-					"href": "/tasty/?api=server",
-					"iconClass": "ico-md ico-file-code-o"
-				},
-				{
-					"label": "Test API",
-					"href": "/tasty/?api=test",
-					"iconClass": "ico-md ico-clipboard"
-				},
-				{
-					"label": "GitHub",
-					"href": "https://github.com/chge/tasty",
-					"target": "_blank",
-					"iconClass": "ico-md ico-github"
-				}
-			]
+			"navbar": {
+				"menu": [
+					{
+						"label": "Introduction",
+						"href": "/tasty/",
+						"iconClass": "fas fa-book"
+					},
+					{
+						"label": "Client API",
+						"href": "/tasty/?api=client",
+						"iconClass": "fas fa-mouse-pointer"
+					},
+					{
+						"label": "Server API",
+						"href": "/tasty/?api=server",
+						"iconClass": "fas fa-file-code"
+					},
+					{
+						"label": "Test API",
+						"href": "/tasty/?api=test",
+						"iconClass": "fas fa-clipboard-list"
+					},
+					{
+						"label": "GitHub",
+						"href": "https://github.com/chge/tasty",
+						"target": "_blank",
+						"iconClass": "fab fa-github"
+					}
+				]
+			}
 		},
 		"path": "default"
 	}
