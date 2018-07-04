@@ -1,0 +1,61 @@
+
+<html><head></head><body><h1 id="known-issues">Known issues</h1>
+<hr />
+<h3 id="sandbox">Sandbox</h3>
+<p>Tasty client runs inside JavaScript sandbox, so it simply can't emulate <em>real</em> interaction,
+as <a href="https://developer.chrome.com/devtools/docs/debugger-protocol">debugging</a> <a href="https://wiki.mozilla.org/Remote_Debugging_Protocol">protocols</a> or <a href="https://www.w3.org/TR/webdriver/">WebDriver</a> can.</p>
+<h3 id="websocket">WebSocket</h3>
+<p>Currently Tasty can't run on clients without native WebSocket support.</p>
+<p>However, the transport layer could be separated and implemented for special purposes. Take a look at client configuration and <code>Server.onConnection</code> method if this is the case.</p>
+<h3 id="auto-focus-elements">Auto-focus elements</h3>
+<p>When using auto-focus elements (such as <code>&lt;input /&gt;</code>), you could encounter <code>cannot type into active node &lt;body /&gt;</code> error when window loses its focus, which causes <code>type</code> and <code>paste</code> tools to fail.</p>
+<p>If you don't want to focus such elements explicitly (using <code>click</code> or something else), make sure that client window remain focused during tests.
+For WebDriver clients you could <a href="https://www.w3.org/TR/webdriver/#maximize-window">maximize window</a> or use <a href="http://stackoverflow.com/a/19170779"><code>alert()</code> workaround</a> to focus reliably.</p>
+<p>Additionally, <a href="https://developer.chrome.com/devtools">Chrome DevTools</a> could force current tab to lose focus, with the same results.</p>
+<p>Remember, you can always click on something to reset autofocus when you don't need to test it.</p>
+<h3 id="highly-fragmented-text">Highly fragmented text</h3>
+<p>Currently Tasty can't find text <code>+1 123 456-78-90</code> in the following case:</p>
+<pre><code class="lang-html">+1 &lt;input type="tel" placeholder="123 456-78-90" /&gt;
+</code></pre>
+<p>In other words, it's too hard to join text fragments of <code>textContent</code>, <code>value/placeholder</code>, <code>:before/:after</code> etc.</p>
+<p>Also, search cannot detect text from <code>alt</code> attribute yet.</p>
+<h3 id="media">Media</h3>
+<p>Border images are currently skipped.</p>
+<p>Also, <code>&lt;audio /&gt;</code>, <code>&lt;video /&gt;</code>, <code>&lt;picture /&gt;</code>, <code>&lt;object /&gt;</code> and <code>&lt;embed /&gt;</code> are not supported out-of-the-box.</p>
+<h3 id="arrow-functions">Arrow functions</h3>
+<pre><code class="lang-javascript">exec(() =&gt; {
+    ...
+});
+</code></pre>
+<p>The lambda above will be called on the client "as is", so if it doesn't support arrow functions, the call will fail. It's more safe to always use <code>function</code> literals in such cases.</p>
+<h3 id="console">Console</h3>
+<p>Tasty console output could be wrong or confusing if <code>window.console</code> is modified by your application. If this is the case, make sure Tasty client code is runnig prior to application code.</p>
+<h3 id="selenium">Selenium</h3>
+<p>Tasty server uses port <code>8765</code> by default, which could be unavailable on remote MacOS or iOS devices. Try to set different port if you use Selenium hub with tunneling.</p>
+<p><a href="http://chromedriver.chromium.org/">ChromeDriver</a> has an <a href="https://bugs.chromium.org/p/chromedriver/issues/detail?id=669">ancient bug</a> that prevents logs to be fully captured. You can force Tasty client to log every message as a single string, by at least two ways.</p>
+<p>Either pass a logger configuration to the client...</p>
+<pre><code class="lang-javascript">const server = new Tasty(...);
+server.on('client', (id, client) =&gt; {
+    client.config.logger = {stringify: true};
+});
+</code></pre>
+<p>...or provide the same configuration (or even a custom logger) to the client constructor.</p>
+<pre><code class="lang-javascript">const client = new Tasty({
+    ...
+    logger: {stringify: true}
+});
+</code></pre>
+<h3 id="jest">Jest</h3>
+<p>Unfortunately, <a href="https://jestjs.io/">Jest</a> has <a href="https://github.com/facebook/jest/issues/5048">no documented API</a> to use its runner programmatically.</p>
+<p>See <a href="/tasty/?api=server#Runner">Runner</a> base class.</p>
+<h3 id="browser-ui">Browser UI</h3>
+<p>Some elements of browser itself, such as tooltips from <code>title</code> attribute or HTML5 Form validation messages, could be potentially detected, but currently aren't supported.</p>
+<h3 id="parallel-logs">Parallel logs</h3>
+<p>Tasty server is able to work with several clients simultaneously. But there are no clear way to separate logs from different clients yet.</p>
+<h3 id="duplicated-clients">Duplicated clients</h3>
+<p>Tasty client currently can't detect that <code>tasty.js</code> is loaded more than once on the page, e.g. included during build and then embedded by Tasty static server. This leads to duplicated clients which obviously fail all the tests.</p>
+<h3 id="http---https-on-the-same-port">HTTP + HTTPS on the same port</h3>
+<p>Not supported yet.</p>
+<h3 id="shadow-dom">Shadow DOM</h3>
+<p>Not supported yet.</p>
+</body></html>

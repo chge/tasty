@@ -1,16 +1,15 @@
 'use strict';
 
-const child = require('child_process'),
-	fs = require('fs'),
+const fs = require('fs'),
 	http = require('http'),
-	path = require('path'),
+	puppeteer = require('puppeteer'),
 	Tasty = require('../..');
 
 const URL = 'http://localhost:8765',
 	URL1 = URL + '/test.html',
 	URL2 = 'http://localhost:9876/path/path.html';
 
-describe('PhantomJS', function() {
+describe('Puppeteer', function() {
 	// WORKAROUND
 	if (process.argv.indexOf('--headful') !== -1) {
 		return it.skip('spec skipped');
@@ -19,10 +18,10 @@ describe('PhantomJS', function() {
 	this.retries(1);
 	this.timeout(60000);
 
-	let phantom, server, tasty;
+	let server, browser, tasty;
 	afterEach(() => {
-		phantom && phantom.kill();
 		server && server.close();
+		browser && browser.close();
 
 		return tasty && tasty.stop().catch(() => {});
 	});
@@ -40,51 +39,63 @@ describe('PhantomJS', function() {
 
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
-			.then(() => {
-				phantom = spawn('path', URL2);
-			});
+			.then(
+				() => spawn('path', URL2)
+			)
+			.then((spawned) => {
+				browser = spawned;
+			})
 	});
 
-	it('passes QUnit suite', function(done) {
+	// NOTE this one produces maximum client coverage.
+	it('passes Mocha suite', function(done) {
 		this.slow(20000);
 
 		tasty = new Tasty({
+			addon: 'chai,chai-as-promised,chai-spies',
 			coverage: 'nyc',
 			coverageReporter: 'lcovonly',
-			include: 'test/self/qunit/*.js',
+			include: 'test/self/mocha/*.js',
 			quiet: false,
-			runner: 'qunit',
 			static: 'test/root',
 			embed: true
 		});
 
 		tasty.once('end', (id, error) => done(error));
 		tasty.start()
-			.then(() => {
-				phantom = spawn('qunit', URL1);
-			});
+			.then(
+				() => spawn('mocha', URL1)
+			)
+			.then((spawned) => {
+				browser = spawned;
+			})
 	});
 });
 
 function spawn(name, url) {
 	name = name || 'unknown';
 
-	const spawned = child.exec(
-		[
-			'phantomjs',
-			'--disk-cache=false',
-			'test/phantom.js',
-			url,
-			'> phantom.' + name + '.log'
-		].join(' ')
-	).on(
-		'error',
-		(error) => console.error(error)
+	return puppeteer.launch({
+		headless: true,
+		args: [
+			'--disable-infobars',
+			// NOTE currently required for headless mode.
+			'--no-sandbox'
+		]
+	}).then(
+		(browser) => browser.newPage()
+			.then(
+				(page) => browser.pages()
+					// NOTE close useless first run page.
+					.then(
+						(pages) => pages[0].close()
+					)
+					.then(
+						() => page.goto(url)
+					)
+					.then(
+						() => browser
+					)
+			)
 	);
-
-	process.on('exit', () => spawned.kill());
-	process.on('SIGINT', () => spawned.kill());
-	process.on('SIGTERM', () => spawned.kill());
-
-	return spawned;
 }

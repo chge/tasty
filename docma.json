@@ -29,7 +29,9 @@
 				"lib/tool.js"
 			]
 		},
-		"README.md"
+		"README.md",
+		"COOKBOOK.md",
+		"ISSUES.md"
 	],
 	"template": {
 		"options": {
@@ -37,14 +39,22 @@
 			"navbar": {
 				"menu": [
 					{
-						"label": "Introduction",
-						"href": "/tasty/",
-						"iconClass": "fas fa-book"
-					},
-					{
-						"label": "Client API",
-						"href": "/tasty/?api=client",
-						"iconClass": "fas fa-mouse-pointer"
+						"label": "Manual",
+						"iconClass": "fas fa-book",
+						"items": [
+							{
+								"label": "Introduction",
+								"href": "/tasty/"
+							},
+							{
+								"label": "Cookbook",
+								"href": "/tasty/?content=cookbook"
+							},
+							{
+								"label": "Known issues",
+								"href": "/tasty/?content=issues"
+							}
+						]
 					},
 					{
 						"label": "Server API",
@@ -55,6 +65,11 @@
 						"label": "Test API",
 						"href": "/tasty/?api=test",
 						"iconClass": "fas fa-clipboard-list"
+					},
+					{
+						"label": "Client API",
+						"href": "/tasty/?api=client",
+						"iconClass": "fas fa-mouse-pointer"
 					},
 					{
 						"label": "GitHub",

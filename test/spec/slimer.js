@@ -49,7 +49,7 @@ describe('SlimerJS', function() {
 		this.slow(20000);
 
 		tasty = new Tasty({
-			coverage: 'istanbul',
+			coverage: 'nyc',
 			coverageReporter: 'lcovonly',
 			include: 'test/self/jasmine/*.js',
 			quiet: false,
@@ -63,47 +63,6 @@ describe('SlimerJS', function() {
 		tasty.start()
 			.then(() => {
 				slimer = spawn('jasmine', URL1);
-			});
-	});
-
-	it('passes QUnit suite', function(done) {
-		this.slow(20000);
-
-		tasty = new Tasty({
-			coverage: 'istanbul',
-			coverageReporter: 'lcovonly',
-			include: 'test/self/qunit/*.js',
-			quiet: false,
-			runner: 'qunit',
-			static: 'test/root',
-			embed: true
-		});
-
-		tasty.once('end', (id, error) => done(error));
-		tasty.start()
-			.then(() => {
-				slimer = spawn('qunit', URL1);
-			});
-	});
-
-	// NOTE this one produces maximum client coverage.
-	it('passes Mocha suite', function(done) {
-		this.slow(20000);
-
-		tasty = new Tasty({
-			addon: 'chai,chai-as-promised,chai-spies',
-			coverage: 'istanbul',
-			coverageReporter: 'lcovonly',
-			include: 'test/self/mocha/*.js',
-			quiet: false,
-			static: 'test/root',
-			embed: true
-		});
-
-		tasty.once('end', (id, error) => done(error));
-		tasty.start()
-			.then(() => {
-				slimer = spawn('mocha', URL1);
 			});
 	});
 });

@@ -4,7 +4,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import globals from 'rollup-plugin-node-globals';
 import istanbul from 'rollup-plugin-istanbul';
 import resolve from 'rollup-plugin-node-resolve';
-import uglify from 'rollup-plugin-uglify';
+import { uglify } from 'rollup-plugin-uglify';
 
 import NYC from 'nyc';
 

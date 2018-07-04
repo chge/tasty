@@ -42,7 +42,7 @@ const CAPS = [
 	{platformName: ANDROID, platformVersion: '4.4', browserName: 'Browser', deviceName: 'Android Emulator', deviceOrientation: 'portrait'},
 	{browserName: CHROME, version: 'dev', platform: WINDOWS10},
 	{browserName: CHROME, version: 'beta', platform: OSX13},
-	{browserName: CHROME, version: '65.0', platform: WINDOWS81},
+	{browserName: CHROME, version: '67.0', platform: WINDOWS81},
 	{browserName: CHROME, version: '61.0', platform: OSX12},
 	{browserName: CHROME, version: '57.0', platform: WINDOWS8},
 	{browserName: CHROME, version: '49.0', platform: WINDOWS7}, // NOTE max on XP
@@ -59,12 +59,13 @@ const CAPS = [
 	{browserName: EXPLORER, version: '10.0', platform: WINDOWS7}, // NOTE min with WebSocket
 	{browserName: FIREFOX, version: 'dev', platform: WINDOWS10},
 	{browserName: FIREFOX, version: 'beta', platform: OSX13},
-	{browserName: FIREFOX, version: '59.0', platform: WINDOWS81},
+	{browserName: FIREFOX, version: '61.0', platform: WINDOWS81},
 	{browserName: FIREFOX, version: '53.0', platform: OSX12},
 	{browserName: FIREFOX, version: '52.0', platform: WINDOWS8}, // NOTE max on Vista
 	{browserName: FIREFOX, version: '49.0', platform: OSX11},
 	{browserName: FIREFOX, version: '45.0', platform: WINDOWS7}, // NOTE max on XP and Linux
-	{browserName: FIREFOX, version: '4.0', platform: LINUX}, // NOTE min
+	{browserName: FIREFOX, version: '11.0', platform: LINUX}, // NOTE min with WebSocket
+	{platformName: IOS, platformVersion: '11.3', deviceName: 'iPad (5th generation) Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '11.2', deviceName: 'iPad (5th generation) Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '11.1', deviceName: 'iPad Pro (12.9 inch) (2nd generation) Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '11.0', deviceName: 'iPad Air 2 Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
@@ -72,6 +73,7 @@ const CAPS = [
 	{platformName: IOS, platformVersion: '10.2', deviceName: 'iPad Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '10.0', deviceName: 'iPad Retina Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '9.3', deviceName: 'iPad 2 Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
+	{platformName: IOS, platformVersion: '11.3', deviceName: 'iPhone X Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '11.2', deviceName: 'iPhone X Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '11.1', deviceName: 'iPhone 8 Plus Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
 	{platformName: IOS, platformVersion: '11.0', deviceName: 'iPhone 8 Simulator', browserName: 'Safari', deviceOrientation: 'portrait'},
@@ -85,7 +87,6 @@ const CAPS = [
 	{browserName: SAFARI, version: '9.0', platform: OSX11},
 	{browserName: SAFARI, version: '8.0', platform: OSX10},
 	{browserName: SAFARI, version: '7.0', platform: OSX9},
-	{browserName: SAFARI, version: '5.1', platform: WINDOWS7},
 ];
 
 describe(clientName(INDEX), function() {

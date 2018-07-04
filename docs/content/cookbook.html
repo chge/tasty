@@ -1,0 +1,320 @@
+
+<html><head></head><body><h1 id="cookbook">Cookbook</h1>
+<hr />
+<p>Either use Tasty from command line or from your code using <a href="https://chge.github.io/tasty/?api=server">API</a>.</p>
+<p>Tasty can read any <a href="https://chge.github.io/tasty/?api=server#Tasty">configuration</a> fields from JSON file provided by <code>--config &lt;path/to/config&gt;</code> flag.</p>
+<p>See <code>tasty --help</code> for more information.</p>
+<p>Using Tasty from command line is intended for the most simple cases only, like testing in developer's browser. For more complicated use cases it's highly recommended to write a test script and use Tasty programmatically.</p>
+<h1 id="server">Server</h1>
+<hr />
+<p>Tasty server is a bridge between the clients and the test runner, it controls each client and runs tests written using Tasty tools.</p>
+<p>Use <code>--url</code> flag to configre server's own URL.</p>
+<h1 id="runner">Runner</h1>
+<hr />
+<p>Tasty supports any test frameworks that support asynchronous tests.</p>
+<p>Check out the <a href="https://chge.github.io/tasty/?api=test">API available for tests</a>.</p>
+<p>There are built-in runners for <a href="https://mochajs.org/">Mocha</a>, <a href="https://jasmine.github.io/">Jasmine</a> and <a href="https://qunitjs.com/">QUnit</a>. See <a href="/tasty/?content=issues#jest">Known issues</a> for <a href="https://jestjs.io/">Jest</a>. Provide <code>--runner &lt;name&gt;</code> flag to use one of them. For other frameworks, use Tasty programmatically from your runner.</p>
+<p><a href="http://chaijs.com/">Chai</a>, its <a href="http://chaijs.com/plugins">plugins</a> and other helper libraries are supported by providing <code>--addon &lt;name&gt;,&lt;name&gt;...</code> flag.
+For example, <code>--addon chai,chai-as-promised,chai-http</code> works fine.</p>
+<p>Use <code>--watch</code> flag to watch for changes or run on several clients.</p>
+<p>Tasty spawns <a href="https://www.npmjs.com/package/tasty-sandbox">sandboxed</a> runner and coverage tool for each client separately,
+so it's easy to test in parallel.</p>
+<h1 id="client">Client</h1>
+<hr />
+<p>Tasty client is a small extendable UMD module that connects to the server and executes its commands.</p>
+<p>It has its own <a href="https://chge.github.io/tasty/?api=client">API</a> and isolated polyfills for non-supporting browsers.</p>
+<p>Load <code>tasty.min.js</code> or use <code>--embed min</code> if you don't need to debug your tests.</p>
+<h1 id="static-server">Static server</h1>
+<hr />
+<p>You can run built-in static server on the same URL by passing <code>--static &lt;path/to/root&gt;</code> flag.
+Use <code>--static-index &lt;path/to/index&gt;</code> flag for SPAs and add <code>--embed</code> flag to inject Tasty client automatically.</p>
+<h1 id="code-coverage">Code coverage</h1>
+<hr />
+<p>When serving application from its own server, you should instrument JavaScript code for coverage by yourself.
+Tasty's static server has built-in support for <a href="https://gotwarlost.github.io/istanbul">Istanbul</a> and <a href="https://istanbul.js.org/">NYC</a> (aka Istanbul 2) to automatically do it for you.</p>
+<h1 id="csp">CSP</h1>
+<hr />
+<p>For Tasty server running on <code>localhost:8765/path</code> you should add the following CSP directives for Tasty client to work properly:</p>
+<pre><code>connect-src ws://localhost:8765/path
+script-src localhost:8765/path
+</code></pre><p>Change <code>ws</code> to <code>wss</code> if you serve from HTTPS.</p>
+<p>Unfortunately, both <a href="https://gotwarlost.github.io/istanbul">Istanbul</a> and <a href="https://istanbul.js.org/">NYC</a> instrumenters use <code>new Function()</code> to get top-level scope.
+To use one of them, you have to add the following directive:</p>
+<pre><code>script-src 'unsafe-eval'
+</code></pre><p>If you use <code>&lt;meta /&gt;</code> for CSP, Tasty's static server automatically injects that directive into HTML files when <code>--coverage &lt;name&gt;</code> flag is used.</p>
+<p>Remember, CSP allows consequently applied directives to only restrict the resulting set, i.e. meta tags can't expand/loose header directives and vice versa.</p>
+<p>Check out a <a href="https://report-uri.io/home/generate">great tool</a> for generating and validating CSP directives.</p>
+<h1 id="automation">Automation</h1>
+<hr />
+<p>Recommended automation setup for particular project is the following.</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Client</th>
+<th>Assets</th>
+<th>API</th>
+<th>Coverage</th>
+<th>Tasty client</th>
+<th>Tasty server</th>
+<th>Tasty transport</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#debugging">Debugging</a></td>
+<td>Developer's browser</td>
+<td>Bundler</td>
+<td>Standalone</td>
+<td>No</td>
+<td>Included explicitly during build</td>
+<td>Localhost</td>
+<td>WS</td>
+</tr>
+<tr>
+<td><a href="#local_testing">Local testing</a></td>
+<td>Puppeteer or similar</td>
+<td>Tasty server or bundler</td>
+<td>Tasty server or standalone</td>
+<td>Tasty server or bundler</td>
+<td>Embedded by Tasty server or included explicitly during build</td>
+<td>Localhost</td>
+<td>WS</td>
+</tr>
+<tr>
+<td><a href="#browser_support">Browser support</a></td>
+<td>Selenium grid</td>
+<td>Test server</td>
+<td>Test server</td>
+<td>Avoid</td>
+<td>Included explicitly during build</td>
+<td>Localhost with tunneling</td>
+<td>WS(S)</td>
+</tr>
+<tr>
+<td><a href="#release_monitoring">Release monitoring</a></td>
+<td>Puppeteer or similar</td>
+<td>Production server</td>
+<td>Production server</td>
+<td>No</td>
+<td>Evaluated by client</td>
+<td>Localhost</td>
+<td>Client-dependent</td>
+</tr>
+</tbody>
+</table>
+<h3 id="debugging">Debugging</h3>
+<h3 id="local-testing">Local testing</h3>
+<p>It's recommended to measure code coverage on this step only.</p>
+<h3 id="mock-api">Mock API</h3>
+<p>It's possible to add API mocks right into Tasty's static server, but you have to use it programmatically.</p>
+<pre><code class="lang-javascript">const tasty = new Tasty(...);
+
+const onRequest = tasty.Server.prototype.onRequest;
+tasty.Server.prototype.onRequest = function(request, response) {
+    if (request.url.startsWith('/api')) {
+        // Handle or proxy API calls here.
+    } else {
+        onRequest.apply(this, arguments);
+    }
+};
+
+tasty.start();
+</code></pre>
+<h3 id="browser-support">Browser support</h3>
+<p>Single Tasty server is able to work with multiple clients simultaneously.</p>
+<h3 id="release-monitoring">Release monitoring</h3>
+<p>In production environment, running third-party code and connecting to third-party servers are generally prohibited. To make everything work, we basically need just two things to happen.</p>
+<ol>
+<li>Tasty client's source should be evaluated on the client side each time document is loaded.</li>
+<li>Tasty client should be able to connect to the running Tasty server.</li>
+</ol>
+<p>The fastest way to achieve this goals is to use Puppeteer. Its <code>setBypassCSP</code>, <code>evaluateOnNewDocument</code> and <code>addScriptTag</code> methods could be useful.</p>
+<p>For other drivers this could be quite tricky and highly depending on a particular driver's API.</p>
+<h1 id="selenium">Selenium</h1>
+<hr />
+<p>It's relatively hard to reliably instrument WebDriver with Tasty client script. So it's highly recommended to explicitly include <code>tasty.js</code> into your application for builds that are tested using Selenium.</p>
+<p>Take a look at <a href="/tasty/?content=issues#selenium">Known issues</a> if you use Safari or when you need console output from the client.</p>
+<h1 id="puppeteer">Puppeteer</h1>
+<hr />
+<h1 id="phantomjs">PhantomJS</h1>
+<hr />
+<h1 id="slimerjs">SlimerJS</h1>
+<hr />
+<h1 id="test-context">Test context</h1>
+<hr />
+<p>It's useful to alter test context, e.g. add the ability to resize client viewport or take a screenshot.</p>
+<pre><code class="lang-javascript">const tasty = new Tasty(...);
+
+const Context = tasty.Context;
+tasty.Context = function() {
+    const context = Context.apply(this, arguments);
+    context.globals.myGlobal = ...;
+
+    return context;
+};
+
+tasty.start();
+</code></pre>
+<p>Now any test should be able to use the instrumentation.</p>
+<pre><code class="lang-javascript">it('uses test context', () =&gt; {
+    global.myGlobal...
+});
+</code></pre>
+<h1 id="custom-tools">Custom Tools</h1>
+<hr />
+<pre><code class="lang-javascript">new Tasty({
+    ...
+    include: [
+        'tools.js',
+        ...
+    ]
+});
+</code></pre>
+<p>Now <code>tools.js</code> will be included prior to any test suite.</p>
+<pre><code class="lang-javascript">now.myTool = myTool;
+global.myTool = tasty.wrap(myTool);
+
+async function myTool() {
+    // Properly implemented Tool always returns Promise.
+}
+</code></pre>
+<pre><code class="lang-javascript">it('uses custom tool', () =&gt; {
+    myTool();
+    now(
+        () =&gt; now.myTool()
+    );
+
+    return now();
+});
+</code></pre>
+<h1 id="security-recommendations">Security recommendations</h1>
+<hr />
+<p>On staging or other near-production environment, Tasty can't pass (re)CAPTCHA or two-factor authentication for you.</p>
+<h3 id="permanent-secrets">Permanent secrets</h3>
+<p>Store passwords in your Continuous Integration tool and pass credentials into command line. All arguments will be available in <code>tasty.config</code> object.</p>
+<p>If you're automatically taking screenshots or recording videos during test run, they could potentially contain passwords (e.g. typed into wrong fields because of error) or other sensitive data.</p>
+<p>Also, Tasty logs all typed/pasted text into browser console.</p>
+<h3 id="one-off-secrets">One-off secrets</h3>
+<p>Get two-factor nonces from backdoor or use paid services to mock real mobile phones.</p>
+<h3 id="-re-captcha">(re)CAPTCHA</h3>
+<p>Use <a href="https://developers.google.com/recaptcha/docs/faq">reCAPTCHA testing <code>sitekey</code> and <code>secret</code></a> for testing environment.</p>
+<p>Instead of trying to click on iframed content, simply fake reCAPTCHA response with some suitable string, e.g.</p>
+<pre><code class="lang-javascript">exec(function() {
+    document.querySelector('[name="g-recaptcha-response"]').value = '03AHJ_VuvHyNQjrLnMZ6eGbmdDZQ3Qma4CBrMSWSOzTcqB8rdl3tbIN1gzAWkB4jPi1qCE-aEw-hx7ns9DuzwNe7bW4E5rCc23SDFs9fQJGqAM27AeNKeg0q6ByJEC3ig3ydkrEzwVd56fi1oyDTVAvwpGCTtg8rjBRYqwn7qDnCp8Fw6Iq6h5vQKc7KtX4mW33QUL8Y5HzJReMDqZio8Rf6zmyqGGcOurvo6Gw4_exJfwcnK0CcnQUpbjlr3-9Mm-1fKeUq_q6s6plM7-2Rc2WNgYdguvp6yxZyyxr5IUKZk1eCvwgxu97zdbM3bPjfuuccrvie4LTGjasRYobPF51H5TbSm3-FacdHJ5usgMSjII6Cba7IaH4NQDPJqyO7ltWH1uPPRybuJmJk1AWALebHTiM-4loixaiI-47JCrBUeJGPPR9A8Q1UfduaZmzP0CrDj5YfFbVzHncDh4ac_KghXgehxbEQ2eD2Qwo18wlc87U-aQQqJLBkvlRUABHDGeWcyRvEzTPnpXfsmbK7Y2WlU4_zbCqtVAdR-pmp3MALqA-njyDtRZmtHsvsVVGvtVXy9UMlGRc4YwmvSyxg0fRegX13K7lMfnY9qqoNV23ZtB3fiQTUwjZnAe0F3KKArRTAt4XFjOJKIaz6-8TxHtqcPfejehTpkOJ0M7cDB3wi9_7BxNu758D6CfqgAXGKqH-kV42K6SJ69S50Lhl3t1l7rEWXmJi5vCEvQ2yHReL1XGtNygpt-WM0qlDiGswUITnUSire2c0JU84vTQCQ3AFZLWXX3eypwRHmyWXvUQAho9LqHZuV_qXoyiyK0SbCZW6lSW4CucElsy5XOpNAFCTgxtY4gTZgnR9uB_JHCjF69ibMeQeUPGNWahECJiRp49TpZi928wvGY_';
+});
+</code></pre>
+<p>For testing <code>sitekey</code> and <code>secret</code>, reCAPTCHA server should accept the same <code>g-recaptcha-response</code> unlimited number of times.</p>
+<p>If example above doesn't work (e.g. response format is changed), get new fake <code>g-recaptcha-response</code> string:</p>
+<ul>
+<li>manually click on testing reCAPTCHA,</li>
+<li>inspect XHR response or <code>value</code> property of <code>&lt;textarea name="g-recaptcha-response" /&gt;</code> on the page.</li>
+</ul>
+<p>For other CAPTCHA implementations, get answers from backdoor.</p>
+<h3 id="ssl-tls">SSL/TLS</h3>
+<p>Do not use production certificates with Tasty: server is not intended to be accessible from external networks.</p>
+<p>Use <a href="https://letsencrypt.org/">Let's encrypt</a>, self-signed non-CA certificates or set up your own CA.</p>
+<h1 id="tools">Tools</h1>
+<hr />
+<h3 id="queue">Queue</h3>
+<p>Each tool adds corresponding action to the runner queue instead of performing that action immediately.
+This allows to write tests in synchronous manner.</p>
+<pre><code class="lang-javascript">click('Name');
+type('John Doe');
+click('Save');
+</code></pre>
+<p>Queue is executed after <code>now()</code> call without arguments, which returns <code>Promise</code> instance.</p>
+<pre><code class="lang-javascript">it('does something', function() {
+    ...
+    return now();
+});
+</code></pre>
+<p>Your testing framework may prefer callback for async tests.</p>
+<pre><code class="lang-javascript">it('works', function(done) {
+    ...
+    now().then(done, done);
+});
+</code></pre>
+<h3 id="ready-state">Ready state</h3>
+<p>For testing SPA (or rich MPA) you can provide a method for Tasty to ensure that client is ready for the next action.</p>
+<p>The simpliest way is to just wait before or after using some tools.</p>
+<pre><code class="lang-javascript">ready('delay', 1000);
+</code></pre>
+<p>You may override the list of tools to wait before and after.</p>
+<pre><code class="lang-javascript">ready('delay', 1000, ['exec'], ['click']);
+</code></pre>
+<p>You always can manually add a delay into queue.</p>
+<pre><code class="lang-javascript">delay(1000);
+</code></pre>
+<p>There could be enough to just check if DOM is ready...</p>
+<pre><code class="lang-javascript">ready('document'); // 'DOMContentLoaded' aka 'interactive' readyState
+</code></pre>
+<pre><code class="lang-javascript">ready('window'); // 'load' aka 'complete' readyState
+</code></pre>
+<p>...and maybe wait a little bit.</p>
+<pre><code class="lang-javascript">ready('document', 300);
+</code></pre>
+<pre><code class="lang-javascript">ready('window', 300);
+</code></pre>
+<p>Another way is to provide some application-specific code.</p>
+<pre><code class="lang-javascript">ready(
+    'until',
+    // This function is executed on client, test will continue when it will return true.
+    function() {
+        return !document.getElementsByClassName('progress').length;
+    },
+    ...
+);
+</code></pre>
+<pre><code class="lang-javascript">ready(
+    'exec',
+    // This function is executed on client, test will continue when promise will be resolved.
+    function(tasty) {
+        // utils.Promise is a built-in implementation for non-supporting browsers.
+        return new this.utils.Promise(
+            function(resolve, reject) {
+                ...
+            }
+        );
+    },
+    ...
+);
+</code></pre>
+<p>Call without arguments simply executes <code>ready</code> logic, which is useful in some cases.</p>
+<pre><code class="lang-javascript">ready('exec', ...);
+click('Start');
+is('Loading...');
+ready();
+is('Done');
+</code></pre>
+<p>Note that ready methods cannot be combined.</p>
+<h3 id="custom-logic">Custom logic</h3>
+<p>The <code>now(...)</code> call with function(s) allows you to add some custom logic into test, but you should use <code>now.*</code> namespace for tools.</p>
+<p>The <code>now.smth()</code> is the same as just <code>smth()</code>, but runs immediately. You should use <code>now.*</code> tools inside <code>now(...)</code> call if you don't want to break execution order.</p>
+<pre><code class="lang-javascript">it('chooses', function() {
+    now(
+        () =&gt; now.is(text('Welcome back'))
+            .then(
+                () =&gt; now.click('Log in'),
+                () =&gt; now.click('Sign up')
+            )
+    );
+
+    return now();
+});
+</code></pre>
+<p>Some tools, like <code>during()</code> and <code>until()</code>, accepts functions that will be already queued, so feel free to use <code>now.smth()</code> from them.</p>
+<pre><code class="lang-javascript">it('searches', function() {
+    until(
+        () =&gt; now.is(text('Chapter 42', 'h1'))
+            .catch((error) =&gt; {
+                now.click('Next');
+                throw error;
+            })
+    );
+    click('Bookmark');
+
+    return now();
+});
+</code></pre>
+</body></html>
